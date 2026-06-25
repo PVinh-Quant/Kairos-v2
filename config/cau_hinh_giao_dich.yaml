@@ -1,13 +1,60 @@
 # Cấu hình chung
-san_giao_dich_chinh: "okx"
+ten_nguoi_dung: "P. Vinh" # Tên hiển thị ở lời chào trang chủ
+san_giao_dich_chinh: "binance"
 cap_giao_dich:
 - "BTC/USDT"
+- "ETH/USDT"
+- "BNB/USDT"
+- "SOL/USDT"
+- "XRP/USDT"
+- "ADA/USDT"
+- "DOGE/USDT"
+- "TRX/USDT"
+- "AVAX/USDT"
+- "LINK/USDT"
+- "DOT/USDT"
+- "LTC/USDT"
+- "BCH/USDT"
+- "NEAR/USDT"
+- "APT/USDT"
+- "SUI/USDT"
+- "TON/USDT"
+- "ARB/USDT"
+- "OP/USDT"
+- "PEPE/USDT"
+- "SHIB/USDT"
+- "WIF/USDT"
+- "BONK/USDT"
+- "FLOKI/USDT"
+- "INJ/USDT"
+- "TIA/USDT"
+- "DYDX/USDT"
+- "LDO/USDT"
+- "AAVE/USDT"
+- "UNI/USDT"
+- "CRV/USDT"
+- "SUSHI/USDT"
+- "FIL/USDT"
+- "ATOM/USDT"
+- "ALGO/USDT"
+- "ICP/USDT"
+- "IMX/USDT"
+- "GALA/USDT"
+- "SAND/USDT"
+- "MANA/USDT"
+- "ENJ/USDT"
+- "AXS/USDT"
+- "YGG/USDT"
+- "CHZ/USDT"
+- "THETA/USDT"
+- "ZETA/USDT"
+- "WLD/USDT"
+- "RENDER/USDT"
+- "PUMP/USDT"
 
 # Quản lý vốn
 von_moi_lenh_usdt: 100
 don_bay: 7 # là số trung vị của khoản đoàn vẩy từ 5 đến 9
 max_lenh_cho_phep: 20
-cat_lo_percent: 0.1   # Cắt lỗ 10%
-chot_loi_percent: 0.15  # Chốt lời 15%
-cooldown_nen: 5       # Số nến đóng băng giao dịch sau khi đóng vị thế (cooldown)
+cooldown_nen: 5 # Số nến đóng băng giao dịch sau khi đóng vị thế (cooldown)
 

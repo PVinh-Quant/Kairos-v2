@@ -54,7 +54,7 @@ class BoMayThucThi:
                     exchange.set_leverage(leverage, symbol)
                 except:
                     pass
-            # amount là số lượng coin
+                                     
             order = exchange.create_order(symbol, "market", side, amount)
             logger.info(
                 f"KHỚP LỆNH {side.upper()} {symbol} trên {ten_san}. ID: {order['id']}"

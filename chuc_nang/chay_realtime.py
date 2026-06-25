@@ -40,14 +40,11 @@ from thuc_thi_lenh.dong_lenh import thuc_hien_dong_lenh
 from thuc_thi_lenh.theo_doi_lenh import kiem_tra_trang_thai_vi_the
 from thuc_thi_lenh.quan_ly_danh_muc import kiem_tra_phan_bo_von
 
-from logic_bar_to_bar.chien_luoc_don_bay import phan_tich_don_bay
-from logic_bar_to_bar.stoploss_takeprofit import tinh_sl_tp_theo_atr
-from logic_bar_to_bar.quan_ly_chien_luoc import (
+from chien_luoc.quan_ly_chien_luoc_bar_to_bar import (
     chien_luoc_vao_lenh,
     chien_luoc_thoat_lenh,
+    danh_gia_ml,
 )
-
-from ml.trang_thai_thi_truong_ml.ml_predict import danh_gia_ml
 from utils.kho_du_lieu import luu_lenh_don, luu_run, tao_run_id
 
 CONFIG = lay_cau_hinh_giao_dich()
@@ -72,9 +69,7 @@ DANG_CHAY = True
 REALTIME_RUN_ID = tao_run_id()
 data_san = lay_thong_tin_san()
 MIN_NOTIONAL = data_san.get(SAN_CHINH, {}).get("min_notional", 5.0)
-
-# tham số để đánh giá hiệu quả ML
-dinh_tai_khoan = VON_BAN_DAU
+VON_MOI_LENH = float(CONFIG.get("von_moi_lenh_usdt", 0) or 0)
 
 
 def luong_quet_thi_truong():
@@ -128,18 +123,8 @@ def luong_quet_thi_truong():
                 )
 
                 if tin_hieu:
-                    don_bay = phan_tich_don_bay(
-                        symbol,
-                        DON_BAY,
-                        df_1m,
-                        df_3m,
-                        df_5m,
-                        df_15m,
-                        df_30m,
-                        df_1h,
-                        df_4h,
-                        df_1d,
-                    )
+                                                                                       
+                    don_bay = int(packet.get("leverage") or DON_BAY)
 
                     msg = f"Tin hieu {tin_hieu.upper()} cho {symbol} (Diem: {diem:.2f})"
                     logger.info(msg)
@@ -164,9 +149,15 @@ def luong_quet_thi_truong():
                     )
 
                     if order:
-                        sl_price, tp_price = tinh_sl_tp_theo_atr(
-                            gia_hien_tai, tin_hieu, df_15m
-                        )
+                                                                                      
+                        sl_pct = float(packet.get("sl_pct") or 0.0)
+                        tp_pct = float(packet.get("tp_pct") or 0.0)
+                        if tin_hieu == "buy":
+                            sl_price = gia_hien_tai * (1 - sl_pct)
+                            tp_price = gia_hien_tai * (1 + tp_pct)
+                        else:
+                            sl_price = gia_hien_tai * (1 + sl_pct)
+                            tp_price = gia_hien_tai * (1 - tp_pct)
 
                         quan_ly_lenh.luu_lenh_moi(
                             CHUC_NANG,
@@ -208,6 +199,13 @@ def luong_quet_thi_truong():
 def luong_quan_ly_vi_the():
     """Luồng theo dõi vị thế đang mở trên sàn, đóng lệnh khi chạm SL/TP hoặc tín hiệu đảo chiều."""
     logger.info("Bắt đầu quản lý vị thế...")
+
+                                                                                          
+                                                                                             
+                                                                                
+    von_uoc_tinh = VON_BAN_DAU
+    dinh_tai_khoan = von_uoc_tinh
+
     while DANG_CHAY:
         try:
             ds_symbol = quan_ly_lenh.lay_danh_sach_symbol_dang_co()
@@ -255,7 +253,7 @@ def luong_quan_ly_vi_the():
                     tp_price = info_lenh.get("tp_price")
                     chien_luoc = info_lenh.get("chien_luoc")
 
-                    packet_ml = info_lenh.get("packet_ml")  # Dữ liệu ML khi mở lệnh
+                    packet_ml = info_lenh.get("packet_ml")                          
 
                     can_thoat = False
                     ly_do = ""
@@ -266,24 +264,21 @@ def luong_quan_ly_vi_the():
                             if gia_high >= tp_price:
                                 can_thoat = True
                                 ly_do = f"Chạm giá TP ({gia_high} >= {tp_price})"
+                                gia_dong_du_kien = tp_price
                             elif gia_low <= sl_price:
                                 can_thoat = True
                                 ly_do = f"Chạm giá SL ({gia_low} <= {sl_price})"
+                                gia_dong_du_kien = sl_price
                         elif vi_the_side == "sell":
                             if gia_low <= tp_price:
                                 can_thoat = True
                                 ly_do = f"Chạm giá TP ({gia_low} <= {tp_price})"
+                                gia_dong_du_kien = tp_price
                             elif gia_high >= sl_price:
                                 can_thoat = True
                                 ly_do = f"Chạm giá SL ({gia_high} >= {sl_price})"
+                                gia_dong_du_kien = sl_price
 
-                    if not can_thoat:
-                        if lai_lo_percent >= CONFIG["chot_loi_percent"] * 100:
-                            can_thoat = True
-                            ly_do = f"TP Hit % ({lai_lo_percent:.2f}%)"
-                        elif lai_lo_percent <= -CONFIG["cat_lo_percent"] * 100:
-                            can_thoat = True
-                            ly_do = f"SL Hit % ({lai_lo_percent:.2f}%)"
 
                     if not can_thoat:
                         can_thoat_som, ly_do_thoat = chien_luoc_thoat_lenh(
@@ -325,7 +320,7 @@ def luong_quan_ly_vi_the():
                                 "strategy": chien_luoc,
                                 "reason": ly_do,
                                 "leverage": info_lenh.get("leverage", 1),
-                                "so_du": 0.0,  # balance không track trong realtime
+                                "so_du": 0.0,                                      
                                 "packet_ml": packet_ml,
                             }
 
@@ -334,14 +329,20 @@ def luong_quan_ly_vi_the():
                             quan_ly_lenh.xoa_lenh(CHUC_NANG, symbol)
                             gui_tin_nhan_telegram(f"Da dong {symbol}: {ly_do}")
 
-                            # Đánh giá hiệu quả ML
-                            so_du_uoc_tinh = VON_BAN_DAU * (1 + lai_lo_percent / 100)
-                            if so_du_uoc_tinh > dinh_tai_khoan:
-                                dinh_tai_khoan = so_du_uoc_tinh
+                                                                                             
+                                                                                                
+                            von_uoc_tinh += VON_MOI_LENH * (lai_lo_percent / 100.0)
+                            if von_uoc_tinh > dinh_tai_khoan:
+                                dinh_tai_khoan = von_uoc_tinh
                             account_drawdown = (
-                                (so_du_uoc_tinh - dinh_tai_khoan) / dinh_tai_khoan * 100
+                                (von_uoc_tinh - dinh_tai_khoan) / dinh_tai_khoan * 100
+                                if dinh_tai_khoan
+                                else 0.0
                             )
-                            danh_gia_ml(packet_ml, lai_lo_percent, account_drawdown)
+                                                                                      
+                                                                                              
+                            if packet_ml and packet_ml.get("state_name"):
+                                danh_gia_ml(packet_ml, lai_lo_percent, account_drawdown)
 
                 except Exception as e:
                     logger.error(f"Lỗi xử lý {symbol}: {e}")
@@ -368,9 +369,20 @@ def chay_realtime():
         ],
     )
     quan_ly_lenh.load_trang_thai(CHUC_NANG)
+    try:
+        from chien_luoc.quan_ly_chien_luoc_vectorized import ten_cac_chien_luoc_kich_hoat
+        _ten_cl = ten_cac_chien_luoc_kich_hoat()
+    except Exception:
+        _ten_cl = ""
     luu_run(
-        REALTIME_RUN_ID, "realtime", {"von_ban_dau": VON_BAN_DAU, "symbols": LIST_COIN}
+        REALTIME_RUN_ID, "realtime",
+        {"von_ban_dau": VON_BAN_DAU, "symbols": LIST_COIN, "ten_chien_luoc": _ten_cl},
     )
+                                        
+    try:
+        quan_ly_lenh.dang_ky_chay_bot(CHUC_NANG, REALTIME_RUN_ID)
+    except Exception as e:
+        print(f"[chay_realtime] Lỗi đăng ký bot: {e}", flush=True)
 
     t1 = threading.Thread(target=luong_quet_thi_truong, name="Thread-Scanner")
     t2 = threading.Thread(target=luong_quan_ly_vi_the, name="Thread-Manager")

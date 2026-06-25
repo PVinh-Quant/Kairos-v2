@@ -58,17 +58,17 @@ def gop_va_dong_bo_data(dfs_dict):
 
     def chuẩn_hóa_df(df, name):
         """Làm sạch và chuẩn hóa tên cột, đảm bảo cột timestamp tồn tại."""
-        # 1. Xóa cột không tên (Unnamed) - Tránh rác từ file CSV cũ
+                                                                   
         df = df.loc[:, ~df.columns.str.contains("^unnamed", case=False)]
 
-        # 2. Xóa cột trống
+                          
         if "" in df.columns:
             df = df.drop(columns=[""])
 
-        # Chuẩn hóa tên cột về chữ thường
+                                         
         df.columns = [col.strip().lower() for col in df.columns]
 
-        # 3. Đảm bảo timestamp là một cột để có thể merge_asof
+                                                              
         if "timestamp" not in df.columns:
             if df.index.name and df.index.name.lower() == "timestamp":
                 df = df.reset_index()
@@ -77,10 +77,10 @@ def gop_va_dong_bo_data(dfs_dict):
 
         df["timestamp"] = pd.to_datetime(df["timestamp"])
 
-        # Sắp xếp để merge_asof không lỗi
+                                         
         return df.sort_values("timestamp").reset_index(drop=True)
 
-    # Lấy khung 1m làm gốc
+                          
     if "1m" not in dfs_dict:
         return None
 
@@ -92,7 +92,7 @@ def gop_va_dong_bo_data(dfs_dict):
 
         df_tf = chuẩn_hóa_df(df.copy(), tf)
 
-        # Chỉ lấy timestamp và các chỉ báo (không lấy OHLC khung lớn)
+                                                                     
         cols_to_exclude = ["open", "high", "low", "close", "volume"]
         cols_to_use = [
             col
@@ -105,15 +105,66 @@ def gop_va_dong_bo_data(dfs_dict):
             df_tf[cols_to_use],
             on="timestamp",
             direction="backward",
-            suffixes=("", f"_{tf}"),  # Thêm hậu tố để phân biệt RSI_5m, RSI_15m...
+            suffixes=("", f"_{tf}"),                                               
         )
 
-    # 4. BƯỚC QUAN TRỌNG NHẤT: Đưa timestamp làm Index
-    # Việc này sẽ thay thế hoàn toàn cột số 0, 1, 2...
+                                                      
+                                                      
     main_df.set_index("timestamp", inplace=True)
 
-    # Xóa các cột rác phát sinh (nếu có)
+                                        
     if "index" in main_df.columns:
         main_df.drop(columns=["index"], inplace=True)
 
     return main_df
+
+
+def gop_va_dong_bo_data_polars(dfs_dict):
+    """
+    Merge nhiều Polars DataFrame khác khung thời gian thành 1 DataFrame gốc 1m.
+    Dùng join_asof (backward) để tránh lookahead.
+    """
+    def chuẩn_hóa_df_pl(df, name):
+        clean_cols = [c for c in df.columns if c and not c.lower().startswith("unnamed") and c != "index"]
+        df_clean = df.select(clean_cols)
+        df_clean = df_clean.rename({c: c.strip().lower() for c in df_clean.columns})
+        if "timestamp" not in df_clean.columns:
+            raise KeyError(f"Không tìm thấy cột 'timestamp' trong khung {name}.")
+        if df_clean.schema["timestamp"] in (pl.String, pl.Utf8):
+            df_clean = df_clean.with_columns(pl.col("timestamp").str.to_datetime())
+        return df_clean.sort("timestamp")
+
+    if "1m" not in dfs_dict:
+        return None
+
+    main_df = chuẩn_hóa_df_pl(dfs_dict["1m"], "1m")
+
+    for tf, df in dfs_dict.items():
+        if tf == "1m":
+            continue
+
+        df_tf = chuẩn_hóa_df_pl(df, tf)
+
+        cols_to_exclude = ["open", "high", "low", "close", "volume"]
+        cols_to_use = [
+            col
+            for col in df_tf.columns
+            if col not in cols_to_exclude or col == "timestamp"
+        ]
+
+        rename_map = {}
+        for col in cols_to_use:
+            if col == "timestamp":
+                continue
+            if col in main_df.columns:
+                rename_map[col] = f"{col}_{tf}"
+
+        if rename_map:
+            df_tf_sub = df_tf.select(cols_to_use).rename(rename_map)
+        else:
+            df_tf_sub = df_tf.select(cols_to_use)
+
+        main_df = main_df.join_asof(df_tf_sub, on="timestamp", strategy="backward")
+
+    return main_df
+

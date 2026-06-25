@@ -20,14 +20,14 @@ def hien_thi_dashboard(
 ):
     """Xây dựng và trả về layout Rich hiển thị live feed AI vs Teacher theo từng regime."""
     SHORT_NAMES = {
-        0: "Đóng_Băng",  # Dead Market (Không trade, vol cạn kiệt)
-        1: "Nén_Chặt",  # Squeeze (Tích lũy nén chặt, canh Breakout)
-        2: "Đầu_Xu_Hướng",  # Early Trend (Xu hướng chớm hình thành trên M15, vào lệnh sớm)
-        3: "Xu_Hướng_Mạnh",  # Strong Trend (H4, H1, M15 đồng thuận, Follow trend)
-        4: "Cao_Trào",  # Climax (Giá chạy quá xa, chuẩn bị chốt lời / Scale out)
-        5: "Hồi_Quy",  # Mean Reversion (Giá giật ngược về trung bình, đánh Counter-trend)
-        6: "Nhiễu_Động",  # Choppy (Đi ngang biên độ hẹp, giật liên tục, đánh Range)
-        7: "Quét_Thanh_Khoản",  # Liquidity Crisis (Vol đột biến, râu nến dài do tin tức, Risk-off)
+        0: "Đóng_Băng",                                           
+        1: "Nén_Chặt",                                              
+        2: "Đầu_Xu_Hướng",                                                                 
+        3: "Xu_Hướng_Mạnh",                                                       
+        4: "Cao_Trào",                                                           
+        5: "Hồi_Quy",                                                                     
+        6: "Nhiễu_Động",                                                            
+        7: "Quét_Thanh_Khoản",                                                                     
     }
 
     total = stats["correct"] + stats["wrong"]
@@ -55,7 +55,7 @@ def hien_thi_dashboard(
         acc = val["correct"] / val["total"] * 100
         fraction = f"{val['correct']}/{val['total']}"
 
-        # Thanh Bar
+                   
         bar_len = 20
         filled = int(acc / 100 * bar_len)
         bar_str = "█" * filled + "░" * (bar_len - filled)
@@ -63,7 +63,7 @@ def hien_thi_dashboard(
 
         table.add_row(name, fraction, f"{acc:.1f}%", f"{color_bar}{bar_str}[/]")
 
-    # B. Panel Thông tin Live
+                             
     live_info = Text()
     live_info.append("🤖 AI Dự Đoán : ", style="bold white")
     live_info.append(f"{ai_text:<8} : {conf * 100:.2f}%", style="cyan")

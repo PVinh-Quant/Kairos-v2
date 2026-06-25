@@ -1,8 +1,8 @@
 {
   "so_du_ban_dau": 10000,
   "so_luong_luong": 5,
-  "ngay_bat_dau": "2026-01-01",
-  "ngay_ket_thuc": "2026-06-01",
+  "ngay_bat_dau": "2024-01-01",
+  "ngay_ket_thuc": "2026-06-15",
   "phi_giao_dich": 0.0004,
   "do_truot_gia": 0.0001
 }

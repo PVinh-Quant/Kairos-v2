@@ -1,8 +1,9 @@
 """
 ml/trang_thai_thi_truong_ml/ml_predict.py – Inference & đánh giá ML
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-2 hàm chính:
+3 hàm chính:
   • du_doan_trang_thai_ml()        – dự đoán 1 cây nến (bar-to-bar, realtime)
+  • du_doan_trang_thai_ml_vector() – dự đoán hàng loạt (batch inference, backtest)
   • danh_gia_ml()                  – ghi reward vào trading_memory.csv sau khi đóng lệnh
 
 STATE_MAP định nghĩa 8 regime và chiến lược tương ứng:
@@ -18,13 +19,14 @@ from datetime import datetime
 import pandas as pd
 import csv
 
-# --- THƯ VIỆN LÕI ---
+                      
 import torch
 import numpy as np
 import polars as pl
 
 from ml.trang_thai_thi_truong_ml.ml_model import AI_Engine, DATA_DIR
-from ml.trang_thai_thi_truong_ml.tao_feature import feature_dataset
+from ml.trang_thai_thi_truong_ml.tao_feature import feature_dataset, features_vectorized
+from utils.log import logger
 
 LOG_FILE = os.path.join(DATA_DIR, "trading_memory.csv")
 engine = AI_Engine()
@@ -33,64 +35,64 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 STATE_MAP = {
-    0: "Đóng_Băng",  # Dead Market – không trade
-    1: "Nén_Chặt",  # Squeeze – tích lũy nén, canh bứt phá
-    2: "Đầu_Xu_Hướng",  # Early Trend – xu hướng chớm hình thành
-    3: "Xu_Hướng_Mạnh",  # Strong Trend – H4/H1/M15 đồng thuận
-    4: "Cao_Trào",  # Climax – giá chạy quá xa, sắp đảo chiều
-    5: "Hồi_Quy",  # Mean Reversion – giật ngược về trung bình
-    6: "Nhiễu_Động",  # Choppy – đi ngang biên độ hẹp
-    7: "Quét_Thanh_Khoản",  # Liquidity Crisis – tin mạnh, risk-off
+    0: "Đóng_Băng",                             
+    1: "Nén_Chặt",                                        
+    2: "Đầu_Xu_Hướng",                                          
+    3: "Xu_Hướng_Mạnh",                                       
+    4: "Cao_Trào",                                           
+    5: "Hồi_Quy",                                             
+    6: "Nhiễu_Động",                                 
+    7: "Quét_Thanh_Khoản",                                         
 }
 
-# Ánh xạ từ state_id sang tên chiến lược được dùng trong quan_ly_chien_luoc
+                                                                           
 STRATEGY_MAP = {
-    0: None,  # Đóng_Băng  → không trade
-    1: "Squeeze",  # Nén_Chặt   → đánh breakout khi squeeze nổ
-    2: "Breakout",  # Đầu_XH     → vào sớm theo hướng breakout
-    3: "Trend_following",  # XH_Mạnh    → follow trend đa khung
-    4: "Mean_reversion",  # Cao_Trào   → đánh ngược khi kiệt sức
-    5: "Mean_reversion",  # Hồi_Quy    → đánh ngược về trung bình
-    6: "Scalping",  # Nhiễu_Động → scalp biên độ hẹp
-    7: None,  # Quét_TK    → quá nguy hiểm, không trade
+    0: None,                            
+    1: "Squeeze",                                             
+    2: "Breakout",                                            
+    3: "Trend_following",                                      
+    4: "Mean_reversion",                                        
+    5: "Mean_reversion",                                         
+    6: "Scalping",                                  
+    7: None,                                           
 }
 
 
 def du_doan_trang_thai_ml(df_5m, df_15m, df_1h, df_4h, last_state=None):
     """Dự đoán regime hiện tại (bar-to-bar) từ 4 khung thời gian; trả về ML packet hoặc None."""
-    # BƯỚC 1: Xây dựng bộ đặc trưng (Feature Dataset) từ 4 khung thời gian 5m, 15m, 1h, 4h
-    # Truyền kèm last_state (Teacher's previous regime) để duy trì context bộ nhớ
+                                                                                          
+                                                                                 
     feature_dict = feature_dataset(df_5m, df_15m, df_1h, df_4h, last_state=last_state)
 
-    # Nếu không có hoặc thiếu dữ liệu tính toán chỉ báo, trả về None (Bypass không trade)
+                                                                                         
     if feature_dict is None or (
         isinstance(feature_dict, pd.DataFrame) and feature_dict.empty
     ):
         return None
 
-    # BƯỚC 2: Trích xuất dòng dữ liệu cuối cùng (Latest candle) đại diện cho thời điểm hiện tại
+                                                                                               
     input_vector = {k: v.iloc[-1] for k, v in feature_dict.items()}
 
-    # BƯỚC 3: Gọi AI Engine thực hiện suy diễn lớp phân loại
-    # Trả về mã trạng thái (state_id), độ tự tin (conf) và xác suất phân phối (probs)
+                                                            
+                                                                                     
     state_id, conf, probs = engine.predict(input_vector)
 
     if state_id is None:
         return None
 
-    # BƯỚC 4: Định tuyến chiến lược giao dịch dựa trên regime dự đoán của AI
+                                                                            
     strategy = STRATEGY_MAP.get(state_id)
 
-    # Nếu trạng thái thị trường thuộc nhóm rủi ro cao hoặc đóng băng (strategy = None) -> Đứng ngoài
+                                                                                                    
     if strategy is None:
         return None
 
-    # BƯỚC 5: Đóng gói gói tin kết quả ML (ML Packet) để chuyển tiếp sang bộ điều phối chiến lược
+                                                                                                 
     packet = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "state_id": state_id,
         "state_name": STATE_MAP.get(state_id, "UNKNOWN"),
-        "strategy_name": strategy,  # tên chiến lược để quan_ly_chien_luoc điều phối (routing)
+        "strategy_name": strategy,                                                            
         "confidence": round(conf, 4),
         "probs": probs,
         "features_snapshot": input_vector,
@@ -98,11 +100,152 @@ def du_doan_trang_thai_ml(df_5m, df_15m, df_1h, df_4h, last_state=None):
     return packet
 
 
+def du_doan_trang_thai_ml_vector(df_1m: pl.DataFrame) -> pl.DataFrame:
+    """
+    Nhận DataFrame 1m gốc. Xuất ra DataFrame có cột 'regime' và 'confidence'
+    do mô hình AI dự đoán (Xử lý hàng loạt - Vectorized Inference).
+    """
+                                                                                 
+                                                                                
+    df_dummy = df_1m.with_columns(pl.lit(0).alias("regime"))
+    df_feat = features_vectorized(df_dummy)
+
+                                        
+    if df_feat is None or df_feat.is_empty():
+        return df_1m.with_columns(
+            [pl.lit(0).alias("regime"), pl.lit(0.0).alias("confidence")]
+        )
+
+    engine_vector = AI_Engine()
+
+                                                                                        
+    if engine_vector.model is None or engine_vector.scaler is None:
+        print(
+            "⚠️ CẢNH BÁO: AI Model hoặc Scaler chưa được huấn luyện! Trả về Regime 0 mặc định."
+        )
+        return df_1m.with_columns(
+            [pl.lit(0).alias("regime"), pl.lit(0.0).alias("confidence")]
+        )
+
+    feature_cols = engine_vector.feature_names
+
+                                                                  
+    missing_cols = [c for c in feature_cols if c not in df_feat.columns]
+    if len(missing_cols) > 0:
+        print(
+            f"❌ LỖI: Dataset bị thiếu {len(missing_cols)} cột Features (Vd: {missing_cols[:3]}). Đã Bypass về Regime 0."
+        )
+        return df_1m.with_columns(
+            [pl.lit(0).alias("regime"), pl.lit(0.0).alias("confidence")]
+        )
+
+                                                                                                   
+    X_numpy = df_feat.select(feature_cols).to_numpy().copy()
+    ctx_indices = [feature_cols.index(f"ctx_last_state_{i}") for i in range(8)]
+
+                                                          
+    for idx in ctx_indices:
+        X_numpy[:, idx] = 0.0
+
+    preds_np = np.zeros(len(df_feat), dtype=np.int32)
+    confs_np = np.zeros(len(df_feat), dtype=np.float64)
+
+                                                                   
+    mean_np = engine_vector.scaler.mean.cpu().numpy()
+    std_np = engine_vector.scaler.std.cpu().numpy()
+
+                                                                                                               
+    X_scaled = (X_numpy - mean_np) / std_np
+    
+                                                                           
+    val_ctx_1 = (1.0 - mean_np[ctx_indices]) / std_np[ctx_indices]
+
+                                                   
+    X_scaled_tensor = torch.tensor(X_scaled, dtype=torch.float32)
+
+    engine_vector.model.eval()
+    
+                                                              
+    try:
+        dummy_input = torch.randn(1, len(feature_cols)).to(device)
+        model_traced = torch.jit.trace(engine_vector.model, dummy_input)
+    except Exception:
+        model_traced = engine_vector.model
+
+                                                                                      
+    old_threads = torch.get_num_threads()
+    torch.set_num_threads(1)
+
+    last_state = 0
+    tong = len(df_feat)
+
+                                                                                  
+                                                                                 
+                                                                        
+    log_progress = tong >= 5000
+    buoc_log = max(1, tong // 10)
+    if log_progress:
+        logger.info(f"[ML] Suy diễn regime (autoregressive) cho {tong:,} nến trên {device}...")
+
+    try:
+        with torch.no_grad():
+            for t in range(tong):
+                                                                              
+                X_scaled_tensor[t, ctx_indices[last_state]] = float(val_ctx_1[last_state])
+
+                                                            
+                row_tensor = X_scaled_tensor[t].unsqueeze(0).to(device)
+                logits = model_traced(row_tensor)
+                probs = torch.softmax(logits, dim=1)[0]
+                conf, pred_class = torch.max(probs, 0)
+
+                pred_state = int(pred_class.item())
+                preds_np[t] = pred_state
+                confs_np[t] = float(conf.item())
+
+                                                       
+                last_state = pred_state
+
+                if log_progress and (t + 1) % buoc_log == 0:
+                    logger.info(f"[ML]   regime {t + 1:,}/{tong:,} nến ({(t + 1) * 100 // tong}%)")
+    finally:
+                               
+        torch.set_num_threads(old_threads)
+
+    if log_progress:
+        logger.info(f"[ML] Hoàn tất suy diễn regime cho {tong:,} nến.")
+
+                                      
+    df_results = pl.DataFrame(
+        {
+            "timestamp": df_feat["timestamp"],
+            "regime": preds_np.astype(np.int32),
+            "confidence": confs_np.astype(np.float64),
+        }
+    )
+
+                                                                                  
+                                                                                          
+                                                                                      
+                                                           
+    cols_goc = [c for c in df_1m.columns if c not in ("regime", "confidence")]
+    df_final = df_1m.select(cols_goc).join(df_results, on="timestamp", how="left").with_columns(
+        [
+            pl.col("regime").fill_null(0).cast(pl.Int32),
+            pl.col("confidence").fill_null(0.0).cast(pl.Float64),
+        ]
+    )
+
+    return df_final.select(
+        ["timestamp", "open", "high", "low", "close", "volume", "regime", "confidence"]
+    )
+
 
 def danh_gia_ml(packet, pnl, dd, correct=None):
     """Tính reward từ PnL/DD và ghi vào trading_memory.csv để phục vụ self-supervised learning."""
-    # Nếu không có thông tin gói tin ML, dừng xử lý
-    if not packet:
+                                                    
+                                                                                   
+    if not packet or not isinstance(packet, dict) or "state_name" not in packet:
         return
 
     if correct is None:
@@ -110,15 +253,15 @@ def danh_gia_ml(packet, pnl, dd, correct=None):
 
     state_name = packet["state_name"]
 
-    # BƯỚC 1: Tính toán phần thưởng cơ bản (Base Reward) dựa trên PnL thực tế của vị thế
-    # Vì mục tiêu là bảo toàn vốn, lệnh thua lỗ (PnL < 0) bị phạt nặng hơn gấp đôi (penalty weight = 2.0)
+                                                                                        
+                                                                                                         
     if pnl > 0:
         reward = pnl * 1.0
     else:
         reward = pnl * 2.0
 
-    # BƯỚC 2: Điều chỉnh phần thưởng theo tính chất đặc thù của từng chiến lược (Regime-specific Adjustments)
-    if state_name == "Nhiễu_Động":  # Regime 6 – Scalping: Đánh sóng ngắn hẹp
+                                                                                                             
+    if state_name == "Nhiễu_Động":                                           
         if pnl < 0:
             reward -= 2.0
         elif 0 < pnl < 0.5:
@@ -126,14 +269,14 @@ def danh_gia_ml(packet, pnl, dd, correct=None):
     elif state_name in (
         "Nén_Chặt",
         "Đầu_Xu_Hướng",
-    ):  # Regime 1,2 – Breakout: Bứt phá, yêu cầu biên lợi nhuận lớn
+    ):                                                              
         if pnl < 0:
             reward -= 2.0
         elif pnl > 2.0:
             reward += 2.0
     elif (
         state_name == "Xu_Hướng_Mạnh"
-    ):  # Regime 3 – Trend Following: Bám xu hướng dài, kỳ vọng lợi nhuận cực lớn
+    ):                                                                           
         if pnl < 0:
             reward *= 1.5
         elif pnl > 3.0:
@@ -141,21 +284,21 @@ def danh_gia_ml(packet, pnl, dd, correct=None):
     elif state_name in (
         "Cao_Trào",
         "Hồi_Quy",
-    ):  # Regime 4,5 – Mean Reversion: Đánh ngược xu hướng khi quá mua/quá bán
+    ):                                                                        
         if pnl < -1.0:
             reward -= 3.0
         elif pnl > 1.5:
             reward += 2.0
     else:
-        # Nếu sụt giảm tài khoản sâu (Max Drawdown < -1%), áp hình phạt giảm điểm
+                                                                                 
         if dd < -1.0:
             reward -= 1.0
 
-    # BƯỚC 3: Giới hạn phần thưởng trong biên độ an toàn [-10, 10] tránh bùng nổ gradient
+                                                                                         
     reward = max(min(reward, 10), -10)
 
-    # BƯỚC 4: Ghi nhật ký chi tiết của lệnh kèm toàn bộ snapshot features tại thời điểm vào lệnh
-    # Tệp log này sẽ làm nguyên liệu đầu vào giúp mô hình tự học (Self-supervised learning) sau này
+                                                                                                
+                                                                                                   
     log_row = {
         "timestamp": packet["timestamp"],
         "state": packet["state_id"],

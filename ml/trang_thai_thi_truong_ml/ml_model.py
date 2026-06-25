@@ -27,7 +27,7 @@ import torch.optim as optim
 from pathlib import Path
 from torch.utils.data import DataLoader, TensorDataset, WeightedRandomSampler
 from sklearn.model_selection import train_test_split
-from .tao_feature import feature_dataset
+from .tao_feature import feature_dataset, features_vectorized
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -57,7 +57,7 @@ class MyTorchScaler:
         """Tính mean và std từ tensor huấn luyện."""
         self.mean = x_tensor.mean(dim=0).cpu()
         self.std = x_tensor.std(dim=0).cpu()
-        self.std[self.std == 0] = 1e-7  # Tránh chia cho 0
+        self.std[self.std == 0] = 1e-7                    
 
     def transform(self, x_tensor):
         """Chuẩn hóa tensor đầu vào theo mean/std đã fit."""
@@ -93,7 +93,7 @@ class ResBlock(nn.Module):
         )
 
     def forward(self, x):
-        # Thêm hàm kích hoạt sau khi cộng Residual để giữ tính phi tuyến
+                                                                        
         return torch.nn.functional.gelu(x + self.block(x))
 
 
@@ -106,7 +106,7 @@ class TradingMLP(nn.Module):
     def __init__(self, input_dim, output_dim, hidden_dim=256, dropout_rate=0.3):
         super(TradingMLP, self).__init__()
 
-        # 1. Input Layer: Thêm Dropout nhẹ để mô phỏng "nhiễu" dữ liệu đầu vào
+                                                                              
         self.input_layer = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
             nn.BatchNorm1d(hidden_dim),
@@ -114,14 +114,14 @@ class TradingMLP(nn.Module):
             nn.Dropout(dropout_rate * 0.5),
         )
 
-        # 2. Residual Blocks: Khối học sâu
+                                          
         self.res_blocks = nn.Sequential(
             ResBlock(hidden_dim, dropout_rate),
             ResBlock(hidden_dim, dropout_rate),
             ResBlock(hidden_dim, dropout_rate),
         )
 
-        # 3. Output Layer
+                         
         self.output_layer = nn.Sequential(
             nn.Linear(hidden_dim, 64),
             nn.BatchNorm1d(64),
@@ -130,7 +130,7 @@ class TradingMLP(nn.Module):
             nn.Linear(64, output_dim),
         )
 
-        # 4. Khởi tạo trọng số thông minh (Kaiming He Initialization)
+                                                                     
         self.apply(self._init_weights)
 
     def _init_weights(self, m):
@@ -170,7 +170,7 @@ class AI_Engine:
             self.feature_names = info.get("feature_names", [])
             input_dim = info["input_dim"]
 
-            # CHÚ Ý: Lấy output_dim từ INFO_PATH thay vì gán cứng để đảm bảo đồng bộ
+                                                                                    
             output_dim = info.get("output_dim", 8)
 
             self.model = TradingMLP(input_dim, output_dim).to(device)
@@ -182,12 +182,12 @@ class AI_Engine:
             self.scaler.load(SCALER_PATH)
         except Exception as e:
             print(f"❌ CRITICAL ERROR khi load model: {e}")
-            raise e  # <-- Phải raise lỗi ra ngoài để ngắt chương trình, không cho backtest chạy mù
+            raise e                                                                                
 
     def predict(self, feature_vector_dict, explore=True):
         """Dự đoán regime từ dict feature; hỗ trợ epsilon-greedy exploration."""
         if not self.model:
-            # Đổi giá trị trả về thành -1 hoặc quăng lỗi để code backtest biết mà dừng lại
+                                                                                          
             raise RuntimeError("Chưa load model mà đã gọi hàm predict!")
 
         vals = []
@@ -202,15 +202,15 @@ class AI_Engine:
             probs = torch.softmax(logits, dim=1)[0]
             conf, pred_class = torch.max(probs, 0)
 
-        # 🔥 RANDOM EXPLORATION (Epsilon-Greedy) 🔥
-        if explore and conf.item() < 0.2:  # 20% ngẫu nhiên
+                                                 
+        if explore and conf.item() < 0.2:                  
             pred_class = torch.tensor(random.randint(0, probs.shape[0] - 1)).to(device)
             conf = torch.tensor(0.1).to(device)
 
         return int(pred_class.item()), float(conf.item()), probs.tolist()
 
 
-# --- 5. HÀM HUẤN LUYỆN
+                       
 def huan_luyen_model(df_5m, df_15m, df_1h, df_4h):
     """Huấn luyện model từ dữ liệu 4 khung thời gian hoặc tạo 'bộ não trắng' nếu chưa có log."""
     os.makedirs(DATA_DIR, exist_ok=True)
@@ -219,7 +219,7 @@ def huan_luyen_model(df_5m, df_15m, df_1h, df_4h):
     X_list, y_list = [], []
     VALID_FEATURES = []
 
-    # --- TRƯỜNG HỢP 1: NẾU ĐÃ CÓ DỮ LIỆU KINH NGHIỆM (LOG) ---
+                                                               
     if os.path.exists(log_path):
         try:
             df_log = pd.read_csv(log_path)
@@ -242,7 +242,7 @@ def huan_luyen_model(df_5m, df_15m, df_1h, df_4h):
         except Exception as e:
             print(f"❌ Lỗi đọc log: {e}")
 
-    # --- TRƯỜNG HỢP 2: KHÔNG CÓ LOG -> KHỞI TẠO BẰNG TỶ LỆ ĐỀU NHAU ---
+                                                                        
     if len(X_list) < 10:
         print(
             "⚠️ Không có dữ liệu log. Tiến hành khởi tạo 'Bộ não trắng' để thu thập dữ liệu..."
@@ -258,19 +258,19 @@ def huan_luyen_model(df_5m, df_15m, df_1h, df_4h):
         INPUT_DIM = len(VALID_FEATURES)
         OUTPUT_DIM = 8
 
-        # 1. TẠO SCALER TRƠ (IDENTITY SCALER) CHO BỘ NÃO TRẮNG
-        # Gán trung bình = 0 và độ lệch chuẩn = 1 để không bóp méo dữ liệu khi chưa train
+                                                              
+                                                                                         
         scaler = MyTorchScaler()
         scaler.mean = torch.zeros(INPUT_DIM, dtype=torch.float32)
         scaler.std = torch.ones(INPUT_DIM, dtype=torch.float32)
         scaler.save(SCALER_PATH)
 
-        # 2. KHỞI TẠO MODEL TRẮNG VÀ LƯU NGAY (KHÔNG HUẤN LUYỆN)
-        # Model lúc này sẽ chứa các trọng số ngẫu nhiên ban đầu (Random weights)
+                                                                
+                                                                                
         model = TradingMLP(INPUT_DIM, OUTPUT_DIM).to(device)
         torch.save(model.state_dict(), MODEL_PATH)
 
-        # 3. LƯU THÔNG TIN CẤU HÌNH (INFO)
+                                          
         with open(INFO_PATH, "w") as f:
             json.dump(
                 {
@@ -288,7 +288,7 @@ def huan_luyen_model(df_5m, df_15m, df_1h, df_4h):
             "ℹ️ Hệ thống KAIROS giờ có thể tiếp tục chạy để dự đoán mù và ghi Log. Hãy chạy lại hàm train khi có đủ dữ liệu thực tế."
         )
 
-        return  # THOÁT HÀM TẠI ĐÂY - Bỏ qua toàn bộ phần khởi tạo Optimizer và vòng lặp Epoch bên dưới.
+        return                                                                                          
 
     X_tensor = torch.tensor(X_list, dtype=torch.float32)
     y_tensor = torch.tensor(y_list, dtype=torch.long).to(device)
@@ -345,7 +345,7 @@ def tu_dong_hoc_tu_log():
     except Exception as e:
         return
 
-    # Lọc các ký ức tốt và xấu
+                              
     good_memories = df_log[df_log["reward"] > 0.0].copy()
     bad_memories = df_log[df_log["reward"] < 0.0].copy()
 
@@ -354,7 +354,7 @@ def tu_dong_hoc_tu_log():
 
     X_list, y_list = [], []
 
-    # 1. Xử lý ký ức tốt
+                        
     for _, row in good_memories.iterrows():
         try:
             feats = (
@@ -367,7 +367,7 @@ def tu_dong_hoc_tu_log():
         except:
             continue
 
-    # 2. Xử lý ký ức xấu (sửa sai)
+                                  
     if len(bad_memories) > 0:
         for _, row in bad_memories.iterrows():
             try:
@@ -387,7 +387,7 @@ def tu_dong_hoc_tu_log():
                 if has_teacher:
                     corrected_state = int(row["correct"])
                 else:
-                    # Logic tự sửa sai cơ bản nếu không có thầy giáo
+                                                                    
                     if wrong_state in [0, 1, 3]:
                         corrected_state = 2
                     elif wrong_state == 2:
@@ -404,44 +404,44 @@ def tu_dong_hoc_tu_log():
     if not X_list:
         return
 
-    # Chuyển sang Tensor
+                        
     X_train = torch.tensor(X_list, dtype=torch.float32)
     y_train = torch.tensor(y_list, dtype=torch.long).to(device)
 
-    # --- KHỞI TẠO ENGINE ---
+                             
     engine = AI_Engine()
 
-    # --- KIỂM TRA KHỚP DỮ LIỆU ---
+                                   
     input_dim_new = X_train.shape[1]
     input_dim_old = 0
 
-    # Lấy kích thước của Scaler cũ nếu có
+                                         
     if engine.scaler is not None and engine.scaler.mean is not None:
         input_dim_old = engine.scaler.mean.shape[0]
 
     model = None
     scaler = None
 
-    # Nếu dữ liệu mới khác kích thước dữ liệu cũ -> RESET MODEL & SCALER
+                                                                        
     if input_dim_new != input_dim_old:
         print(
             f"⚠️ Phát hiện thay đổi dữ liệu (Cũ: {input_dim_old} -> Mới: {input_dim_new}). Tiến hành huấn luyện lại từ đầu..."
         )
 
-        # Tạo Scaler mới và fit ngay lập tức với dữ liệu hiện tại
+                                                                 
         scaler = MyTorchScaler()
         scaler.fit(X_train)
 
-        # Tạo Model mới tương ứng với input_dim mới
-        model = TradingMLP(input_dim_new, 8).to(device)  # Giả sử output là 8 lớp
+                                                   
+        model = TradingMLP(input_dim_new, 8).to(device)                          
 
-        # Gán lại vào engine để tí nữa dùng
+                                           
         engine.model = model
         engine.scaler = scaler
 
-        # Cập nhật lại file info để lần sau load đúng
+                                                     
         with open(INFO_PATH, "w") as f:
-            # Lấy tên feature từ dòng đầu tiên của log (nếu có thể) để lưu lại tên cột
+                                                                                      
             feature_names_new = []
             try:
                 first_row_feat = json.loads(good_memories.iloc[0]["features_json"])
@@ -459,36 +459,36 @@ def tu_dong_hoc_tu_log():
             )
 
     else:
-        # Nếu khớp dimension thì dùng tiếp model/scaler cũ
+                                                          
         print(f"✅ Dữ liệu khớp ({input_dim_new} features). Đang tinh chỉnh model...")
         model = engine.model
         scaler = engine.scaler
 
-    # --- TIẾN HÀNH TRAINING ---
+                                
     model.train()
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
     criterion = nn.CrossEntropyLoss()
 
-    # --- CHUẨN BỊ DỮ LIỆU CHIA BATCH ---
-    # CHÚ Ý: Tạm thời giữ dữ liệu ở CPU, KHÔNG dùng .to(device) ở đây để tránh tràn RAM GPU
+                                         
+                                                                                           
     X_train_scaled = scaler.transform(X_train).cpu()
     y_train_cpu = y_train.cpu()
 
-    # Khởi tạo DataLoader để chia nhỏ dữ liệu
-    # Nếu vẫn bị lỗi OOM, hãy giảm batch_size xuống 128 hoặc 64
+                                             
+                                                               
     batch_size = 256
     dataset = TensorDataset(X_train_scaled, y_train_cpu)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-    # --- TIẾN HÀNH TRAINING THEO BATCH ---
+                                           
     model.train()
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
     criterion = nn.CrossEntropyLoss()
 
-    for epoch in range(10):  # Train 10 epoch
+    for epoch in range(10):                  
         total_loss = 0.0
         for batch_X, batch_y in dataloader:
-            # Chỉ đưa từng gói dữ liệu nhỏ (256 dòng) lên GPU
+                                                             
             batch_X = batch_X.to(device)
             batch_y = batch_y.to(device)
 
@@ -502,7 +502,7 @@ def tu_dong_hoc_tu_log():
 
         print(f"  + Epoch {epoch+1}/10 - Loss: {total_loss/len(dataloader):.4f}")
 
-    # --- LƯU LẠI MODEL VÀ SCALER MỚI ---
+                                         
     torch.save(model.state_dict(), MODEL_PATH)
     scaler.save(SCALER_PATH)
 
@@ -511,4 +511,183 @@ def tu_dong_hoc_tu_log():
     )
 
 
+def huan_luyen_tu_dataframe(df_labeled: pl.DataFrame, epochs=20, batch_size=512):
+    """
+    Nhận DataFrame đã được label bởi detect_regime_vectorized.
+    Trích xuất feature, CẮT 30 NGÀY NHIỄU, CHỈ CẮT GỌT CLASS LỚN (KHÔNG NHÂN BẢN) và huấn luyện Model.
+    """
+    print("🧠 BƯỚC 1: Đang trích xuất Features (Vectorized)...")
+                                                                                       
+    engine = AI_Engine()
+    if engine.model is not None and engine.scaler is not None:
+        print("🧠 Chạy mô phỏng tuần tự (rollout) trên tập train bằng model hiện tại...")
+        from ml.trang_thai_thi_truong_ml.ml_predict import du_doan_trang_thai_ml_vector
+        df_rollout = du_doan_trang_thai_ml_vector(df_labeled)
+        df_feat = features_vectorized(df_rollout)
+    else:
+        print("⚠️ Không tìm thấy model hiện tại. Sử dụng Teacher forcing làm dữ liệu khởi động...")
+        df_feat = features_vectorized(df_labeled)
 
+                                              
+    df_final = df_feat.join(
+        df_labeled.select(["timestamp", "regime"]), on="timestamp", how="inner"
+    )
+
+                                                               
+                                                       
+                                                               
+    df_final = df_final.sort("timestamp")
+
+    DROP_ROWS = 30 * 24 * 60                                           
+    if df_final.height > DROP_ROWS:
+        df_final = df_final.slice(DROP_ROWS)
+        print(f"✂️ Đã cắt bỏ {DROP_ROWS} nến (30 ngày đầu) để loại bỏ nhiễu chỉ báo.")
+    else:
+        print("⚠️ Cảnh báo: Dữ liệu quá ngắn, không đủ 30 ngày để cắt!")
+
+                                     
+    feature_cols = [
+        col for col in df_final.columns if col not in ["timestamp", "regime"]
+    ]
+
+                                                               
+                                                                
+                                                               
+    n_total = len(df_final)
+    n_train_split = int(n_total * 0.8)
+    
+    df_train = df_final.slice(0, n_train_split)
+    df_val = df_final.slice(n_train_split)
+    
+    X_train_full = df_train.select(feature_cols).to_numpy()
+    y_train_full = df_train.select("regime").to_numpy().flatten()
+    
+    X_val_np = df_val.select(feature_cols).to_numpy()
+    y_val_np = df_val.select("regime").to_numpy().flatten()
+
+    print(f"📊 Dữ liệu trước cân bằng: Train = {len(X_train_full)}, Val = {len(X_val_np)} mẫu.")
+
+                                                               
+                                                                         
+                                                               
+    counts = np.bincount(y_train_full, minlength=8)
+    print(f"📈 Phân bổ nhãn Train trước cân bằng: {counts}")
+
+                                                      
+    minority_counts = counts[1:]
+    valid_minorities = minority_counts[minority_counts > 0]
+
+    if len(valid_minorities) > 0:
+                                                       
+        limit_cap = int(np.min(valid_minorities))
+    else:
+                                                   
+        limit_cap = len(y_train_full)
+
+    print(f"🎯 Thiết lập Mức Trần (Cap Limit) cho Train: {limit_cap} dòng.")
+
+    balanced_indices = []
+    for c in range(8):
+        if counts[c] == 0:
+            continue
+
+        idx_c = np.where(y_train_full == c)[0]
+
+                                                                                    
+        current_limit = int(limit_cap * 1.5) if c == 0 else limit_cap
+
+                                                       
+        current_limit = min(current_limit, counts[c])
+
+        if counts[c] > current_limit:
+                         
+            idx_sampled = np.random.choice(idx_c, current_limit, replace=False)
+            print(f"  🔻 Cắt gọt Train Regime {c}: {counts[c]} -> {current_limit} dòng")
+        else:
+                        
+            idx_sampled = idx_c
+            print(f"  ✅ Giữ nguyên Train Regime {c}: {counts[c]} dòng")
+
+        balanced_indices.extend(idx_sampled)
+
+                                                                       
+    np.random.shuffle(balanced_indices)
+
+    X_train_np = X_train_full[balanced_indices]
+    y_train_np = y_train_full[balanced_indices]
+    print(f"🚀 Dữ liệu Train CHUẨN sau khi cân bằng: {len(X_train_np)} mẫu. Bắt đầu Train!")
+                                                               
+
+                                                                                   
+    X_train_tensor = torch.tensor(X_train_np, dtype=torch.float32)
+    y_train_tensor = torch.tensor(y_train_np, dtype=torch.long)
+
+    scaler = MyTorchScaler()
+    scaler.fit(X_train_tensor)
+    X_scaled = scaler.transform(X_train_tensor)
+    scaler.save(SCALER_PATH)
+
+                                                                                        
+    X_val_tensor = None
+    y_val_tensor = None
+    if len(X_val_np) > 0:
+        X_val_tensor = scaler.transform(torch.tensor(X_val_np, dtype=torch.float32))
+        y_val_tensor = torch.tensor(y_val_np, dtype=torch.long)
+
+                       
+    input_dim = len(feature_cols)
+    output_dim = 8
+    model = TradingMLP(input_dim, output_dim).to(device)
+
+                                       
+    dataset = TensorDataset(X_scaled, y_train_tensor)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
+                                                                                                  
+    criterion = nn.CrossEntropyLoss().to(device)
+    optimizer = optim.AdamW(model.parameters(), lr=0.001, weight_decay=1e-4)
+
+    print(f"🔥 BƯỚC 3: Bắt đầu huấn luyện Model trên {device}...")
+    model.train()
+    for epoch in range(epochs):
+        total_loss = 0.0
+        for batch_X, batch_y in dataloader:
+            batch_X, batch_y = batch_X.to(device), batch_y.to(device)
+
+            optimizer.zero_grad()
+            outputs = model(batch_X)
+            loss = criterion(outputs, batch_y)
+            loss.backward()
+            optimizer.step()
+            total_loss += loss.item()
+
+        if (epoch + 1) % 5 == 0 or epoch == 0:
+            msg = f"   + Epoch {epoch+1}/{epochs} | Loss: {total_loss/len(dataloader):.4f}"
+
+                                                                             
+            if X_val_tensor is not None:
+                model.eval()
+                with torch.no_grad():
+                    val_X = X_val_tensor.to(device)
+                    val_y = y_val_tensor.to(device)
+                    val_logits = model(val_X)
+                    val_loss = criterion(val_logits, val_y).item()
+                    val_acc = (val_logits.argmax(dim=1) == val_y).float().mean().item()
+                model.train()
+                msg += f" | Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.2%}"
+
+            print(msg)
+
+                          
+    torch.save(model.state_dict(), MODEL_PATH)
+    with open(INFO_PATH, "w") as f:
+        json.dump(
+            {
+                "input_dim": input_dim,
+                "output_dim": output_dim,
+                "feature_names": feature_cols,
+            },
+            f,
+        )
+
+    print("✅ Đã học xong và lưu Model!")

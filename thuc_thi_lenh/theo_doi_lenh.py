@@ -18,7 +18,7 @@ def kiem_tra_trang_thai_vi_the(san, symbol):
     try:
         positions = exchange.fetch_positions([symbol])
         for pos in positions:
-            # Kiểm tra size > 0 để đảm bảo là vị thế đang mở
+                                                            
             size = (
                 float(pos["contracts"] or 0)
                 if "contracts" in pos
@@ -32,7 +32,7 @@ def kiem_tra_trang_thai_vi_the(san, symbol):
                     "entry_price": float(pos["entryPrice"]),
                     "amount": size,
                 }
-        return None  # Không có vị thế
+        return None                   
     except Exception as e:
         logger.error(f"Lỗi theo dõi vị thế {symbol}: {e}")
         return None

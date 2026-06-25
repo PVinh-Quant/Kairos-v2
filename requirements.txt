@@ -17,8 +17,7 @@ ta
 # ----- Machine Learning -----
 scikit-learn
 joblib
-torch
-optuna
+torch 
 
 
 # ----- Visualization -----

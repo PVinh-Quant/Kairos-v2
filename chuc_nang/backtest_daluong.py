@@ -24,14 +24,13 @@ try:
         tai_du_lieu_lich_su,
         chuan_bi_du_lieu_da_khung,
     )
-    from logic_bar_to_bar.quan_ly_chien_luoc import (
+    from chien_luoc.quan_ly_chien_luoc_bar_to_bar import (
         chien_luoc_vao_lenh,
         chien_luoc_thoat_lenh,
+        tinh_sl_tp_theo_atr,
+        phan_tich_don_bay,
+        danh_gia_ml,
     )
-    from logic_bar_to_bar.stoploss_takeprofit import tinh_sl_tp_theo_atr
-    from logic_bar_to_bar.chien_luoc_don_bay import phan_tich_don_bay
-
-    from ml.trang_thai_thi_truong_ml.ml_predict import danh_gia_ml
     from utils.kho_du_lieu import luu_ket_qua_backtest, tao_run_id
 except ImportError as e:
     logger.error(f"Lỗi Import: {e}")
@@ -56,8 +55,6 @@ def backtest_1_symbol(symbol, config_backtest, config_trading, result_queue):
         END_DATE = config_backtest.get("ngay_ket_thuc", "")
 
         VON_MOI_LENH = float(config_trading.get("von_moi_lenh_usdt", 100))
-        CAT_LO_PCT = float(config_trading.get("cat_lo_percent", 0.02))
-        CHOT_LOI_PCT = float(config_trading.get("chot_loi_percent", 0.05))
 
         von_hien_tai = VON_BAN_DAU
         lich_su_lenh = []
@@ -84,10 +81,10 @@ def backtest_1_symbol(symbol, config_backtest, config_trading, result_queue):
         last_price_close = 0
         last_time_str = ""
 
-        # tham số ml đánh giá
+                             
         dinh_tai_khoan = von_hien_tai
 
-        # 2. Vòng lặp quét dữ liệu
+                                  
         for current_time in timestamps:
 
             set_log_time(current_time)
@@ -114,7 +111,7 @@ def backtest_1_symbol(symbol, config_backtest, config_trading, result_queue):
             last_time_str = str_time
 
             if vi_the:
-                # --- LOGIC KIỂM TRA THOÁT LỆNH ---
+                                                   
                 side, entry, don_bay, amount = (
                     vi_the["side"],
                     vi_the["entry"],
@@ -133,37 +130,39 @@ def backtest_1_symbol(symbol, config_backtest, config_trading, result_queue):
                 ly_do_thoat = ""
                 gia_khop_thoat = gia_close
 
-                # Tính toán ROE để check SL/TP cứng
+                                                   
                 if side == "buy":
-                    roe_low_pct = ((gia_low - entry) / entry) * don_bay
-                    roe_high_pct = ((gia_high - entry) / entry) * don_bay
+                    liq_price = entry * (1 - 1 / don_bay)
+                                                                                            
+                    if sl_price > 0 and gia_low <= sl_price:
+                        can_thoat = True
+                        ly_do_thoat = "SL"
+                        gia_khop_thoat = sl_price
+                    elif tp_price > 0 and gia_high >= tp_price:
+                        can_thoat = True
+                        ly_do_thoat = "TP"
+                        gia_khop_thoat = tp_price
+                    elif gia_low <= liq_price:
+                        can_thoat = True
+                        ly_do_thoat = "LIQUIDATION"
+                        gia_khop_thoat = liq_price
                 else:
-                    roe_low_pct = ((entry - gia_low) / entry) * don_bay
-                    roe_high_pct = ((entry - gia_high) / entry) * don_bay
-
-                if side == "buy":
-                    if gia_low <= sl_price or roe_low_pct <= -CAT_LO_PCT:
+                    liq_price = entry * (1 + 1 / don_bay)
+                                                                                            
+                    if sl_price > 0 and gia_high >= sl_price:
                         can_thoat = True
-                        ly_do_thoat = "SL (Hit Price/ROE)"
-                        gia_khop_thoat = sl_price if gia_low <= sl_price else gia_low
-
-                    elif gia_high >= tp_price or roe_high_pct >= CHOT_LOI_PCT:
+                        ly_do_thoat = "SL"
+                        gia_khop_thoat = sl_price
+                    elif tp_price > 0 and gia_low <= tp_price:
                         can_thoat = True
-                        ly_do_thoat = "TP (Hit Price/ROE)"
-                        gia_khop_thoat = tp_price if gia_high >= tp_price else gia_high
-
-                else:
-                    if gia_high >= sl_price or roe_high_pct <= -CAT_LO_PCT:
+                        ly_do_thoat = "TP"
+                        gia_khop_thoat = tp_price
+                    elif gia_high >= liq_price:
                         can_thoat = True
-                        ly_do_thoat = "SL (Hit Price/ROE)"
-                        gia_khop_thoat = sl_price if gia_high >= sl_price else gia_high
+                        ly_do_thoat = "LIQUIDATION"
+                        gia_khop_thoat = liq_price
 
-                    elif gia_low <= tp_price or roe_low_pct >= CHOT_LOI_PCT:
-                        can_thoat = True
-                        ly_do_thoat = "TP (Hit Price/ROE)"
-                        gia_khop_thoat = tp_price if gia_low <= tp_price else gia_low
-
-                # Check tín hiệu chiến lược nếu chưa chạm SL/TP cứng
+                                                                    
                 if not can_thoat:
                     check_thoat, reason = chien_luoc_thoat_lenh(
                         symbol,
@@ -184,15 +183,21 @@ def backtest_1_symbol(symbol, config_backtest, config_trading, result_queue):
                         gia_khop_thoat = gia_close
 
                 if can_thoat:
-                    if side == "buy":
-                        real_pnl_pct = (gia_khop_thoat - entry) / entry
+                    if ly_do_thoat == "LIQUIDATION":
+                                                                                        
+                        real_pnl_pct = -1 / don_bay
+                        loi_nhuan_usdt = -vi_the["value"]
+                        phi_dong = 0.0
                     else:
-                        real_pnl_pct = (entry - gia_khop_thoat) / entry
-
-                    gia_tri_lenh = vi_the["value"] * don_bay
-                    loi_nhuan_usdt = gia_tri_lenh * real_pnl_pct
-                    phi_dong = gia_tri_lenh * PHI_GD
-
+                        phi_truot_dong = gia_khop_thoat * SLIPPAGE
+                        if side == "buy":
+                            gia_khop_thoat = gia_khop_thoat - phi_truot_dong
+                            real_pnl_pct = (gia_khop_thoat - entry) / entry
+                        else:
+                            gia_khop_thoat = gia_khop_thoat + phi_truot_dong
+                            real_pnl_pct = (entry - gia_khop_thoat) / entry
+                        loi_nhuan_usdt = (vi_the["value"] * don_bay) * real_pnl_pct
+                        phi_dong = (vi_the["value"] * don_bay) * PHI_GD
                     net_profit = loi_nhuan_usdt - phi_dong
                     von_hien_tai += net_profit
 
@@ -230,7 +235,7 @@ def backtest_1_symbol(symbol, config_backtest, config_trading, result_queue):
 
                     result_queue.put({"symbol": symbol, "trades": lich_su_lenh})
 
-                    # Đánh giá hiệu quả ML
+                                          
                     if von_hien_tai > dinh_tai_khoan:
                         dinh_tai_khoan = von_hien_tai
                     account_drawdown = (
@@ -242,28 +247,15 @@ def backtest_1_symbol(symbol, config_backtest, config_trading, result_queue):
                         account_drawdown,
                     )
 
-                    # Reset vị thế
+                                  
                     vi_the = None
                     dem_cooldown = COOLDOWN_NEN
 
             if not vi_the and dem_cooldown == 0:
-                tin_hieu, diem, chien_luoc, ly_do, packet = chien_luoc_vao_lenh(
-                    symbol,
-                    current_time,
-                    df_1m,
-                    df_3m,
-                    df_5m,
-                    df_15m,
-                    df_30m,
-                    df_1h,
-                    df_4h,
-                    df_1d,
-                )
-
-                if tin_hieu:
-                    don_bay = phan_tich_don_bay(
+                if von_hien_tai >= VON_MOI_LENH:
+                    tin_hieu, diem, chien_luoc, ly_do, packet = chien_luoc_vao_lenh(
                         symbol,
-                        DON_BAY,
+                        current_time,
                         df_1m,
                         df_3m,
                         df_5m,
@@ -273,6 +265,11 @@ def backtest_1_symbol(symbol, config_backtest, config_trading, result_queue):
                         df_4h,
                         df_1d,
                     )
+                else:
+                    tin_hieu = None
+
+                if tin_hieu:
+                    don_bay = int(packet.get("leverage") or DON_BAY)
 
                     gia_vao = (
                         gia_close * (1 + SLIPPAGE)
@@ -280,7 +277,14 @@ def backtest_1_symbol(symbol, config_backtest, config_trading, result_queue):
                         else gia_close * (1 - SLIPPAGE)
                     )
 
-                    sl_price, tp_price = tinh_sl_tp_theo_atr(gia_vao, tin_hieu, df_15m)
+                    sl_pct = float(packet.get("sl_pct") or 0.025)
+                    tp_pct = float(packet.get("tp_pct") or 0.05)
+                    if tin_hieu == "buy":
+                        sl_price = gia_vao * (1 - sl_pct)
+                        tp_price = gia_vao * (1 + tp_pct)
+                    else:
+                        sl_price = gia_vao * (1 + sl_pct)
+                        tp_price = gia_vao * (1 - tp_pct)
 
                     gia_tri_lenh = VON_MOI_LENH * don_bay
                     so_luong_coin = gia_tri_lenh / gia_vao
@@ -311,7 +315,7 @@ def backtest_1_symbol(symbol, config_backtest, config_trading, result_queue):
                         f"S: {chien_luoc}"
                     )
 
-        # 3. Đóng lệnh cưỡng bức cuối kỳ
+                                        
         if vi_the:
             side, entry, don_bay = vi_the["side"], vi_the["entry"], vi_the["leverage"]
             raw_pnl_pct = (
@@ -398,7 +402,7 @@ def chay_backtest(return_data=False, callback=None):
         result_queue = manager.Queue()
 
         with ProcessPoolExecutor(max_workers=num_workers) as executor:
-            # Gửi toàn bộ danh sách symbol vào pool
+                                                   
             futures = {
                 executor.submit(
                     backtest_1_symbol,
@@ -412,25 +416,25 @@ def chay_backtest(return_data=False, callback=None):
 
             finished_symbols = set()
 
-            # Sử dụng as_completed để xử lý ngay khi có bất kỳ luồng nào xong (gối đầu)
+                                                                                       
             for future in as_completed(futures):
                 symbol = futures[future]
                 try:
-                    # Lấy kết quả cuối cùng từ hàm return của mỗi tiến trình
-                    # (Hàm backtest_1_symbol trả về danh sách lịch sử lệnh)
+                                                                            
+                                                                           
                     trades = future.result()
 
                     if symbol:
                         trades_by_symbol[symbol] = trades
                         finished_symbols.add(symbol)
 
-                        # Cập nhật kết quả tổng hợp sau mỗi cặp hoàn thành
+                                                                          
                         all_trades_merged = []
                         for tlist in trades_by_symbol.values():
                             if isinstance(tlist, list):
                                 all_trades_merged.extend(tlist)
 
-                        # Sắp xếp và tính Equity Curve
+                                                      
                         all_trades_merged.sort(key=lambda x: x.get("time_close", ""))
                         curr_bal = VON_BAN_DAU
                         equity_curve = [{"time": "Start", "balance": curr_bal}]
@@ -441,7 +445,7 @@ def chay_backtest(return_data=False, callback=None):
                                 {"time": t.get("time_close"), "balance": curr_bal}
                             )
 
-                        # Gửi callback cập nhật UI ngay lập tức
+                                                               
                         if callback:
                             progress = int(
                                 (len(finished_symbols) / len(DS_SYMBOL)) * 100
@@ -515,6 +519,11 @@ def chay_backtest(return_data=False, callback=None):
         ).write_csv(save_path)
         logger.info(f"Da luu lich su lenh tai: {save_path}")
 
+        try:
+            from chien_luoc.quan_ly_chien_luoc_vectorized import ten_cac_chien_luoc_kich_hoat
+            ten_chien_luoc = ten_cac_chien_luoc_kich_hoat()
+        except Exception:
+            ten_chien_luoc = ""
         luu_ket_qua_backtest(
             all_trades_merged,
             run_id,
@@ -527,6 +536,7 @@ def chay_backtest(return_data=False, callback=None):
                 "phi_gd": float(config_backtest.get("phi_giao_dich", 0.001)),
                 "slippage": float(config_backtest.get("do_truot_gia", 0.0005)),
                 "don_bay": int(config_trading.get("don_bay", 1)),
+                "ten_chien_luoc": ten_chien_luoc,
             },
         )
         logger.info(

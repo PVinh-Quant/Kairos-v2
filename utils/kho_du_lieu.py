@@ -85,7 +85,8 @@ def _tao_schema(con: duckdb.DuckDBPyConnection):
             von_ban_dau DOUBLE,
             phi_gd      DOUBLE,
             slippage    DOUBLE,
-            don_bay     INTEGER
+            don_bay     INTEGER,
+            ten_chien_luoc VARCHAR
         )
     """)
     con.execute("""
@@ -115,7 +116,7 @@ def _tao_schema(con: duckdb.DuckDBPyConnection):
             r_multiple     DOUBLE
         )
     """)
-    # Migration: thêm cột mới nếu bảng cũ chưa có
+                                                 
     for col, dtype, default in [
         ("hold_duration", "DOUBLE", "0.0"),
         ("session", "VARCHAR", "''"),
@@ -131,6 +132,12 @@ def _tao_schema(con: duckdb.DuckDBPyConnection):
         except Exception:
             pass
 
+                                                                                
+    try:
+        con.execute("ALTER TABLE backtest_run ADD COLUMN IF NOT EXISTS ten_chien_luoc VARCHAR DEFAULT ''")
+    except Exception:
+        pass
+
     con.execute("""
         CREATE TABLE IF NOT EXISTS signal_log (
             run_id      VARCHAR,
@@ -145,7 +152,7 @@ def _tao_schema(con: duckdb.DuckDBPyConnection):
         )
     """)
 
-    # Views
+           
     con.execute("""
         CREATE OR REPLACE VIEW v_lenh_day_du AS
         SELECT *,
@@ -178,7 +185,7 @@ def tao_run_id() -> str:
     return datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + uuid.uuid4().hex[:4]
 
 
-# ─── NORMALIZE helpers ───────────────────────────────────────────────────────
+                                                                               
 
 
 def _chuan_hoa_lenh_vector(row: dict) -> dict:
@@ -255,7 +262,7 @@ _NORMALIZER = {
     "backtest_bar": _chuan_hoa_lenh_bar,
     "backtest_da_luong": _chuan_hoa_lenh_bar,
     "demo": _chuan_hoa_lenh_demo,
-    "realtime": _chuan_hoa_lenh_demo,  # cùng field names với demo
+    "realtime": _chuan_hoa_lenh_demo,                             
 }
 
 
@@ -311,7 +318,7 @@ def _build_row(chuc_nang: str, run_id: str, norm: dict) -> dict:
     }
 
 
-# ─── PUBLIC API ──────────────────────────────────────────────────────────────
+                                                                               
 
 
 def luu_run(run_id: str, chuc_nang: str, config: dict):
@@ -320,7 +327,7 @@ def luu_run(run_id: str, chuc_nang: str, config: dict):
     _tao_schema(con)
     con.execute(
         """
-        INSERT OR REPLACE INTO backtest_run VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT OR REPLACE INTO backtest_run VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """,
         [
             run_id,
@@ -333,6 +340,7 @@ def luu_run(run_id: str, chuc_nang: str, config: dict):
             config.get("phi_gd", 0),
             config.get("slippage", 0),
             config.get("don_bay", 1),
+            config.get("ten_chien_luoc", ""),
         ],
     )
     con.close()
@@ -381,7 +389,7 @@ def luu_ket_qua_backtest(
     con.close()
 
 
-# ─── ANALYTICAL QUERIES ──────────────────────────────────────────────────────
+                                                                               
 
 
 def _where(run_id=None, chuc_nang=None) -> str:
@@ -600,7 +608,7 @@ def luu_signal(run_id: str, chuc_nang: str, signal_raw: dict):
     con.close()
 
 
-# ─── ANALYTICS MỚI ───────────────────────────────────────────────────────────
+                                                                               
 
 
 def thong_ke_hold_duration(run_id=None, chuc_nang=None) -> pd.DataFrame:
@@ -723,21 +731,93 @@ def sharpe_ratio(run_id: str, risk_free_rate: float = 0.0) -> dict:
     risk_free_rate: lãi suất phi rủi ro hàng năm (mặc định 0).
     """
     con = _ket_noi()
-    df = con.execute(f"""
+    run_info = con.execute(f"""
+        SELECT von_ban_dau, tu_ngay, den_ngay FROM backtest_run WHERE run_id = '{run_id}'
+    """).df()
+    
+    if run_info.empty:
+                                 
+        von_ban_dau = 10000.0
+        dates_df = con.execute(f"SELECT MIN(ngay) as min_d, MAX(ngay) as max_d FROM lenh WHERE run_id = '{run_id}'").df()
+        if dates_df.empty or dates_df.iloc[0]["min_d"] is None:
+            con.close()
+            return {"sharpe": 0.0, "sortino": 0.0, "n_days": 0}
+        start_date = dates_df.iloc[0]["min_d"]
+        end_date = dates_df.iloc[0]["max_d"]
+    else:
+        von_ban_dau = float(run_info.iloc[0]["von_ban_dau"] or 10000.0)
+        tu_ngay = run_info.iloc[0]["tu_ngay"]
+        den_ngay = run_info.iloc[0]["den_ngay"]
+        
+        try:
+            import datetime
+            if isinstance(tu_ngay, str):
+                start_date = datetime.datetime.strptime(tu_ngay[:10], "%Y-%m-%d").date()
+            else:
+                start_date = tu_ngay
+            if isinstance(den_ngay, str):
+                end_date = datetime.datetime.strptime(den_ngay[:10], "%Y-%m-%d").date()
+            else:
+                end_date = den_ngay
+        except Exception:
+            dates_df = con.execute(f"SELECT MIN(ngay) as min_d, MAX(ngay) as max_d FROM lenh WHERE run_id = '{run_id}'").df()
+            if dates_df.empty or dates_df.iloc[0]["min_d"] is None:
+                con.close()
+                return {"sharpe": 0.0, "sortino": 0.0, "n_days": 0}
+            start_date = dates_df.iloc[0]["min_d"]
+            end_date = dates_df.iloc[0]["max_d"]
+
+                                      
+    import datetime
+    if isinstance(start_date, str):
+        start_date = datetime.datetime.strptime(start_date[:10], "%Y-%m-%d").date()
+    elif hasattr(start_date, "date"):
+        start_date = start_date.date()
+        
+    if isinstance(end_date, str):
+        end_date = datetime.datetime.strptime(end_date[:10], "%Y-%m-%d").date()
+    elif hasattr(end_date, "date"):
+        end_date = end_date.date()
+
+    df_pnl = con.execute(f"""
         SELECT ngay, SUM(pnl) AS daily_pnl
         FROM lenh WHERE run_id = '{run_id}'
         GROUP BY ngay ORDER BY ngay
     """).df()
     con.close()
 
-    if df.empty or len(df) < 2:
-        return {"sharpe": 0.0, "sortino": 0.0, "n_days": 0}
+    if start_date > end_date:
+        start_date, end_date = end_date, start_date
 
-    returns = df["daily_pnl"].values
+    delta = end_date - start_date
+    all_dates = [start_date + datetime.timedelta(days=i) for i in range(delta.days + 1)]
+    
+    pnl_dict = {}
+    for r in df_pnl.itertuples():
+        d_val = r.ngay
+        if isinstance(d_val, str):
+            d_val = datetime.datetime.strptime(d_val[:10], "%Y-%m-%d").date()
+        elif hasattr(d_val, "date"):
+            d_val = d_val.date()
+        pnl_dict[d_val] = float(r.daily_pnl)
+
+    daily_returns = []
+    curr_balance = von_ban_dau
+    for d in all_dates:
+        daily_pnl = pnl_dict.get(d, 0.0)
+        daily_ret = daily_pnl / curr_balance if curr_balance > 0 else 0.0
+        daily_returns.append(daily_ret)
+        curr_balance += daily_pnl
+
+    returns = np.array(daily_returns)
+    n_days = len(returns)
+    if n_days < 2:
+        return {"sharpe": 0.0, "sortino": 0.0, "n_days": n_days}
+
     mean_r = returns.mean()
     std_r = returns.std(ddof=1)
     downside = returns[returns < 0]
-    down_std = np.std(downside, ddof=1) if len(downside) > 1 else 1e-9
+    down_std = downside.std(ddof=1) if len(downside) > 1 else 1e-9
 
     trading_days = 365
     daily_rf = risk_free_rate / trading_days
@@ -752,15 +832,16 @@ def sharpe_ratio(run_id: str, risk_free_rate: float = 0.0) -> dict:
     return {
         "sharpe": round(sharpe, 4),
         "sortino": round(sortino, 4),
-        "n_days": len(df),
-        "daily_mean_pnl": round(mean_r, 4),
-        "daily_std_pnl": round(std_r, 4),
+        "n_days": n_days,
+        "daily_mean_return": round(mean_r, 6),
+        "daily_std_return": round(std_r, 6),
     }
 
 
 def kelly_criterion(run_id: str) -> dict:
     """
-    Tính Kelly Criterion: f* = W/|avg_loss| - (1-W)/avg_win
+    Tính Kelly Criterion: f* = w - (1-w)/R
+    R = avg_win / avg_loss (win/loss ratio không đơn vị).
     Trả về full kelly và half kelly (an toàn hơn).
     """
     con = _ket_noi()
@@ -778,10 +859,15 @@ def kelly_criterion(run_id: str) -> dict:
 
     row = df.iloc[0]
     w = row["win_rate"] or 0.0
-    avg_win = row["avg_win"] or 1e-9
-    avg_loss = row["avg_loss"] or 1e-9
+    avg_win = row["avg_win"] or 0.0
+    avg_loss = row["avg_loss"] or 0.0
 
-    kelly = w / avg_loss - (1 - w) / avg_win
+    if avg_loss > 0 and avg_win > 0:
+        R = avg_win / avg_loss
+        kelly = w - (1.0 - w) / R
+    else:
+        kelly = 0.0
+        
     kelly = max(0.0, min(kelly, 1.0))
 
     return {

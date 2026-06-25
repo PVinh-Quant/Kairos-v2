@@ -1,9 +1,9 @@
+
 """
 Kairos Quant System v2 – Entry Point
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Chạy từ thư mục gốc dự án:
-    python main.py
-"""
+    python main.py7"""
 
 import sys
 import os
@@ -25,7 +25,7 @@ from rich.style import Style
 console = Console()
 
 
-# ─── LOGO ────────────────────────────────────────────────────────────────────
+                                                                               
 
 LOGO = r"""
  ██╗  ██╗ █████╗ ██╗██████╗  ██████╗ ███████╗
@@ -36,7 +36,7 @@ LOGO = r"""
  ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝"""
 
 
-# ─── CONFIG SUMMARY ──────────────────────────────────────────────────────────
+                                                                               
 
 
 def _doc_config_ngan():
@@ -69,7 +69,7 @@ def _doc_config_ngan():
         }
 
 
-# ─── MENU RENDERER ───────────────────────────────────────────────────────────
+                                                                               
 
 
 def _count_wrapped_lines(text: str, width: int) -> int:
@@ -98,10 +98,10 @@ def hien_thi_menu():
     console.clear()
     from rich.rule import Rule
 
-    # Determine console width
+                             
     console_width = console.width
 
-    # Define thresholds and widths
+                                  
     min_side_by_side_width = 110
     max_layout_width = 132
 
@@ -116,9 +116,9 @@ def hien_thi_menu():
         right_w = layout_width
         left_w = layout_width
 
-    # Logo
+          
     logo_text = Text(LOGO, style="bold cyan")
-    # Calculate space to center subtitle relative to logo text (45 chars wide)
+                                                                              
     logo_max_line_len = max(len(line) for line in LOGO.split("\n"))
     subtitle_text = "Analytics System v2"
     padding_len = max(0, (logo_max_line_len - len(subtitle_text)) // 2)
@@ -127,7 +127,7 @@ def hien_thi_menu():
 
     logo_panel = Panel(content, border_style="cyan", padding=(0, 2), width=layout_width)
 
-    # Menu chính (no box border to avoid double border!)
+                                                        
     menu = Table(box=None, show_header=False, padding=(0, 1), expand=True)
     menu.add_column("key", style="bold yellow", width=6, justify="center")
     menu.add_column("name", style="white", width=28)
@@ -159,7 +159,7 @@ def hien_thi_menu():
     menu.add_row("", "", "")
     menu.add_row("[0]", Text("Thoát", style="dim red"), "")
 
-    # Config summary
+                    
     cfg = _doc_config_ngan()
     cfg_table = Table(
         box=box.SIMPLE,
@@ -175,7 +175,7 @@ def hien_thi_menu():
     cfg_table.add_row("Backtest", f"{cfg['tu_ngay']}  →  {cfg['den_ngay']}")
     cfg_table.add_row("Von", cfg["von"])
 
-    # Author panel
+                  
     author = Table(box=None, show_header=False, padding=(0, 1), expand=True)
     author.add_column("info")
     author.add_row(Text(""))
@@ -192,7 +192,7 @@ def hien_thi_menu():
     author.add_row(Text("Kairos  v2  ·  2026", style="dim"))
     author.add_row(Text(""))
 
-    # Config and Author Panels
+                              
     cfg_panel = Panel(
         cfg_table,
         title="[bold]Config hien tai[/bold]",
@@ -209,12 +209,12 @@ def hien_thi_menu():
     )
 
     if is_side_by_side:
-        # Measure height of right column to pad the menu panel
+                                                              
         right_group = Group(cfg_panel, author_panel)
         options = console.options.copy().update(width=right_w)
         right_height = len(console.render_lines(right_group, options))
 
-        # Menu panel has height: len(menu.rows) + 2 (Panel borders)
+                                                                   
         base_rows = len(menu.rows)
         target_rows = right_height - 2
         extra_rows = target_rows - base_rows
@@ -230,7 +230,7 @@ def hien_thi_menu():
             expand=True,
         )
 
-        # Print Logo and Columns centered if terminal is wider than max_layout_width
+                                                                                    
         if console_width > max_layout_width:
             console.print(Align.center(logo_panel))
             console.print(
@@ -244,7 +244,7 @@ def hien_thi_menu():
                 Columns([left_panel, right_group], equal=False, padding=(0, 2))
             )
     else:
-        # Stacked vertically (narrow terminal)
+                                              
         left_panel = Panel(
             menu,
             title="[bold]Menu[/bold]",
@@ -262,7 +262,7 @@ def hien_thi_menu():
     return console.input("[bold yellow]Chon chuc nang [0-8]:[/bold yellow] ").strip()
 
 
-# ─── RUNNERS ─────────────────────────────────────────────────────────────────
+                                                                               
 
 
 def chay_realtime():
@@ -332,46 +332,18 @@ def chay_ml():
 
 
 def chay_dashboard():
-    """Khởi động dashboard PyQt6 gồm 4 tab: Realtime, Demo, Backtest, Vectorized."""
-    from PyQt6.QtWidgets import QApplication, QMainWindow, QTabWidget
+    """Khởi động dashboard PyQt6. Tab sinh động từ registry (hien_thi.dang_ky_man_hinh).
 
+    KHÔNG dựng tab tại đây nữa: vỏ app duy nhất là `hien_thi.app.ung_dung` — thêm/bớt
+    màn hình chỉ cần sửa registry `MAN_HINH`, không đụng main.py.
+    """
     try:
-        from hien_thi.dashboard_vectorized import CandlestickChartWidget
-        from hien_thi.dashboard_backtest import DraggableDashboard
-        from hien_thi.dashboard_demo import MainDashboard_demo
-        from hien_thi.dashboard_realtime import MainDashboard_realtime
+        from hien_thi.app.ung_dung import chay
     except ImportError as e:
         console.print(f"[red]Lỗi import dashboard: {e}[/red]")
         return
 
-    app = QApplication.instance() or QApplication(sys.argv)
-
-    class KairosWindow(QMainWindow):
-        def __init__(self):
-            """Khởi tạo cửa sổ chính với 4 tab dashboard."""
-            super().__init__()
-            self.setWindowTitle("Kairos v2 – Analytics Dashboard")
-            self.resize(1440, 900)
-            self.setStyleSheet("""
-                QMainWindow  { background-color: #0B0E14; }
-                QTabWidget::pane { border: 1px solid #2A2E39; }
-                QTabBar::tab {
-                    background: #131722; color: #787B86;
-                    padding: 10px 24px; font-size: 13px;
-                }
-                QTabBar::tab:selected { background: #1E2230; color: #D1D4DC; }
-                QTabBar::tab:hover    { color: #D1D4DC; }
-            """)
-            tabs = QTabWidget()
-            self.setCentralWidget(tabs)
-            tabs.addTab(MainDashboard_realtime(), "Realtime")
-            tabs.addTab(MainDashboard_demo(), "Demo")
-            tabs.addTab(DraggableDashboard(), "Backtest")
-            tabs.addTab(CandlestickChartWidget(), "Vectorized")
-
-    window = KairosWindow()
-    window.show()
-    sys.exit(app.exec())
+    chay()
 
 
 def chay_toi_uu_hoa():
@@ -379,9 +351,7 @@ def chay_toi_uu_hoa():
     from toi_uu_hoa.giao_dien_cli import chay_menu_tuong_tac
 
     chay_menu_tuong_tac()
-
-
-# ─── DISPATCH ────────────────────────────────────────────────────────────────
+                                                                        
 
 DISPATCH = {
     "1": chay_realtime,

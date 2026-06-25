@@ -31,17 +31,14 @@ from utils.thoi_gian import ngu_an_toan, lay_timestamp_ms
 from utils.log import logger
 from lay_du_lieu.lay_ohlcv import lay_du_lieu_nen
 from lay_du_lieu.lay_marketsnapshot import mo_theo_doi, dong_theo_doi
-from logic_bar_to_bar.quan_ly_chien_luoc import (
+from chien_luoc.quan_ly_chien_luoc_bar_to_bar import (
     chien_luoc_vao_lenh,
     chien_luoc_thoat_lenh,
+    danh_gia_ml,
 )
 
 from thuc_thi_lenh.quan_ly_danh_muc import kiem_tra_phan_bo_von
-from logic_bar_to_bar.stoploss_takeprofit import tinh_sl_tp_theo_atr
-from logic_bar_to_bar.chien_luoc_don_bay import phan_tich_don_bay
 from thuc_thi_lenh import quan_ly_lenh
-
-from ml.trang_thai_thi_truong_ml.ml_predict import danh_gia_ml
 from utils.kho_du_lieu import luu_lenh_don, luu_run, tao_run_id
 
 CONFIG = lay_cau_hinh_giao_dich()
@@ -126,18 +123,8 @@ def luong_quet_thi_truong_demo():
                 )
 
                 if tin_hieu:
-                    don_bay = phan_tich_don_bay(
-                        symbol,
-                        DON_BAY,
-                        df_1m,
-                        df_3m,
-                        df_5m,
-                        df_15m,
-                        df_30m,
-                        df_1h,
-                        df_4h,
-                        df_1d,
-                    )
+                                                                                       
+                    don_bay = int(packet.get("leverage") or DON_BAY)
 
                     msg = f"Tin hieu {tin_hieu.upper()} cho {symbol} (Diem: {diem:.2f})"
                     logger.info(msg)
@@ -156,7 +143,15 @@ def luong_quet_thi_truong_demo():
                     phi_mo = gia_tri_lenh * PHI_GIAO_DICH
                     VON_AO -= phi_mo
 
-                    sl_price, tp_price = tinh_sl_tp_theo_atr(gia_vao, tin_hieu, df_15m)
+                                                                                  
+                    sl_pct = float(packet.get("sl_pct") or 0.0)
+                    tp_pct = float(packet.get("tp_pct") or 0.0)
+                    if tin_hieu == "buy":
+                        sl_price = gia_vao * (1 - sl_pct)
+                        tp_price = gia_vao * (1 + tp_pct)
+                    else:
+                        sl_price = gia_vao * (1 + sl_pct)
+                        tp_price = gia_vao * (1 - tp_pct)
 
                     quan_ly_lenh.luu_lenh_moi(
                         CHUC_NANG,
@@ -204,7 +199,7 @@ def luong_quan_ly_vi_the_demo():
     global VON_AO
     logger.info("[DEMO] Bat dau quan ly vi the...")
 
-    dinh_tai_khoan = VON_AO  # init 1 lần, không reset trong loop
+    dinh_tai_khoan = VON_AO                                      
 
     while DANG_CHAY:
         ds_dang_giu = quan_ly_lenh.lay_danh_sach_symbol_dang_co()
@@ -243,12 +238,8 @@ def luong_quan_ly_vi_the_demo():
                 tp_price = vt.get("tp_price")
                 chien_luoc = vt.get("chien_luoc")
 
-                pnl_usdt, pnl_percent = tinh_pnl(
-                    vt["entry_price"], gia_hien_tai, vt["side"], vt["amount"]
-                )
-                roe_percent = pnl_percent * vt["leverage"]
 
-                packet_ml = vt.get("packet_ml")  # Dữ liệu ML khi mở lệnh
+                packet_ml = vt.get("packet_ml")                          
 
                 can_thoat = False
                 ly_do = ""
@@ -274,13 +265,6 @@ def luong_quan_ly_vi_the_demo():
                             ly_do = f"Chạm giá SL ({gia_high} >= {sl_price})"
                             gia_dong_du_kien = sl_price
 
-                if not can_thoat:
-                    if roe_percent >= CONFIG["chot_loi_percent"]:
-                        can_thoat = True
-                        ly_do = f"TP Hit % (Đạt {roe_percent*100:.2f}%)"
-                    elif roe_percent <= -CONFIG["cat_lo_percent"]:
-                        can_thoat = True
-                        ly_do = f"SL Hit % (Âm {roe_percent*100:.2f}%)"
 
                 if not can_thoat:
                     check_thoat_chien_luoc, ly_do_cl = chien_luoc_thoat_lenh(
@@ -345,11 +329,14 @@ def luong_quan_ly_vi_the_demo():
 
                     quan_ly_lenh.xoa_lenh(CHUC_NANG, symbol)
 
-                    # Đánh giá hiệu quả ML
+                                                                                        
+                                                                                      
                     if VON_AO > dinh_tai_khoan:
                         dinh_tai_khoan = VON_AO
                     account_drawdown = (VON_AO - dinh_tai_khoan) / dinh_tai_khoan * 100
-                    danh_gia_ml(packet_ml, real_pnl_percent * 100, account_drawdown)
+                    if packet_ml and packet_ml.get("state_name"):
+                        real_roe_percent = real_pnl_percent * 100 * vt.get("leverage", 1)
+                        danh_gia_ml(packet_ml, real_roe_percent, account_drawdown)
 
                 end = lay_timestamp_ms()
                 thoi_gian_xu_ly_ms = end - start_time
@@ -380,7 +367,17 @@ def chay_demo():
         ],
     )
     quan_ly_lenh.load_trang_thai(CHUC_NANG)
-    luu_run(DEMO_RUN_ID, "demo", {"von_ban_dau": VON_AO, "symbols": LIST_COIN})
+    try:
+        from chien_luoc.quan_ly_chien_luoc_vectorized import ten_cac_chien_luoc_kich_hoat
+        _ten_cl = ten_cac_chien_luoc_kich_hoat()
+    except Exception:
+        _ten_cl = ""
+    luu_run(DEMO_RUN_ID, "demo", {"von_ban_dau": VON_AO, "symbols": LIST_COIN, "ten_chien_luoc": _ten_cl})
+                                        
+    try:
+        quan_ly_lenh.dang_ky_chay_bot(CHUC_NANG, DEMO_RUN_ID)
+    except Exception as e:
+        print(f"[chay_demo] Lỗi đăng ký bot: {e}", flush=True)
 
     t1 = threading.Thread(target=luong_quet_thi_truong_demo, name="Demo-Scanner")
     t2 = threading.Thread(target=luong_quan_ly_vi_the_demo, name="Demo-Manager")

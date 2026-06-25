@@ -24,7 +24,7 @@ class SignalManager(QObject):
 
 
 ui_signals = SignalManager()
-# --- ĐƯỜNG DẪN FILE ---
+                        
 FILE_REALTIME = os.path.join(
     os.path.dirname(os.path.dirname(__file__)),
     "du_lieu",
@@ -50,12 +50,18 @@ FILE_LICH_SU_DEMO = os.path.join(
     "thong_tin_lenh",
     "lich_su_lenh_demo.json",
 )
+FILE_BOTS_HOAT_DONG = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)),
+    "du_lieu",
+    "thong_tin_lenh",
+    "bots_hoat_dong.json",
+)
 
-# --- BIẾN TOÀN CỤC ---
+                       
 danh_sach_lenh_dang_chay = {}
 data_lenh_dang_chay = {}
 data_lich_su = []
-lich_su_dong_lenh = {}  # Lưu thời gian đóng lệnh gần nhất: {symbol: timestamp}
+lich_su_dong_lenh = {}                                                         
 
 MAX_CANDLES_MEMORY = 300
 total_lenh_lich_su = 100
@@ -81,7 +87,7 @@ def load_trang_thai(CHUC_NANG):
     else:
         return
 
-    # 1. Load lệnh đang chạy
+                            
     if os.path.exists(file_dang_chay):
         try:
             with open(file_dang_chay, "r", encoding="utf-8") as f:
@@ -94,7 +100,7 @@ def load_trang_thai(CHUC_NANG):
         except Exception as e:
             logger.error(f"Lỗi load đang chạy: {e}")
 
-    # 2. Load lịch sử
+                     
     if os.path.exists(file_lich_su):
         try:
             with open(file_lich_su, "r", encoding="utf-8") as f:
@@ -102,7 +108,7 @@ def load_trang_thai(CHUC_NANG):
 
             last_100 = lines[-100:] if len(lines) > 100 else lines
 
-            data_lich_su.clear()  # Xóa dữ liệu cũ
+            data_lich_su.clear()                  
 
             for line in last_100:
                 line = line.strip()
@@ -110,7 +116,7 @@ def load_trang_thai(CHUC_NANG):
                     continue
                 try:
                     order = json.loads(line)
-                    data_lich_su.append(order)  # Append vào List
+                    data_lich_su.append(order)                   
                 except:
                     continue
 
@@ -178,7 +184,7 @@ def xoa_lenh(CHUC_NANG, symbol):
         if symbol in data_lenh_dang_chay:
             del data_lenh_dang_chay[symbol]
 
-        # Ghi nhận thời điểm đóng lệnh để tính cooldown
+                                                       
         lich_su_dong_lenh[symbol] = time.time()
 
         save_trang_thai(CHUC_NANG)
@@ -240,3 +246,81 @@ def xoa_bien_theo_symbol(symbol):
     if symbol in data_lenh_dang_chay:
         del data_lenh_dang_chay[symbol]
     ui_signals.data_changed.emit(get_all_data())
+
+
+def dang_ky_chay_bot(chuc_nang, run_id):
+    """Đăng ký bot đang hoạt động với PID hiện tại vào file JSON."""
+    from datetime import datetime
+    pid = os.getpid()
+    print(f"[DEBUG dang_ky_chay_bot] Gọi với chuc_nang={chuc_nang}, run_id={run_id}, pid={pid}", flush=True)
+    entry = {
+        "run_id": run_id,
+        "chuc_nang": chuc_nang,
+        "pid": pid,
+        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    try:
+        data = []
+        if os.path.exists(FILE_BOTS_HOAT_DONG):
+            with open(FILE_BOTS_HOAT_DONG, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        
+                                                     
+        data = [x for x in data if x.get("run_id") != run_id and x.get("pid") != pid]
+        data.append(entry)
+        
+                                     
+        os.makedirs(os.path.dirname(FILE_BOTS_HOAT_DONG), exist_ok=True)
+        with open(FILE_BOTS_HOAT_DONG, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+    except Exception as e:
+        print(f"[Quan ly lenh] Lỗi đăng ký bot: {e}", flush=True)
+
+
+def lay_so_bot_dang_chay(chuc_nang):
+    """Quét danh sách bot đang chạy, lọc bỏ các PID đã chết, trả về số lượng hoạt động."""
+    if not os.path.exists(FILE_BOTS_HOAT_DONG):
+        return 0
+    try:
+        with open(FILE_BOTS_HOAT_DONG, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        
+        active_bots = []
+        count = 0
+        import sys
+        for x in data:
+            pid = x.get("pid")
+            if pid:
+                pid_alive = False
+                if sys.platform == "win32":
+                    import ctypes
+                    PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+                    handle = ctypes.windll.kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, pid)
+                    if handle:
+                        exit_code = ctypes.c_ulong()
+                        ctypes.windll.kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code))
+                        ctypes.windll.kernel32.CloseHandle(handle)
+                        pid_alive = (exit_code.value == 259)                       
+                else:
+                    try:
+                        os.kill(pid, 0)
+                        pid_alive = True
+                    except OSError:
+                        pid_alive = False
+                
+                if pid_alive:
+                    active_bots.append(x)
+                    if x.get("chuc_nang") == chuc_nang:
+                        count += 1
+        
+                                                         
+        if len(active_bots) != len(data):
+            try:
+                with open(FILE_BOTS_HOAT_DONG, "w", encoding="utf-8") as f:
+                    json.dump(active_bots, f, indent=4, ensure_ascii=False)
+            except Exception:
+                pass
+        return count
+    except Exception as e:
+        print(f"[Quan ly lenh] Lỗi đọc danh sách bot: {e}", flush=True)
+        return 0
