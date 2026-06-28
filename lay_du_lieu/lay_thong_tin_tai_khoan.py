@@ -18,10 +18,10 @@ def lay_so_du_kha_dung(ten_san, asset="USDT"):
 
     try:
         balance = exchange.fetch_balance()
-                                               
+
         if "free" in balance and asset in balance["free"]:
             return float(balance["free"][asset])
-        elif asset in balance:                               
+        elif asset in balance:
             return float(balance[asset]["free"])
         else:
             return 0.0

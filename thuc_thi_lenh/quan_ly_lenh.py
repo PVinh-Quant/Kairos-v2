@@ -24,7 +24,7 @@ class SignalManager(QObject):
 
 
 ui_signals = SignalManager()
-                        
+
 FILE_REALTIME = os.path.join(
     os.path.dirname(os.path.dirname(__file__)),
     "du_lieu",
@@ -57,11 +57,11 @@ FILE_BOTS_HOAT_DONG = os.path.join(
     "bots_hoat_dong.json",
 )
 
-                       
+
 danh_sach_lenh_dang_chay = {}
 data_lenh_dang_chay = {}
 data_lich_su = []
-lich_su_dong_lenh = {}                                                         
+lich_su_dong_lenh = {}
 
 MAX_CANDLES_MEMORY = 300
 total_lenh_lich_su = 100
@@ -87,7 +87,7 @@ def load_trang_thai(CHUC_NANG):
     else:
         return
 
-                            
+
     if os.path.exists(file_dang_chay):
         try:
             with open(file_dang_chay, "r", encoding="utf-8") as f:
@@ -100,7 +100,7 @@ def load_trang_thai(CHUC_NANG):
         except Exception as e:
             logger.error(f"Lỗi load đang chạy: {e}")
 
-                     
+
     if os.path.exists(file_lich_su):
         try:
             with open(file_lich_su, "r", encoding="utf-8") as f:
@@ -108,7 +108,7 @@ def load_trang_thai(CHUC_NANG):
 
             last_100 = lines[-100:] if len(lines) > 100 else lines
 
-            data_lich_su.clear()                  
+            data_lich_su.clear()
 
             for line in last_100:
                 line = line.strip()
@@ -116,7 +116,7 @@ def load_trang_thai(CHUC_NANG):
                     continue
                 try:
                     order = json.loads(line)
-                    data_lich_su.append(order)                   
+                    data_lich_su.append(order)
                 except:
                     continue
 
@@ -184,7 +184,7 @@ def xoa_lenh(CHUC_NANG, symbol):
         if symbol in data_lenh_dang_chay:
             del data_lenh_dang_chay[symbol]
 
-                                                       
+
         lich_su_dong_lenh[symbol] = time.time()
 
         save_trang_thai(CHUC_NANG)
@@ -264,12 +264,12 @@ def dang_ky_chay_bot(chuc_nang, run_id):
         if os.path.exists(FILE_BOTS_HOAT_DONG):
             with open(FILE_BOTS_HOAT_DONG, "r", encoding="utf-8") as f:
                 data = json.load(f)
-        
-                                                     
+
+
         data = [x for x in data if x.get("run_id") != run_id and x.get("pid") != pid]
         data.append(entry)
-        
-                                     
+
+
         os.makedirs(os.path.dirname(FILE_BOTS_HOAT_DONG), exist_ok=True)
         with open(FILE_BOTS_HOAT_DONG, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
@@ -284,7 +284,7 @@ def lay_so_bot_dang_chay(chuc_nang):
     try:
         with open(FILE_BOTS_HOAT_DONG, "r", encoding="utf-8") as f:
             data = json.load(f)
-        
+
         active_bots = []
         count = 0
         import sys
@@ -300,20 +300,20 @@ def lay_so_bot_dang_chay(chuc_nang):
                         exit_code = ctypes.c_ulong()
                         ctypes.windll.kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code))
                         ctypes.windll.kernel32.CloseHandle(handle)
-                        pid_alive = (exit_code.value == 259)                       
+                        pid_alive = (exit_code.value == 259)
                 else:
                     try:
                         os.kill(pid, 0)
                         pid_alive = True
                     except OSError:
                         pid_alive = False
-                
+
                 if pid_alive:
                     active_bots.append(x)
                     if x.get("chuc_nang") == chuc_nang:
                         count += 1
-        
-                                                         
+
+
         if len(active_bots) != len(data):
             try:
                 with open(FILE_BOTS_HOAT_DONG, "w", encoding="utf-8") as f:

@@ -103,7 +103,7 @@ def lay_cau_hinh_ao():
     return cfg
 
 
-                                                                                
+
 
 
 def _yaml_scalar(val) -> str:
@@ -112,7 +112,7 @@ def _yaml_scalar(val) -> str:
         return "true" if val else "false"
     if isinstance(val, (int, float)):
         return str(val)
-    return f'"{val}"'                                                          
+    return f'"{val}"'
 
 
 def luu_cau_hinh_ao(data: dict) -> bool:
@@ -149,11 +149,11 @@ def luu_cau_hinh_giao_dich(data: dict) -> bool:
                 if isinstance(val, (list, tuple)):
                     out.append(f"{indent}{key}:\n")
                     out.extend(f"{indent}- {_yaml_scalar(x)}\n" for x in val)
-                    i += 1                                               
+                    i += 1
                     while i < n and re.match(r"^\s*-\s", lines[i]):
                         i += 1
                     continue
-                hash_idx = rest.find(" #")                                   
+                hash_idx = rest.find(" #")
                 comment = rest[hash_idx:] if hash_idx != -1 else ""
                 out.append(f"{indent}{key}: {_yaml_scalar(val)}{comment}\n")
                 i += 1
@@ -161,7 +161,7 @@ def luu_cau_hinh_giao_dich(data: dict) -> bool:
         out.append(line)
         i += 1
 
-                                                      
+
     for key, val in con_lai.items():
         if isinstance(val, (list, tuple)):
             out.append(f"{key}:\n")

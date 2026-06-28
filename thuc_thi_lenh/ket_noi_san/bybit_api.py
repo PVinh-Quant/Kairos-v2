@@ -26,10 +26,10 @@ class BybitAPI:
     def doi_don_bay(self, symbol, leverage):
         """Set đòn bẩy cho symbol trên Bybit, bỏ qua lỗi nếu leverage không thay đổi."""
         try:
-                                                                       
+
             return self.exchange.set_leverage(leverage, symbol)
         except Exception as e:
-                                                                                        
+
             if "leverage not modified" not in str(e).lower():
                 logger.error(f"Lỗi set leverage Bybit: {e}")
             return None

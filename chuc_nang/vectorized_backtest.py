@@ -85,7 +85,7 @@ def vectorized_backtest(strategies=None, dataset=None):
         ],
     )
 
-                                    
+
 
     for symbol in DS_SYMBOL:
 
@@ -99,22 +99,22 @@ def vectorized_backtest(strategies=None, dataset=None):
         if df_goc is None or df_goc.is_empty():
             continue
 
-                                                                                               
+
         df = tong_hop_tin_hieu(df_goc, strategies=strategies)
-        
-                                         
+
+
         vi_the = 0
         gia_vao = 0
         co_tin_hieu = 0
-        regime_vao = 0                                                        
+        regime_vao = 0
         don_bay_vao = DON_BAY
         dem_cooldown = 0
-                                                                                               
-        COOLDOWN_NEN = int(config_trading.get("cooldown_nen", 5))                                        
 
-                                                                   
+        COOLDOWN_NEN = int(config_trading.get("cooldown_nen", 5))
+
+
         signals = df["signal"].to_numpy()
-                                                                                       
+
         signals_raw = (
             df["signal_raw"].to_numpy() if "signal_raw" in df.columns else signals
         )
@@ -136,7 +136,7 @@ def vectorized_backtest(strategies=None, dataset=None):
         sl_pct_vao = 0.0
         tp_pct_vao = 0.0
 
-                                                                  
+
         idx_start = 43200
         if len(df) <= idx_start:
             logger.warning(f"Dữ liệu của {symbol} quá ngắn để warm-up.")
@@ -152,7 +152,7 @@ def vectorized_backtest(strategies=None, dataset=None):
             if dem_cooldown > 0:
                 dem_cooldown -= 1
 
-                                                                           
+
             if vi_the == 0 and co_tin_hieu == 0 and dem_cooldown == 0:
                 while sig_ptr < num_signals and signal_indices[sig_ptr] < i:
                     sig_ptr += 1
@@ -169,9 +169,9 @@ def vectorized_backtest(strategies=None, dataset=None):
             thoi_gian = times[i]
             don_bay_i = int(leverages[i])
 
-                                                                 
+
             if co_tin_hieu != 0 and vi_the == 0:
-                                                 
+
                 if von_hien_tai < VON_MOI_LENH:
                     co_tin_hieu = 0
                     i += 1
@@ -183,7 +183,7 @@ def vectorized_backtest(strategies=None, dataset=None):
                 phi_truot = gia_open * SLIPPAGE
                 gia_vao = gia_open + phi_truot if vi_the == 1 else gia_open - phi_truot
 
-                                     
+
                 sl_pct_i = sl_pcts[i - 1] if i > 0 else 0.05
                 tp_pct_i = tp_pcts[i - 1] if i > 0 else 0.10
                 if vi_the == 1:
@@ -200,7 +200,7 @@ def vectorized_backtest(strategies=None, dataset=None):
                 sl_pct_vao = sl_pct_i
                 tp_pct_vao = tp_pct_i
 
-                                                                                            
+
             if vi_the != 0:
                 can_thoat = False
                 loai = "LONG" if vi_the == 1 else "SHORT"
@@ -209,43 +209,43 @@ def vectorized_backtest(strategies=None, dataset=None):
 
                 if vi_the == 1:
                     liq_price = gia_vao * (1 - 1 / don_bay_vao)
-                                                                                                   
+
                     if gia_low <= sl_gia:
                         can_thoat = True
                         gia_dong = sl_gia
                         ly_do_thoat = "SL"
-                                    
+
                     elif gia_high >= tp_gia:
                         can_thoat = True
                         gia_dong = tp_gia
                         ly_do_thoat = "TP"
-                                                                                        
+
                     elif gia_low <= liq_price:
                         can_thoat = True
                         gia_dong = liq_price
                         ly_do_thoat = "LIQUIDATION"
-                                                                                                     
+
                     elif tin_hieu_raw == -1:
                         can_thoat = True
                         ly_do_thoat = "SIGNAL"
                 else:
                     liq_price = gia_vao * (1 + 1 / don_bay_vao)
-                                                                 
+
                     if gia_high >= sl_gia:
                         can_thoat = True
                         gia_dong = sl_gia
                         ly_do_thoat = "SL"
-                                    
+
                     elif gia_low <= tp_gia:
                         can_thoat = True
                         gia_dong = tp_gia
                         ly_do_thoat = "TP"
-                                                                                        
+
                     elif gia_high >= liq_price:
                         can_thoat = True
                         gia_dong = liq_price
                         ly_do_thoat = "LIQUIDATION"
-                                                                                                     
+
                     elif tin_hieu_raw == 1:
                         can_thoat = True
                         ly_do_thoat = "SIGNAL"
@@ -259,7 +259,7 @@ def vectorized_backtest(strategies=None, dataset=None):
                             gia_dong = gia_dong + phi_truot_dong
 
                     if ly_do_thoat == "LIQUIDATION":
-                                                                                        
+
                         pnl_raw = -VON_MOI_LENH
                         phi_dong = 0.0
                     else:
@@ -284,7 +284,7 @@ def vectorized_backtest(strategies=None, dataset=None):
                             "PnL": pnl_net,
                             "Time": thoi_gian,
                             "Balance": von_hien_tai,
-                            "Strategy": "",                                                  
+                            "Strategy": "",
                             "Entry_Time": thoi_gian_vao,
                             "SL_pct": sl_pct_vao,
                             "TP_pct": tp_pct_vao,
@@ -292,9 +292,9 @@ def vectorized_backtest(strategies=None, dataset=None):
                         }
                     )
                     vi_the = 0
-                    dem_cooldown = COOLDOWN_NEN                                          
+                    dem_cooldown = COOLDOWN_NEN
 
-                                                                                                  
+
             if vi_the == 0 and co_tin_hieu == 0 and tin_hieu_hien_tai != 0 and dem_cooldown == 0:
                 co_tin_hieu = tin_hieu_hien_tai
 
@@ -307,10 +307,10 @@ def vectorized_backtest(strategies=None, dataset=None):
         print(f"Xử lý trong: {thoi_gian_xu_ly_ms} ms", end="\r")
 
 
-                                                         
+
         luu_du_lieu_vectorized_pl(df, symbol, "1m", label="backtest")
 
-                                                                                              
+
     if tong_lich_su_lenh:
         tong_lich_su_lenh.sort(key=lambda x: x.get("Time", ""))
         curr_bal = VON_BAN_DAU
@@ -320,7 +320,7 @@ def vectorized_backtest(strategies=None, dataset=None):
             t["price_change"] = t.get("PnL", 0.0)
         von_hien_tai = curr_bal
 
-                                                                              
+
     if tong_lich_su_lenh:
         df_lenh = pd.DataFrame(tong_lich_su_lenh)
         try:
@@ -347,9 +347,9 @@ def vectorized_backtest(strategies=None, dataset=None):
             f"Đã lưu {len(tong_lich_su_lenh)} lệnh vào warehouse [run_id={run_id}]"
         )
 
-                                                                             
-                                                                                            
-                                                                    
+
+
+
         try:
             save_dir = os.path.join(
                 os.path.dirname(os.path.dirname(__file__)),
@@ -365,7 +365,7 @@ def vectorized_backtest(strategies=None, dataset=None):
         except Exception as e:
             logger.warning(f"Không xuất được CSV lịch sử lệnh vector: {e}")
 
-                                                                              
+
     if tong_lich_su_lenh:
         df_result = pd.DataFrame(tong_lich_su_lenh)
         tong_lenh = len(df_result)

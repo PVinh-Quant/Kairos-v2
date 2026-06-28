@@ -3,12 +3,12 @@ import sys, os
 from hien_thi.duong_dan import PROJECT_ROOT
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
-                                                                                          
-                                                                                           
+
+
 try:
-    from utils.doc_cau_hinh import lay_cau_hinh_ao              
+    from utils.doc_cau_hinh import lay_cau_hinh_ao
     SO_DU_BAN_DAU = float(lay_cau_hinh_ao().get("so_du_ban_dau", 10000) or 10000)
-except Exception:                
+except Exception:
     SO_DU_BAN_DAU = 10000.0
 CATEGORIES = {
     "Momentum / Dao động": ["rsi", "stochastic", "mfi", "ultimate", "stoch_rsi", "stc"],
@@ -29,7 +29,7 @@ INDICATOR_DESC = {
     "volume": "Khối lượng", "obv": "On-Balance Volume", "vwap": "Giá TB theo khối lượng",
     "cmf": "Chaikin Money Flow", "mfi_volume": "MFI theo khối lượng",
     "fractals": "Fractals",
-                           
+
     "stoch_rsi": "Stochastic RSI",
     "stc": "Schaff Trend Cycle",
     "chandelier_exit": "Chandelier Exit",
@@ -40,8 +40,8 @@ INDICATOR_DESC = {
     "elder_ray": "Elder Ray (Bull/Bear Power)",
 }
 
-                                                                                    
-                                                                                            
+
+
 try:
     from toi_uu_hoa.dang_ky_chi_bao import INDICATOR_REGISTRY as _REG
     _da_liet_ke = {k for ks in CATEGORIES.values() for k in ks}
@@ -55,18 +55,18 @@ except Exception:
 
 ALL_TIMEFRAMES = ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "1d"]
 
-                                                                                
-                                                                                   
-                                                                                  
+
+
+
 MODULE_DEFS = {
     "regime":  {"name": "Regime ML",    "flag": "DUNG_REGIME_MAC_DINH", "desc": "ML lọc nến theo trạng thái thị trường — chọn các trạng thái được vào lệnh"},
     "sl_tp":   {"name": "SL/TP động",   "flag": "DUNG_SL_TP_DONG",      "desc": "SL/TP động theo ATR — chỉnh khung ATR & khoảng dò base_sl/rr"},
     "don_bay": {"name": "Đòn bẩy động", "flag": "DUNG_DON_BAY_DONG",    "desc": "Đòn bẩy theo điều kiện thị trường — chỉnh đòn bẩy gốc/trần/khung"},
 }
 
-                                                                            
-                                                                                
-                                                                                       
+
+
+
 REGIME_STATES = [
     (0, "Đóng băng"),
     (1, "Nén chặt"),
@@ -79,7 +79,7 @@ REGIME_STATES = [
 ]
 REGIME_ALLOWED_DEFAULT = [1, 2, 3, 4, 5, 6]
 
-                                                                          
+
 DEFAULT_MODULE_PARAMS = {
     "regime":  {"allowed": list(REGIME_ALLOWED_DEFAULT)},
     "sl_tp":   {"tf": "Tự động", "sl_min": 1.0, "sl_max": 5.0, "rr_min": 1.2, "rr_max": 4.0},

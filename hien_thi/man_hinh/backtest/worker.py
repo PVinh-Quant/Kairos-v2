@@ -27,11 +27,11 @@ class BacktestWorker(QThread):
             self.finished_signal.emit({})
 
 
-                                                                                   
-                          
-                                                                                   
+
+
+
 class ProcessWorkerThread(QThread):
-                                                                 
+
     filter_finished = pyqtSignal(list, list, list)
 
     def __init__(self, df_main, filters, initial_capital, executor_pool):
@@ -44,7 +44,7 @@ class ProcessWorkerThread(QThread):
 
     def run(self):
         """Gửi execute_filtering_task vào ThreadPool và emit kết quả khi xong."""
-                                                
+
         future = self.executor.submit(
             execute_filtering_task, self.df_main, self.filters, self.initial_capital
         )
@@ -56,8 +56,8 @@ class ProcessWorkerThread(QThread):
             self.filter_finished.emit([], [], [])
 
 
-                                                                                   
-                         
-                                                                                   
+
+
+
 
 __all__ = ["BacktestWorker", "ProcessWorkerThread"]

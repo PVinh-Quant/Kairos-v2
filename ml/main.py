@@ -2,7 +2,7 @@ import sys
 import os
 from datetime import datetime
 
-                     
+
 from rich.console import Console, Group
 from rich.live import Live
 from rich.panel import Panel
@@ -87,7 +87,7 @@ def chay_training_cap_toc():
                 continue
             timestamps = df_goc.get_column("timestamp").slice(idx_start).to_list()
 
-                             
+
             stats = {"correct": 0, "wrong": 0}
             class_stats = {k: {"correct": 0, "total": 0} for k in STATE_MAP.keys()}
 
@@ -118,10 +118,10 @@ def chay_training_cap_toc():
                 if ai_state == teacher_state:
                     stats["correct"] += 1
                     class_stats[teacher_state]["correct"] += 1
-                    danh_gia_ml(packet, 1, 0, teacher_state)                 
+                    danh_gia_ml(packet, 1, 0, teacher_state)
                 else:
                     stats["wrong"] += 1
-                    danh_gia_ml(packet, -0.5, 0, teacher_state)                 
+                    danh_gia_ml(packet, -0.5, 0, teacher_state)
 
                 layout = hien_thi_dashboard(
                     symbol,
@@ -186,10 +186,10 @@ def hien_thi_menu_ml():
     console.clear()
     from rich.rule import Rule
 
-                             
+
     console_width = console.width
 
-                                  
+
     min_side_by_side_width = 110
     max_layout_width = 132
 
@@ -204,13 +204,13 @@ def hien_thi_menu_ml():
         right_w = layout_width
         left_w = layout_width
 
-                                                                                         
+
     title_text = Text("KAIROS — MACHINE LEARNING ENGINE", style="bold magenta")
     title_panel = Panel(
         Align.center(title_text), border_style="magenta", width=layout_width
     )
 
-                                                        
+
     menu = Table(box=None, show_header=False, padding=(0, 1), expand=True)
     menu.add_column("key", style="bold yellow", width=6, justify="center")
     menu.add_column("name", style="white", width=28)
@@ -229,7 +229,7 @@ def hien_thi_menu_ml():
     menu.add_row("", "", "")
     menu.add_row("[0]", Text("Thoát", style="dim red"), "Quay lại terminal launcher")
     menu.add_row("")
-                    
+
     config_backtest = lay_cau_hinh_ao() or {}
     config_trading = lay_cau_hinh_giao_dich() or {}
     START_DATE = config_backtest.get("ngay_bat_dau", "—")
@@ -255,7 +255,7 @@ def hien_thi_menu_ml():
     cfg_table.add_row("Backtest", f"{START_DATE}  →  {END_DATE}")
     cfg_table.add_row("Vốn", f"{config_backtest.get('so_du_ban_dau', 0):,.0f} USDT")
 
-                        
+
     m_info = _lay_thong_tin_model()
     model_table = Table(box=None, show_header=False, padding=(0, 1), expand=True)
     model_table.add_column("k", style="dim", width=12)
@@ -264,7 +264,7 @@ def hien_thi_menu_ml():
     model_table.add_row("Accuracy", m_info["accuracy"])
     model_table.add_row("Train Loss", m_info["loss"])
 
-                             
+
     cfg_panel = Panel(
         cfg_table,
         title="[bold]Config hiện tại[/bold]",
@@ -281,12 +281,12 @@ def hien_thi_menu_ml():
     )
 
     if is_side_by_side:
-                                                              
+
         right_group = Group(cfg_panel, model_panel)
         options = console.options.copy().update(width=right_w)
         right_height = len(console.render_lines(right_group, options))
 
-                                                                   
+
         base_rows = len(menu.rows)
         target_rows = right_height - 2
         extra_rows = target_rows - base_rows
@@ -302,7 +302,7 @@ def hien_thi_menu_ml():
             expand=True,
         )
 
-                                                                                     
+
         if console_width > max_layout_width:
             console.print(Align.center(title_panel))
             console.print(
@@ -316,7 +316,7 @@ def hien_thi_menu_ml():
                 Columns([left_panel, right_group], equal=False, padding=(0, 2))
             )
     else:
-                                              
+
         left_panel = Panel(
             menu,
             title="[bold]Menu ML[/bold]",

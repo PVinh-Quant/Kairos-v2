@@ -49,7 +49,7 @@ def _rai_xuong_tu_khung_lon(df, polars_time_frame, suffix, tinh_1m):
     htf = htf.with_columns(pl.col("timestamp").dt.offset_by(polars_time_frame))
     feat = [c for c in htf.columns if c not in base]
     ren = {c: c[:-2] + suffix for c in feat if c.endswith("_1m")}
-    htf = htf.rename(ren)                                                                           
+    htf = htf.rename(ren)
     feat = [ren.get(c, c) for c in feat]
     return df.join_asof(
         htf.select(["timestamp"] + feat), on="timestamp", strategy="backward"
@@ -118,13 +118,13 @@ def pt_ema_trend(df, time_frame, window=20):
 
     col_ema_name = f"ema_{window}_{time_frame}"
 
-                                                                             
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, polars_time_frame, time_frame, lambda d: pt_ema_trend(d, "1m", window)
         )
 
-                              
+
     df_pd = df.select(["close"]).to_pandas()
     ema_val = ta.trend.ema_indicator(close=df_pd["close"], window=window)
     df_out = df.with_columns(pl.Series(col_ema_name, ema_val))
@@ -165,7 +165,7 @@ def pt_sma(df, time_frame, window=20):
 
     col_sma = f"sma_{window}_{time_frame}"
 
-                                                              
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, polars_time_frame, time_frame, lambda d: pt_sma(d, "1m", window)
@@ -274,7 +274,7 @@ def pt_ichimoku(df, time_frame, n1=9, n2=26, n3=52):
     c_senkou_b_lead = f"ichi_senkou_b_lead_{time_frame}"
     c_chikou_ref = f"ichi_chikou_ref_{time_frame}"
 
-                                                              
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, polars_time_frame, time_frame, lambda d: pt_ichimoku(d, "1m", n1, n2, n3)
@@ -284,7 +284,7 @@ def pt_ichimoku(df, time_frame, n1=9, n2=26, n3=52):
         df_pd = df.select(["high", "low", "close"]).to_pandas()
         ichi_vis = ta.trend.IchimokuIndicator(high=df_pd["high"], low=df_pd["low"], window1=n1, window2=n2, window3=n3, visual=True)
         ichi_lead = ta.trend.IchimokuIndicator(high=df_pd["high"], low=df_pd["low"], window1=n1, window2=n2, window3=n3, visual=False)
-        
+
         df_out = df.with_columns([
             pl.Series(c_tenkan, ichi_vis.ichimoku_conversion_line()),
             pl.Series(c_kijun, ichi_vis.ichimoku_base_line()),
@@ -330,7 +330,7 @@ def pt_supertrend(df, time_frame, window=10, multiplier=3.0):
     c_st = f"supertrend_{time_frame}"
     c_trend = f"is_st_uptrend_{time_frame}"
 
-                                                              
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, polars_time_frame, time_frame, lambda d: pt_supertrend(d, "1m", window, multiplier)
@@ -384,7 +384,7 @@ def pt_macd(df, time_frame, fast=12, slow=26, signal=9):
     c_signal = f"macd_signal_{time_frame}"
     c_hist = f"macd_hist_{time_frame}"
 
-                                                              
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, polars_time_frame, time_frame, lambda d: pt_macd(d, "1m", fast, slow, signal)
@@ -436,7 +436,7 @@ def pt_psar(df, time_frame, af_start=0.02, af_step=0.02, af_max=0.2):
     c_flip_up = f"psar_flip_up_{time_frame}"
     c_flip_down = f"psar_flip_down_{time_frame}"
 
-                                                              
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, polars_time_frame, time_frame, lambda d: pt_psar(d, "1m", af_start, af_step, af_max)
@@ -629,7 +629,7 @@ def pt_hma(df, time_frame, window=9):
         hma = ta.trend.wma_indicator(raw_hma, sqrt_win)
         return hma
 
-                                                              
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, polars_time_frame, time_frame, lambda d: pt_hma(d, "1m", window)
@@ -672,7 +672,7 @@ def pt_kama(df, time_frame, window=10, fast=2, slow=30):
             df = df.with_columns(pl.col("timestamp").str.to_datetime())
         df = df.sort("timestamp")
 
-                                                              
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, polars_time_frame, time_frame, lambda d: pt_kama(d, "1m", window, fast, slow)
@@ -711,18 +711,18 @@ def pt_alma(df, time_frame, window=9, offset=0.85, sigma=6.0):
         s = window / sigma
         weights = np.exp(-((np.arange(window) - m) ** 2) / (2 * s * s))
         sum_weights = weights.sum()
-        
+
         alma = np.full(n, np.nan, dtype=float)
         if n < window:
             return alma
-        
+
         for i in range(window - 1, n):
             window_vals = close_arr[i - window + 1:i + 1]
             alma[i] = np.dot(window_vals, weights) / sum_weights
-        
+
         return alma
 
-                                                              
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, polars_time_frame, time_frame, lambda d: pt_alma(d, "1m", window, offset, sigma)
@@ -760,7 +760,7 @@ def pt_vwma(df, time_frame, window=20):
         vol_sum = vol.rolling(window).sum()
         return pv_sum / (vol_sum + 1e-9)
 
-                                                              
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, polars_time_frame, time_frame, lambda d: pt_vwma(d, "1m", window)

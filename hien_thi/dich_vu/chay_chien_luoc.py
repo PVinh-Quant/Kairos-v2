@@ -29,7 +29,7 @@ class ChienLuocActiveMixin:
             return
         try:
             phien.strategy_changed.connect(self._nhan_chien_luoc)
-        except Exception:                
+        except Exception:
             pass
         if getattr(phien, "active_strategy", None):
             self._nhan_chien_luoc(phien.active_strategy)
@@ -64,7 +64,7 @@ class ChienLuocActiveMixin:
             self.lbl_chien_luoc = lbl
             try:
                 tb.addWidget(lbl)
-            except Exception:                
+            except Exception:
                 pass
         if lbl is not None:
             lbl.setText(txt)
@@ -81,5 +81,5 @@ class ChienLuocActiveMixin:
         try:
             from chien_luoc.quan_ly_chien_luoc_bar_to_bar import dat_chien_luoc_ghi_de
             dat_chien_luoc_ghi_de(cfg, getattr(self, "_active_strategy_label", "active"))
-        except Exception as e:                
+        except Exception as e:
             logger.error(f"[man vận hành] Lỗi áp dụng ghi đè chiến lược: {e}")

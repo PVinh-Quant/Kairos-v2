@@ -107,8 +107,8 @@ class CoreCandlestickChart(QWidget):
             return
         df_view = self.df_current[start_idx:end_idx]
 
-                                                                                     
-                                                                                        
+
+
         n_ts = len(self.current_timestamps)
         view_first_ts = self.current_timestamps[start_idx] if start_idx < n_ts else None
         view_last_ts = self.current_timestamps[end_idx - 1] if 0 < end_idx <= n_ts else None
@@ -133,7 +133,7 @@ class CoreCandlestickChart(QWidget):
         def get_y(price):
             return margin_top + chart_h - ((price - min_low) / price_range) * chart_h
 
-                     
+
         grid_pen = QPen(QColor(Theme.GRID), 1, Qt.PenStyle.SolidLine)
         painter.setPen(grid_pen)
         painter.setFont(QFont("Segoe UI", 8))
@@ -167,7 +167,7 @@ class CoreCandlestickChart(QWidget):
         max_vol = max(volumes) if volumes and max(volumes) > 0 else 1
         vol_max_height = chart_h * 0.25
 
-                
+
         for i in range(len(opens)):
             o, hi, lo, c, vol = opens[i], highs[i], lows[i], closes[i], volumes[i]
             x = chart_w - (len(opens) - i) * space_per_candle
@@ -200,7 +200,7 @@ class CoreCandlestickChart(QWidget):
                 QRectF(x, min(yo, yc), self.candle_width, max(abs(yo - yc), 1))
             )
 
-                   
+
         for i in range(len(opens)):
             if (start_idx + i) % time_step == 0:
                 x = (
@@ -230,29 +230,29 @@ class CoreCandlestickChart(QWidget):
                         time_str,
                     )
 
-                           
+
         for t in self.trades:
             if "exit_time" not in t:
                 continue
 
-                                                                        
+
             en_time = t["entry_time"]
-                                                                                           
-                                                                                         
+
+
             if view_first_ts is not None and (en_time < view_first_ts or en_time > view_last_ts):
                 continue
             en_idx = bisect.bisect_left(self.current_timestamps, en_time)
 
-                                                                            
+
             if en_idx >= self.df_current.height:
                 continue
 
-                                                       
-                                                                                                
-                                                                              
 
-                                                                       
-                                                                                            
+
+
+
+
+
             view_idx = en_idx - start_idx
             if not (0 <= view_idx < df_view.height):
                 continue
@@ -260,7 +260,7 @@ class CoreCandlestickChart(QWidget):
             candle_high = highs[view_idx]
             candle_low = lows[view_idx]
 
-                                   
+
             x1 = self.get_x(
                 en_time, start_idx, end_idx, total_candles, chart_w, space_per_candle
             )
@@ -274,17 +274,17 @@ class CoreCandlestickChart(QWidget):
             )
             y2 = get_y(t["exit_price"])
 
-                                                                                             
+
 
             direction = t["direction"]
             val = float(t.get("price_change", 0))
 
-                                                                           
+
             if x1 == -1 and x2 == -1:
                 continue
 
-                                                                          
-                                             
+
+
             if x1 == -1:
                 x1 = (
                     chart_w
@@ -299,48 +299,48 @@ class CoreCandlestickChart(QWidget):
                     + self.candle_width / 2
                 )
 
-                                                                                            
+
             y1_price = get_y(t["entry_price"])
 
-                              
+
             painter.setPen(QPen(QColor(Theme.TRADE_LINE), 1.2, Qt.PenStyle.DashLine))
             painter.drawLine(int(x1), int(y1_price), int(x2), int(y2))
 
-                                                            
+
             if 0 <= x1 <= chart_w:
                 painter.setPen(Qt.PenStyle.NoPen)
                 poly = QPainterPath()
                 padding = 6
 
                 if direction == "Long":
-                                                               
-                    painter.setBrush(QColor(Theme.ENTRY))                              
+
+                    painter.setBrush(QColor(Theme.ENTRY))
                     y_base = get_y(candle_low)
                     top_y = y_base + padding
-                    poly.moveTo(x1, top_y)                       
+                    poly.moveTo(x1, top_y)
                     poly.lineTo(x1 - 6, top_y + 12)
                     poly.lineTo(x1 + 6, top_y + 12)
                     poly.closeSubpath()
                 else:
-                                                                               
+
                     painter.setBrush(QColor("#C517FF"))
-                    y_base = get_y(candle_high)                                    
-                    padding = 6                                        
+                    y_base = get_y(candle_high)
+                    padding = 6
                     top_y = (
                         y_base - padding
-                    )                                              
+                    )
                     poly = QPainterPath()
-                                                                                 
+
                     poly.moveTo(x1, top_y)
-                                                                   
+
                     poly.lineTo(x1 - 6, top_y - 12)
-                                                                   
+
                     poly.lineTo(x1 + 6, top_y - 12)
                     poly.closeSubpath()
 
                 painter.drawPath(poly)
 
-                                                         
+
             if 0 <= x2 <= chart_w:
                 painter.setPen(QPen(QColor(Theme.EXIT), 2))
                 size = 5
@@ -351,7 +351,7 @@ class CoreCandlestickChart(QWidget):
                     int(x2 - size), int(y2 + size), int(x2 + size), int(y2 - size)
                 )
 
-                                                   
+
             if (
                 self.mouse_pos
                 and abs(self.mouse_pos.x() - x2) <= space_per_candle
@@ -384,9 +384,9 @@ class CoreCandlestickChart(QWidget):
             0, int(margin_top + chart_h), int(chart_w), int(margin_top + chart_h)
         )
 
-                                                    
-                                                     
-                                                    
+
+
+
         if self.mouse_pos and hovered_candle_idx != -1:
             mx, my = self.mouse_pos.x(), self.mouse_pos.y()
             mx = max(0, min(mx, chart_w))
@@ -412,12 +412,12 @@ class CoreCandlestickChart(QWidget):
             )
             hover_time = timestamps[hovered_candle_idx]
 
-                                                                       
+
             trades_here = []
             for t in self.trades:
                 en_t = t.get("entry_time")
                 ex_t = t.get("exit_time")
-                                                                                                    
+
                 if view_first_ts is not None:
                     en_out = en_t is None or en_t < view_first_ts or en_t > view_last_ts
                     ex_out = ex_t is None or ex_t < view_first_ts or ex_t > view_last_ts
@@ -456,18 +456,18 @@ class CoreCandlestickChart(QWidget):
                     hud_lines.append(f"ID {tr['id']} ({tr['direction']})")
                     hud_lines.append(f"{action}: {val:.2f}")
 
-                                                              
+
             font_hud = QFont("Consolas", 9)
             painter.setFont(font_hud)
-            fm_hud = painter.fontMetrics()                                            
+            fm_hud = painter.fontMetrics()
 
-                                                                                
+
             max_w = max([fm_hud.horizontalAdvance(line) for line in hud_lines]) + 15
 
-                                                                       
+
             box_h = len(hud_lines) * 16 + 10
 
-                                                                        
+
             hud_x = mx + 20
             hud_y = my + 20
             if mx > chart_w * 0.6:
@@ -475,13 +475,13 @@ class CoreCandlestickChart(QWidget):
             if my > chart_h * 0.6:
                 hud_y = my - box_h - 20
 
-                         
+
             bg_hud = QColor(Theme.CARD)
             bg_hud.setAlpha(240)
             painter.setPen(QPen(QColor(Theme.BORDER), 1))
             painter.setBrush(bg_hud)
 
-                                                       
+
             painter.drawRoundedRect(
                 int(hud_x), int(hud_y), int(max_w), int(box_h), 4, 4
             )
@@ -505,6 +505,6 @@ class CoreCandlestickChart(QWidget):
             painter.drawText(int(chart_w + 6), int(my + 4), f"{cross_price:.4f}")
 
 
-                                            
-                               
-                                            
+
+
+

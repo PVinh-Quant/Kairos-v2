@@ -48,7 +48,7 @@ def vectorized_backtest():
         df = du_doan_trang_thai_ml_vector(df_goc)
         luu_du_lieu_vectorized_pl(df, symbol, "1m")
         hien_thi_regime_tren_ui(df)
-        time.sleep(1000)                             
+        time.sleep(1000)
 
 
 if __name__ == "__main__":

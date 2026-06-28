@@ -12,14 +12,14 @@ khao_sat_thiet_ke_toi_uu_hoa.md – Mô-đun 5):
   4. OOS Profit Factor >= 1.2            — tổng thắng vượt trội tổng thua.
 """
 
-                                                                                
+
 DSR_MIN = 0.90
 OOS_IS_MIN = 0.8
 MIN_TRADES_OOS = 30
 PF_MIN = 1.2
-WF_DUONG_MIN = 0.6                                                               
+WF_DUONG_MIN = 0.6
 
-                                                                                   
+
 _NO_DATA_SHARPE = -10.0
 
 
@@ -64,8 +64,8 @@ def danh_gia_guardrails(result, nguong=None):
 
     ism = result.get("is_metrics", {}) or {}
     oos = result.get("oos_metrics", {}) or {}
-                                                                               
-                                                                                      
+
+
     dsr = _safe_float(ism.get("deflated_sharpe_ratio"))
     sharpe = _safe_float(oos.get("sharpe_ratio"))
     pf = _safe_float(oos.get("profit_factor"))
@@ -95,7 +95,7 @@ def danh_gia_guardrails(result, nguong=None):
         },
     ]
 
-                                                                                           
+
     wf = result.get("wf_summary") or {}
     if wf.get("so_doan_co_du_lieu", 0) >= 2:
         wf_min = nguong.get("wf_duong", WF_DUONG_MIN)
@@ -109,7 +109,7 @@ def danh_gia_guardrails(result, nguong=None):
 
     failed = [c["ten"] for c in checks if not c["dat"]]
 
-                        
+
     if _oos_thieu_lenh(result):
         verdict = "NO_TRADE"
     elif not failed and sharpe > 0:

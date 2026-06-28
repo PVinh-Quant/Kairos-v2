@@ -2,7 +2,7 @@
 from PyQt6.QtCore import QThread, pyqtSignal
 class ComboWorker(QThread):
     status = pyqtSignal(str)
-    trial_progress = pyqtSignal(int, int, object)                               
+    trial_progress = pyqtSignal(int, int, object)
     finished_combo = pyqtSignal(dict)
     failed = pyqtSignal(str)
 
@@ -39,7 +39,7 @@ class ComboWorker(QThread):
             self.finished_combo.emit(result)
         except SystemExit as e:
             self.failed.emit(f"Tối ưu bị dừng đột ngột (thiếu dữ liệu/cấu hình): {e}")
-        except Exception as e:                
+        except Exception as e:
             self.failed.emit(str(e))
 
 
@@ -76,7 +76,7 @@ class StrategyWorker(QThread):
             self.finished_combo.emit(result)
         except SystemExit as e:
             self.failed.emit(f"Tối ưu bị dừng đột ngột (thiếu dữ liệu/cấu hình): {e}")
-        except Exception as e:                
+        except Exception as e:
             self.failed.emit(str(e))
 
 

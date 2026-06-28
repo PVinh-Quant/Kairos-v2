@@ -40,7 +40,7 @@ def _load_rounded_icon(file_path, size=256, radius=40):
     except Exception:
         return QIcon()
 
-                                                               
+
 _QSS_CUA_SO = """
     QMainWindow  { background-color: #0B0E14; }
     QTabWidget::pane { border: 1px solid #2A2E39; }
@@ -83,7 +83,7 @@ def tao_cua_so(phien=None):
     cua_so.resize(1440, 900)
     cua_so.setStyleSheet(_QSS_CUA_SO)
 
-                                                   
+
     icon_path = os.path.join(ASSETS_DIR, "logo.png")
     if os.path.exists(icon_path):
         icon = _load_rounded_icon(icon_path, 256, 40)
@@ -93,36 +93,36 @@ def tao_cua_so(phien=None):
             app_inst.setWindowIcon(icon)
         cua_so.setWindowIcon(icon)
 
-                                                                     
+
     if phien is None:
         phien = PhienNghienCuu(cua_so)
     cua_so.phien = phien
 
-    shell = lay_lop("toi_uu")()                                                      
+    shell = lay_lop("toi_uu")()
     _tiem_phien(shell, phien)
     cua_so.setCentralWidget(shell)
 
-                                                                             
+
     phien.yeu_cau_xem_man.connect(shell.di_toi_man)
 
     return cua_so
 
 
-                                                                                   
-                                                                                    
-                                                                               
-                                                                                   
+
+
+
+
 _MODULE_WARMUP = [
-    "chuc_nang.vectorized_backtest",                            
-    "chuc_nang.backtest_donluong",                   
-    "chuc_nang.chay_realtime",                                               
+    "chuc_nang.vectorized_backtest",
+    "chuc_nang.backtest_donluong",
+    "chuc_nang.chay_realtime",
     "chuc_nang.chay_demo",
 ]
 
 
 def chay(argv=None):
     """Mở app: tạo QApplication (nếu chưa có), show cửa sổ, nạp-trước backend, chạy vòng lặp Qt."""
-                                                                                    
+
     if sys.platform == "win32":
         try:
             import ctypes
@@ -142,14 +142,14 @@ def chay(argv=None):
             for ten_mod in _MODULE_WARMUP:
                 try:
                     importlib.import_module(ten_mod)
-                except Exception:                                                  
+                except Exception:
                     pass
 
     app = QApplication.instance() or QApplication(argv if argv is not None else sys.argv)
     cua_so = tao_cua_so()
     cua_so.show()
 
-    cua_so._warmup = _WarmupBackend()                    
+    cua_so._warmup = _WarmupBackend()
     cua_so._warmup.start()
 
     return app.exec()

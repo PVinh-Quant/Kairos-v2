@@ -24,7 +24,7 @@ class RSIDaoChieuTheoTrendEMA(ChienLuocPluginCoSo):
     mo_ta = "Mua đáy RSI trong xu hướng tăng EMA, bán đỉnh RSI trong xu hướng giảm (đa khung)."
     nhom = "Chiến lược plugin"
 
-                                                                                 
+
     khung_vao = "5m"
     khung_loc = "1h"
 
@@ -48,7 +48,7 @@ class RSIDaoChieuTheoTrendEMA(ChienLuocPluginCoSo):
         is_pandas = not hasattr(df, "clone")
         d = pl.from_pandas(df) if is_pandas else df.clone()
 
-                                                                            
+
         d = pt_rsi(d, self.khung_vao, window=rsi_w)
         d = pt_ema_trend(d, self.khung_loc, window=ema_w)
 
@@ -69,7 +69,7 @@ class RSIDaoChieuTheoTrendEMA(ChienLuocPluginCoSo):
         d = d.with_columns(
             pl.when(entry_long).then(1).when(entry_short).then(-1).otherwise(0).alias("signal")
         )
-                                      
+
         d = d.with_columns(
             pl.when(pl.col("signal") == 0).then(None).otherwise(pl.col("signal"))
             .forward_fill().fill_null(0).cast(pl.Int64).alias("signal")

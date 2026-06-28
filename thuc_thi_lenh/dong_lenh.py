@@ -13,7 +13,7 @@ def thuc_hien_dong_lenh(san, symbol, side_hien_tai, khoi_luong):
     """Đóng vị thế an toàn cho cả Binance (One-way) và OKX/Bybit (Hedge Mode)."""
     side_dong = "sell" if side_hien_tai == "buy" else "buy"
 
-                                                                        
+
     params = {"reduceOnly": True}
 
     if san in ["okx", "bybit"]:

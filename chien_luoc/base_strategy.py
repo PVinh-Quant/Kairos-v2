@@ -7,9 +7,9 @@ class BaseStrategy(abc.ABC):
     cho cả hai chế độ chạy: Vectorized (backtest/tối ưu) và Bar-to-bar (realtime).
     """
 
-                                                                               
-    mo_ta: str = ""                                                        
-    nhom: str = "Chiến lược plugin"                                        
+
+    mo_ta: str = ""
+    nhom: str = "Chiến lược plugin"
 
     def khong_gian_tham_so(self) -> list:
         """Khai báo KHÔNG GIAN THAM SỐ để Optuna tối ưu (mặc định: rỗng).
@@ -136,7 +136,7 @@ class ChienLuocPluginCoSo(BaseStrategy):
         raw = "".join(c for c in raw if not unicodedata.combining(c))
         return re.sub(r"[^0-9a-z]+", "_", raw.lower()).strip("_") or cls.__name__.lower()
 
-                                                                               
+
     @abc.abstractmethod
     def sinh_tin_hieu(self, df, tf_map=None, params=None):
         """Nhận df 1m (Polars hoặc Pandas) + tf_map (tùy chọn) + params (dict) →
@@ -146,7 +146,7 @@ class ChienLuocPluginCoSo(BaseStrategy):
         """
         raise NotImplementedError
 
-                                                                                
+
     def get_default_params(self) -> dict:
         out = {}
         for p in (self.khong_gian_tham_so() or []):
@@ -162,9 +162,9 @@ class ChienLuocPluginCoSo(BaseStrategy):
                 out[ten] = int(round(mid)) if p.get("kieu") == "int" else mid
         return out
 
-                                                                               
+
     def tinh_chi_bao(self, df_1m, timeframe_map: dict = None):
-                                                                                       
+
         self._tf_map = timeframe_map
         return df_1m
 
@@ -172,14 +172,14 @@ class ChienLuocPluginCoSo(BaseStrategy):
         import polars as pl
         tf_map = getattr(self, "_tf_map", None)
         df_sig = self.sinh_tin_hieu(df, tf_map, params or self.get_default_params())
-                                                              
-        if hasattr(df_sig, "clone"):          
+
+        if hasattr(df_sig, "clone"):
             if "signal" not in df_sig.columns:
                 df_sig = df_sig.with_columns(pl.lit(0).cast(pl.Int64).alias("signal"))
             df_sig = df_sig.with_columns(
                 pl.col("signal").diff().fill_null(0).cast(pl.Int64).alias("entry_signal")
             )
-        else:          
+        else:
             if "signal" not in df_sig.columns:
                 df_sig["signal"] = 0
             df_sig["entry_signal"] = df_sig["signal"].diff().fillna(0).astype(int)

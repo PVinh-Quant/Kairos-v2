@@ -4,7 +4,7 @@ import numpy as np
 
 class TradingTeacher:
     def __init__(self):
-                                                       
+
         self.last_state = 0
         self.change_count = 0
 
@@ -20,7 +20,7 @@ class TradingTeacher:
                 return None
             df = df_in
             try:
-                                                                                   
+
                 df = df.with_columns(
                     [
                         pl.col("close").diff().alias("diff"),
@@ -36,7 +36,7 @@ class TradingTeacher:
                     ]
                 )
 
-                                                                           
+
                 df = df.with_columns(
                     [
                         pl.col("tr").ewm_mean(span=14, adjust=False).alias("atr"),
@@ -55,7 +55,7 @@ class TradingTeacher:
                     ]
                 )
 
-                                                
+
                 df = (
                     df.with_columns(
                         [
@@ -139,7 +139,7 @@ class TradingTeacher:
                     )
                 )
 
-                                                                      
+
                 df = (
                     df.with_columns(
                         [
@@ -179,7 +179,7 @@ class TradingTeacher:
                     )
                 )
 
-                            
+
                 df = df.with_columns(
                     [
                         pl.col("tr").rolling_sum(14).alias("tr_sum"),
@@ -199,7 +199,7 @@ class TradingTeacher:
                     ]
                 )
 
-                                                                                
+
                 df = df.with_columns(
                     [
                         pl.col("volume").rolling_mean(20).alias("vol_sma"),
@@ -234,7 +234,7 @@ class TradingTeacher:
             except Exception as e:
                 return None
 
-                          
+
         c_h4 = _calc_features(df_4h) if df_4h is not None else _calc_features(df_1h)
         c_h1 = _calc_features(df_1h)
         c_m15 = _calc_features(df_15m)
@@ -245,7 +245,7 @@ class TradingTeacher:
 
         scores = {k: 0.0 for k in range(8)}
 
-                                                                
+
         sweep_up = (
             (c_m5["high"] > c_m5["prev_high"])
             and (c_m5["close"] < c_m5["prev_high"])
@@ -298,7 +298,7 @@ class TradingTeacher:
                     scores[2] *= 0.5
                     scores[3] *= 0.5
 
-                                                                 
+
         scores[self.last_state] += max(
             4.0, 10.0 * confidence if "confidence" in locals() else 6.0
         )
@@ -314,7 +314,7 @@ class TradingTeacher:
         if confidence < 0.60 or (top2[0] - top2[1]) < 0.08:
             raw_state = self.last_state
 
-                                                                
+
         fast_states = [4, 7]
         if raw_state in fast_states:
             self.last_state = raw_state
@@ -338,25 +338,25 @@ import numpy as np
 
 def detect_regime_vectorized(
     df_1m: pl.DataFrame,
-                                                                       
-                                                   
-                                                                       
-    change_limit: int = 2,                                                                    
-    bonus_mult: float = 10.0,                                                           
-    min_bonus: float = 5.0,                                                       
-    conf_threshold: float = 0.60,                                                                 
-    diff_threshold: float = 0.04,                                                                 
+
+
+
+    change_limit: int = 2,
+    bonus_mult: float = 10.0,
+    min_bonus: float = 5.0,
+    conf_threshold: float = 0.60,
+    diff_threshold: float = 0.04,
 ):
     """Phát hiện regime cho toàn bộ chuỗi dữ liệu 1m bằng Polars vectorized + NumPy state machine."""
 
-                                                                       
-                                                        
-                                                                       
+
+
+
     def _add_features(df):
         """Tính toán toàn bộ chỉ báo kỹ thuật MTF trên DataFrame đầu vào."""
         if df is None:
             return None
-                              
+
         df = df.with_columns(
             [
                 pl.col("close").diff().alias("diff"),
@@ -372,7 +372,7 @@ def detect_regime_vectorized(
             ]
         )
 
-                            
+
         df = df.with_columns(
             [
                 pl.col("tr").ewm_mean(span=14, adjust=False).alias("atr"),
@@ -389,7 +389,7 @@ def detect_regime_vectorized(
             ]
         )
 
-                   
+
         df = (
             df.with_columns(
                 [
@@ -456,7 +456,7 @@ def detect_regime_vectorized(
             )
         )
 
-                              
+
         df = df.with_columns(
             [
                 pl.col("close").rolling_mean(20).alias("bb_mid"),
@@ -488,7 +488,7 @@ def detect_regime_vectorized(
             ]
         )
 
-                       
+
         df = df.with_columns(
             [
                 pl.col("volume").rolling_mean(20).alias("vol_sma"),
@@ -520,7 +520,7 @@ def detect_regime_vectorized(
         )
         return df
 
-                                                                              
+
     def resample_and_shift(df, interval_str, shift_minutes):
         """Resample DataFrame sang khung thời gian lớn hơn và dịch timestamp để tránh look-ahead bias."""
         resampled = df.group_by_dynamic("timestamp", every=interval_str).agg(
@@ -533,7 +533,7 @@ def detect_regime_vectorized(
             ]
         )
         features = _add_features(resampled)
-                                                                                
+
         features = features.with_columns(
             (pl.col("timestamp") + pl.duration(minutes=shift_minutes)).alias(
                 "timestamp"
@@ -541,7 +541,7 @@ def detect_regime_vectorized(
         )
         return features
 
-                                                                  
+
     df_1m = _add_features(df_1m)
 
     f5m = resample_and_shift(df_1m, "5m", 5).select(pl.all().name.suffix("_5m"))
@@ -557,7 +557,7 @@ def detect_regime_vectorized(
         .fill_null(strategy="forward")
     )
 
-                                                     
+
     cond_sweep = (
         (
             (pl.col("high") > pl.col("prev_high"))
@@ -571,7 +571,7 @@ def detect_regime_vectorized(
         )
     ) & (
         pl.col("VOLz") > 1.5
-    )                                       
+    )
 
     cond_dead = (pl.col("VOLz_1h") < -1.2) & (
         pl.col("ATRn_1h") < (pl.col("ATRn_avg100_1h") * 0.65)
@@ -653,7 +653,7 @@ def detect_regime_vectorized(
         ]
     )
 
-                                         
+
     df = df.with_columns(
         [
             pl.when(pl.col("r6") > 0)
@@ -667,9 +667,9 @@ def detect_regime_vectorized(
         ]
     )
 
-                                                                       
-                                                             
-                                                                       
+
+
+
     score_matrix = (
         df.select(["r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7"])
         .fill_null(0.0)
@@ -687,11 +687,11 @@ def detect_regime_vectorized(
     for i in range(n_rows):
         scores = score_matrix[i].copy()
 
-                                   
+
         bonus = max(min_bonus, bonus_mult * confidence) if i > 0 else 6.0
         scores[last_state] += bonus
 
-                    
+
         max_s = np.max(scores)
         exps = np.exp(scores - max_s)
         probs = exps / np.sum(exps)
@@ -699,7 +699,7 @@ def detect_regime_vectorized(
         raw_state = int(np.argmax(probs))
         curr_confidence = probs[raw_state]
 
-                                         
+
         sorted_probs = np.sort(probs)
         if (
             curr_confidence < conf_threshold
@@ -707,9 +707,9 @@ def detect_regime_vectorized(
         ):
             raw_state = last_state
 
-                                                                      
+
         if raw_state in (4, 7):
-                                                                                                          
+
             last_state = raw_state
             change_count = 0
         else:
@@ -718,20 +718,20 @@ def detect_regime_vectorized(
             else:
                 change_count = 0
 
-                                                                            
-                                                            
+
+
             if change_count >= change_limit:
                 last_state = raw_state
                 change_count = 0
 
-                                 
+
         regimes[i] = last_state
         confidence = curr_confidence
         confidences[i] = curr_confidence
 
-                                                                       
-                                       
-                                                                       
+
+
+
     df = df.with_columns(
         [pl.Series("regime", regimes), pl.Series("confidence", confidences)]
     )

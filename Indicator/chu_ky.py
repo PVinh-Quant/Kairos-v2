@@ -38,7 +38,7 @@ def _rai_xuong_tu_khung_lon(df, polars_time_frame, suffix, tinh_1m):
     htf = htf.with_columns(pl.col("timestamp").dt.offset_by(polars_time_frame))
     feat = [c for c in htf.columns if c not in base]
     ren = {c: c[:-2] + suffix for c in feat if c.endswith("_1m")}
-    htf = htf.rename(ren)                                                                           
+    htf = htf.rename(ren)
     feat = [ren.get(c, c) for c in feat]
     return df.join_asof(
         htf.select(["timestamp"] + feat), on="timestamp", strategy="backward"
@@ -54,7 +54,7 @@ def pt_kiem_tra_ngay(df):
             df = df.with_columns(pl.col("timestamp").str.to_datetime())
         df = df.sort("timestamp")
 
-                                                   
+
     df = df.with_columns(
         pl.lit(True).alias("check_days")
     )
@@ -143,14 +143,14 @@ def pt_session_range(df, time_frame):
             df = df.with_columns(pl.col("timestamp").str.to_datetime())
         df = df.sort("timestamp")
 
-                                                              
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, tf, tf, lambda d: pt_session_range(d, "1m")
         )
 
     session_block = pl.col("timestamp").dt.hour() // 8
-                                     
+
     df = df.with_columns(
         (pl.col("timestamp").dt.date().cast(pl.String) + "_" + session_block.cast(pl.String)).alias("_session_key")
     )

@@ -63,7 +63,7 @@ class DistributionChart(QWidget):
         self.selected_index = current_filter_idx
         count = 7 if self.chart_type == "day" else 24
 
-                         
+
         if df is None or df.is_empty():
             self.data = [0.0] * count
             self.update()
@@ -151,7 +151,7 @@ class DistributionChart(QWidget):
             x = draw_rect.left() + i * bar_w_total + bar_gap / 2
             h_val = (abs(val) / max_abs_val) * (draw_rect.height() / 2)
 
-                      
+
             if val >= 0:
                 color = QColor(COLOR_WIN)
                 rect = QRectF(x, zero_y - h_val, bar_w, h_val)
@@ -159,24 +159,24 @@ class DistributionChart(QWidget):
                 color = QColor(COLOR_LOSS)
                 rect = QRectF(x, zero_y, bar_w, h_val)
 
-                                            
+
             if self.selected_index is not None:
                 if self.selected_index == i:
-                    color.setAlpha(255)           
-                    painter.setPen(QPen(QColor("#FFFFFF")))              
+                    color.setAlpha(255)
+                    painter.setPen(QPen(QColor("#FFFFFF")))
                 else:
-                    color.setAlpha(50)         
+                    color.setAlpha(50)
                     painter.setPen(Qt.PenStyle.NoPen)
             else:
-                color.setAlpha(200)            
+                color.setAlpha(200)
                 painter.setPen(Qt.PenStyle.NoPen)
 
             painter.setBrush(color)
             painter.drawRect(rect)
 
-                                                   
+
             if self.chart_type == "day" or (self.chart_type == "hour" and i % 2 == 0):
-                if i < len(self.labels):                    
+                if i < len(self.labels):
                     painter.setPen(QColor(TEXT_SUB))
                     painter.setFont(FONT_SUB)
                     label = self.labels[i]
@@ -191,9 +191,9 @@ class DistributionChart(QWidget):
                     painter.drawText(text_rect, Qt.AlignmentFlag.AlignCenter, label)
 
 
-                                                                                   
-                         
-                                                                                   
+
+
+
 class BacktestSummaryWidget(QWidget):
     def __init__(self):
         """Khởi tạo widget tóm tắt chỉ số hiệu suất backtest (winrate, PnL, drawdown...)."""
@@ -203,7 +203,7 @@ class BacktestSummaryWidget(QWidget):
 
     def update_data(self, data_packet=None):
         """Tính toán và cập nhật các chỉ số hiệu suất từ data_packet chứa danh sách lệnh."""
-                                                                                            
+
         result = data_packet if data_packet else {}
         trades = result.get("trades", [])
 
@@ -212,10 +212,10 @@ class BacktestSummaryWidget(QWidget):
         if total_trades > 0:
             df = pl.DataFrame(trades)
 
-                                  
+
             df = df.with_columns(pl.col("pnl_usd").cast(pl.Float64))
 
-                                   
+
             total_profit = df["pnl_usd"].sum()
 
             wins = df.filter(pl.col("pnl_usd") > 0)
@@ -235,7 +235,7 @@ class BacktestSummaryWidget(QWidget):
             rr_ratio = avg_win / avg_loss if avg_loss > 0 else 0.0
             expectancy = df["pnl_usd"].mean() or 0.0
 
-                                      
+
             df = (
                 df.with_columns(pl.col("pnl_usd").cum_sum().alias("cumsum"))
                 .with_columns(pl.col("cumsum").cum_max().alias("peak"))
@@ -254,7 +254,7 @@ class BacktestSummaryWidget(QWidget):
             rr_ratio = 0.0
             max_dd_val = 0.0
 
-                                       
+
         self.perf_data = [
             (
                 "Tỷ lệ thắng",
@@ -363,9 +363,9 @@ class BacktestSummaryWidget(QWidget):
             )
 
 
-                                                                                   
-                            
-                                                                                   
+
+
+
 class DailyPnLBarChart(QWidget):
     date_clicked = pyqtSignal(object)
 
@@ -379,7 +379,7 @@ class DailyPnLBarChart(QWidget):
         self.selected_date = None
         self.total_pnl_str = "$0.00"
         self.setMouseTracking(True)
-        self.df_trades = pl.DataFrame()                    
+        self.df_trades = pl.DataFrame()
 
     def update_data(self, df_trades: pl.DataFrame):
         """Tính toán PnL theo ngày từ DataFrame và cập nhật dữ liệu vẽ biểu đồ cột."""
@@ -391,7 +391,7 @@ class DailyPnLBarChart(QWidget):
 
         self.df_trades = df_trades
         try:
-                                                                  
+
             daily_stats = (
                 self.df_trades.group_by("filter_date")
                 .agg(
@@ -411,13 +411,13 @@ class DailyPnLBarChart(QWidget):
                         .alias("short_pnl"),
                         pl.len().alias(
                             "count"
-                        ),                                                      
+                        ),
                     ]
                 )
                 .sort("filter_date")
             )
 
-                                                             
+
             self.chart_data = [
                 {
                     "date": r["filter_date"],
@@ -441,7 +441,7 @@ class DailyPnLBarChart(QWidget):
         if not self.chart_data:
             return
 
-                                                                   
+
         if self.selected_date:
             self.selected_date = None
             self.selected_index = None
@@ -459,7 +459,7 @@ class DailyPnLBarChart(QWidget):
             self.selected_index = index
             self.selected_date = self.chart_data[index]["date"]
 
-                                                                        
+
             day_df = self.df_trades.filter(
                 pl.col("filter_date") == self.selected_date
             ).sort("time_close")
@@ -480,23 +480,23 @@ class DailyPnLBarChart(QWidget):
         chart_h = h - chart_top - 30
         zero_y = chart_top + chart_h / 2
 
-                                  
+
         painter.setFont(FONT_VAL_BIG)
         painter.setPen(QColor(COLOR_WIN if "+" in self.total_pnl_str else COLOR_LOSS))
         painter.drawText(margin, 40, self.total_pnl_str)
 
-                                                                    
+
         if self.selected_date and self.intra_day_trades:
             self.draw_intraday_line(painter, margin, chart_top, w - margin * 2, chart_h)
         else:
-                                                     
+
             self.draw_daily_bars(
                 painter, margin, chart_top, w - margin * 2, chart_h, zero_y
             )
 
     def draw_intraday_line(self, painter, x, y, w, h):
         """Vẽ đường equity curve nội ngày từ danh sách lệnh intraday."""
-                                       
+
         painter.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
         painter.setPen(QColor(ACCENT_COLOR))
         painter.drawText(
@@ -505,7 +505,7 @@ class DailyPnLBarChart(QWidget):
             f"CHI TIẾT: {self.selected_date.strftime('%d/%m/%Y')} (Click để quay lại)",
         )
 
-                                            
+
         pnl_values = [t["pnl_usd"] for t in self.intra_day_trades]
         equity_points = [0]
         curr = 0
@@ -517,19 +517,19 @@ class DailyPnLBarChart(QWidget):
         min_v = min(equity_points) if equity_points else -1
         range_v = max(abs(max_v), abs(min_v)) or 1
 
-                       
+
         zero_y = y + h / 2
         painter.setPen(QPen(QColor(GRID_COLOR), 1, Qt.PenStyle.DotLine))
         painter.drawLine(x, int(zero_y), x + w, int(zero_y))
 
-                 
+
         path = QPainterPath()
         step_x = w / (len(equity_points) - 1) if len(equity_points) > 1 else w
 
         points = []
         for i, val in enumerate(equity_points):
             px = x + i * step_x
-                                
+
             py = zero_y - (val / range_v * (h / 2.2))
             points.append(QPointF(px, py))
             if i == 0:
@@ -537,17 +537,17 @@ class DailyPnLBarChart(QWidget):
             else:
                 path.lineTo(px, py)
 
-                                    
+
         fill_path = QPainterPath(path)
         fill_path.lineTo(points[-1].x(), zero_y)
         fill_path.lineTo(points[0].x(), zero_y)
         painter.fillPath(fill_path, QColor(60, 180, 255, 30))
 
-                        
+
         painter.setPen(QPen(QColor("#3498db"), 2))
         painter.drawPath(path)
 
-                          
+
         painter.setBrush(QColor("#3498db"))
         painter.drawEllipse(points[-1], 3, 3)
 
@@ -575,11 +575,11 @@ class DailyPnLBarChart(QWidget):
             la_lai = pnl >= 0
             height = (abs(pnl) / (max_val * 1.2)) * (chart_h / 2)
 
-                                                                               
+
             rect = QRectF(x, zero_y - height if la_lai else zero_y, bar_w, height)
             painter.fillRect(rect, QColor(COLOR_WIN if la_lai else COLOR_LOSS))
 
-                              
+
             painter.setPen(QColor(TEXT_SUB))
             painter.setFont(QFont("Segoe UI", 7))
             painter.drawText(
@@ -589,9 +589,9 @@ class DailyPnLBarChart(QWidget):
             )
 
 
-                                                                                   
-                 
-                                                                                   
+
+
+
 class TotalAssetChart(QWidget):
     def __init__(self):
         """Khởi tạo widget equity curve với gradient fill và thông tin balance/PnL."""
@@ -599,13 +599,13 @@ class TotalAssetChart(QWidget):
         self.setMinimumSize(300, 200)
         self.chart_color = QColor("#2962FF")
 
-                                                
+
         self.data = []
         self.total_val = 0.0
         self.pnl_val = 0.0
         self.pnl_pct = 0.0
 
-                                                
+
         self.update_data()
 
     def downsample_data(self, balances, max_points=300):
@@ -622,7 +622,7 @@ class TotalAssetChart(QWidget):
             chunk = balances[start:end]
             if not chunk:
                 continue
-                                                                               
+
             result.append(min(chunk))
             result.append(max(chunk))
         return result
@@ -635,11 +635,11 @@ class TotalAssetChart(QWidget):
             self.update()
             return
 
-                                               
+
         balances = [item["balance"] for item in equity_curve]
 
         if len(balances) > 0:
-                                           
+
             self.data = self.downsample_data(balances, 300)
 
             start_val = balances[0]
@@ -733,9 +733,9 @@ class TotalAssetChart(QWidget):
         painter.drawPath(path)
 
 
-                                                                                   
-                                
-                                                                                   
+
+
+
 class TradeScatterWidget(QWidget):
     def __init__(self):
         """Khởi tạo scatter plot phân tích thời gian giữ lệnh vs PnL với tooltip hover."""
@@ -745,10 +745,10 @@ class TradeScatterWidget(QWidget):
         self.max_duration = 1
         self.max_pnl_abs = 1
 
-                                                 
+
         self.MIN_DURATION_DISPLAY = 1
 
-                                            
+
         self.setMouseTracking(True)
         self.hover_point = None
 
@@ -776,13 +776,13 @@ class TradeScatterWidget(QWidget):
             return
 
         try:
-                                            
+
             if "time_close" not in df.columns or "time_open" not in df.columns:
                 print("ScatterPlot: Thiếu cột time_close hoặc time_open")
                 self.update()
                 return
 
-                                                                 
+
             df_plot = df.select(
                 [
                     pl.col("time_close"),
@@ -799,14 +799,14 @@ class TradeScatterWidget(QWidget):
                 ).alias("duration")
             )
 
-                                              
+
             max_dur = df_plot["duration"].max()
             max_pnl = df_plot["pnl"].abs().max()
 
             self.max_duration = max_dur if max_dur and max_dur > 1 else 1
             self.max_pnl_abs = max_pnl if max_pnl and max_pnl > 0 else 1
 
-                                                 
+
             rows = df_plot.select(["duration", "pnl", "pair"]).to_dicts()
 
             for r in rows:
@@ -828,12 +828,12 @@ class TradeScatterWidget(QWidget):
 
     def get_x_pos(self, duration, plot_width, margin_left):
         """Tính tọa độ X logarit cho một giá trị duration trên trục thời gian."""
-                                                               
+
         safe_dur = max(self.MIN_DURATION_DISPLAY, duration)
 
         min_log = math.log10(self.MIN_DURATION_DISPLAY)
 
-                                                                  
+
         real_max = max(self.max_duration * 1.1, self.MIN_DURATION_DISPLAY * 2)
         max_log = math.log10(real_max)
 
@@ -843,7 +843,7 @@ class TradeScatterWidget(QWidget):
         if range_log == 0:
             range_log = 1
 
-                             
+
         ratio = (current_log - min_log) / range_log
         return margin_left + (ratio * plot_width)
 
@@ -861,11 +861,11 @@ class TradeScatterWidget(QWidget):
         center_y = m_top + plot_h / 2
         scale_y = (plot_h / 2) / self.max_pnl_abs
 
-        closest_dist = 15         
+        closest_dist = 15
         found = None
 
         for p in self.points:
-                                       
+
             px = self.get_x_pos(p["dur"], plot_w, m_left)
             py = center_y - (p["pnl"] * scale_y)
 
@@ -901,16 +901,16 @@ class TradeScatterWidget(QWidget):
         plot_h = h - m_top - m_bottom
         center_y = m_top + plot_h / 2
 
-                                     
-        painter.setPen(QPen(QColor(BORDER_COLOR), 1))
-        painter.drawLine(m_left, m_top, m_left, h - m_bottom)          
-        painter.drawLine(m_left, h - m_bottom, w - m_right, h - m_bottom)          
 
-                  
+        painter.setPen(QPen(QColor(BORDER_COLOR), 1))
+        painter.drawLine(m_left, m_top, m_left, h - m_bottom)
+        painter.drawLine(m_left, h - m_bottom, w - m_right, h - m_bottom)
+
+
         painter.setPen(QPen(QColor("#444"), 1, Qt.PenStyle.DashLine))
         painter.drawLine(m_left, int(center_y), w - m_right, int(center_y))
 
-                                                     
+
         time_markers = [1, 5, 15, 60, 240, 1440, 4320]
         painter.setFont(FONT_SUB)
 
@@ -918,23 +918,23 @@ class TradeScatterWidget(QWidget):
             if tm > self.max_duration * 1.5:
                 break
 
-                                                          
+
             if tm < self.MIN_DURATION_DISPLAY:
                 continue
 
-                                        
+
             x_line = self.get_x_pos(tm, plot_w, m_left)
 
-                             
+
             painter.setPen(QPen(QColor(GRID_COLOR), 1, Qt.PenStyle.DotLine))
             painter.drawLine(int(x_line), m_top, int(x_line), h - m_bottom)
 
-                     
+
             painter.setPen(QColor(TEXT_SUB))
             label = self.format_duration(tm)
             painter.drawText(int(x_line) + 3, h - m_bottom - 5, label)
 
-                                   
+
         painter.setFont(FONT_LABEL)
         painter.setPen(QColor(COLOR_WIN))
         painter.drawText(5, m_top + 10, f"+{self.max_pnl_abs:.1f}$")
@@ -947,16 +947,16 @@ class TradeScatterWidget(QWidget):
             painter.drawText(w // 2 - 20, h // 2, "No Data")
             return
 
-                                         
+
         scale_y = (plot_h / 2) / self.max_pnl_abs
         painter.setPen(Qt.PenStyle.NoPen)
 
         for p in self.points:
-                                        
+
             x = self.get_x_pos(p["dur"], plot_w, m_left)
             y = center_y - (p["pnl"] * scale_y)
 
-                                     
+
             if y < m_top:
                 y = m_top
             if y > h - m_bottom:
@@ -976,7 +976,7 @@ class TradeScatterWidget(QWidget):
 
             painter.drawEllipse(QPointF(x, y), radius, radius)
 
-                               
+
         if self.hover_point:
             hp = self.hover_point
             tip_text = f"{hp['pair']}\nPnL: {hp['pnl']:+.2f}$\nTime: {self.format_duration(hp['dur'])}"
@@ -989,7 +989,7 @@ class TradeScatterWidget(QWidget):
             bx = hp["sx"] + 10
             by = hp["sy"] - 10
 
-                                                    
+
             if bx + max_w > w:
                 bx = hp["sx"] - max_w - 10
             if by + box_h > h:
@@ -1004,11 +1004,11 @@ class TradeScatterWidget(QWidget):
                 painter.drawText(int(bx + 10), int(by + 15 + i * fm.height()), line)
 
 
-                                                                                   
-                                                                     
-                                                                                   
+
+
+
 class LongShortWidget(QWidget):
-                                                                
+
     side_clicked = pyqtSignal(object)
 
     def __init__(self):
@@ -1019,7 +1019,7 @@ class LongShortWidget(QWidget):
             "long": {"win": 0, "total": 0, "pnl": 0},
             "short": {"win": 0, "total": 0, "pnl": 0},
         }
-        self.selected_side = None                             
+        self.selected_side = None
 
     def update_data(self, df: pl.DataFrame | None = None, current_filter_side=None):
         """Tính winrate và PnL cho mỗi bên Long/Short từ DataFrame và cập nhật widget."""
@@ -1034,7 +1034,7 @@ class LongShortWidget(QWidget):
             return
 
         try:
-                                                                 
+
             agg = (
                 df.group_by("filter_side")
                 .agg(
@@ -1051,7 +1051,7 @@ class LongShortWidget(QWidget):
             )
 
             for row in agg:
-                side = row["filter_side"]                                           
+                side = row["filter_side"]
                 if side in self.stats:
                     self.stats[side]["total"] = row["total"]
                     self.stats[side]["pnl"] = float(row["pnl"])
@@ -1067,25 +1067,25 @@ class LongShortWidget(QWidget):
 
         clicked_side = None
 
-                                                  
+
         if 0 <= y <= 75:
             clicked_side = "long"
 
-                                                
+
         elif 85 <= y <= 150:
             clicked_side = "short"
 
-                                                                                           
+
         if clicked_side is None:
             return
 
-                                                           
+
         if self.selected_side == clicked_side:
-            self.selected_side = None               
+            self.selected_side = None
         else:
             self.selected_side = clicked_side
 
-                                               
+
         self.side_clicked.emit(self.selected_side)
         self.update()
 
@@ -1109,7 +1109,7 @@ class LongShortWidget(QWidget):
         margin = 16
         bar_height = 40
 
-                 
+
         self.draw_bar(
             painter,
             margin,
@@ -1122,7 +1122,7 @@ class LongShortWidget(QWidget):
             is_selected=(self.selected_side == "long"),
         )
 
-                  
+
         self.draw_bar(
             painter,
             margin,
@@ -1137,13 +1137,13 @@ class LongShortWidget(QWidget):
 
     def draw_bar(self, painter, x, y, w, h, title, data, color, is_selected=False):
         """Vẽ một thanh progress bar với winrate, hiệu ứng highlight và dim."""
-                                    
+
         if is_selected:
             painter.setPen(QPen(QColor(ACCENT_COLOR), 1))
             c_highlight = QColor(ACCENT_COLOR)
             c_highlight.setAlpha(30)
             painter.setBrush(c_highlight)
-                                      
+
             painter.drawRoundedRect(QRectF(x - 5, y - 25, w + 10, 45), 6, 6)
 
         painter.setPen(QColor(TEXT_MAIN))
@@ -1152,7 +1152,7 @@ class LongShortWidget(QWidget):
         winrate = (data["win"] / total * 100) if total > 0 else 0.0
         pnl = data["pnl"]
 
-                                                       
+
         if self.selected_side is not None and not is_selected:
             painter.setOpacity(0.3)
         else:
@@ -1177,8 +1177,8 @@ class LongShortWidget(QWidget):
         painter.setOpacity(1.0)
 
 
-                                                                                   
-                                                              
-                                                                                   
+
+
+
 
 __all__ = ["DistributionChart", "BacktestSummaryWidget", "DailyPnLBarChart", "TotalAssetChart", "TradeScatterWidget", "LongShortWidget"]

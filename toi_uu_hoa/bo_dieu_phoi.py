@@ -20,11 +20,23 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-                                                          
+
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../'))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
-                                                       
+
+
+
+
+
+
+
+
+
+
+
+
+
 import random
 
 
@@ -108,8 +120,8 @@ except ImportError as e:
     print(f'[ERROR] Lỗi Import trong bo_dieu_phoi.py: {e}')
     sys.exit(1)
 
-                                                                                         
-                                                                                     
+
+
 _COOLDOWN_NEN = int((lay_cau_hinh_giao_dich() or {}).get("cooldown_nen", 5))
 _COOLDOWN_NEN = int((lay_cau_hinh_giao_dich() or {}).get("cooldown_nen", 5))
 
@@ -123,7 +135,7 @@ def _lay_khoang_sl_rr():
         rr = tuple(getattr(Q, "RR_RANGE", rr)) or rr
     except Exception:
         pass
-                                                                      
+
     sl_lo, sl_hi = sorted((float(sl[0]), float(sl[1])))
     rr_lo, rr_hi = sorted((float(rr[0]), float(rr[1])))
     return (sl_lo, sl_hi), (rr_lo, rr_hi)
@@ -148,8 +160,13 @@ def _tham_so_mo_dun():
     except Exception:
         pass
     return out
-                                                         
+
+
+
 IS_RATIO = 0.7
+
+
+
 
 def _chay_backtest_cho_params(indicator_func, indicator_params, htf, ltf, target_type,
                                suggested_thresholds, base_sl, rr, datasets, VON_BAN_DAU, PHI_GD,
@@ -168,8 +185,8 @@ def _chay_backtest_cho_params(indicator_func, indicator_params, htf, ltf, target
     6. Tính toán Sharpe Ratio và tập đa chỉ số quant.
     """
     all_trades = []
-    
-                                                                                   
+
+
     import polars as pl
     for symbol, data in datasets.items():
         df_1m = data['df_1m']
@@ -177,7 +194,7 @@ def _chay_backtest_cho_params(indicator_func, indicator_params, htf, ltf, target
         df_ltf = tf_map[ltf]
         df_htf = tf_map[htf]
 
-                                          
+
         df_calc_ltf = indicator_func(df_ltf.clone(), ltf, **indicator_params)
         new_cols_ltf = [c for c in df_calc_ltf.columns if c not in df_ltf.columns]
         target_col_ltf = get_cols_by_type(new_cols_ltf, target_type)
@@ -192,8 +209,8 @@ def _chay_backtest_cho_params(indicator_func, indicator_params, htf, ltf, target
 
         dfs_dict = {'1m': df_1m, ltf: df_calc_ltf}
         target_col_htf = None
-        
-                                                                
+
+
         if htf != ltf:
             df_calc_htf = indicator_func(df_htf.clone(), htf, **indicator_params)
             dfs_dict[htf] = df_calc_htf
@@ -208,14 +225,17 @@ def _chay_backtest_cho_params(indicator_func, indicator_params, htf, ltf, target
                 else:
                     target_col_htf = target_col_htf.lower()
 
-                                    
+
         df_merged = gop_va_dong_bo_data_polars(dfs_dict)
         if df_merged is None:
             continue
-                                                                                     
+
+
+
+
         df_signal = generate_generic_signals(df_merged, target_type, target_col_ltf, suggested_thresholds)
-        
-                                                                                          
+
+
         if htf != ltf and target_col_htf is not None:
             if target_type == 'oscillator':
                 htf_col = target_col_htf
@@ -247,19 +267,19 @@ def _chay_backtest_cho_params(indicator_func, indicator_params, htf, ltf, target
                         .alias("signal")
                     )
 
-                                                                                     
+
         df_signal = df_signal.filter(
             (pl.col("timestamp") >= start_filter) & (pl.col("timestamp") <= end_filter)
         )
         if df_signal.height < 50:
             continue
 
-                                                                               
+
         df_signal = df_signal.with_columns(
             pl.col("signal").diff().fill_null(0).cast(pl.Int64).alias("entry_signal")
         )
 
-                                                                                        
+
         try:
             import chien_luoc.quan_ly_chien_luoc_vectorized as Q
             dung_regime_ml = getattr(Q, "DUNG_REGIME_MAC_DINH", False)
@@ -267,19 +287,22 @@ def _chay_backtest_cho_params(indicator_func, indicator_params, htf, ltf, target
             dung_regime_ml = False
 
         df_signal = chuan_hoa_va_loc_tin_hieu(df_signal, dung_regime_ml=dung_regime_ml)
-                                                                                                     
+
+
+
+
         df_signal = SLTP.them_sl_tp(df_signal, base_sl=base_sl, rr=rr)
-                                      
+
         df_signal = them_don_bay_dong(df_signal, don_bay_goc=DON_BAY)
-        
-                                        
+
+
         trades, _ = run_fast_backtest(df_signal, VON_BAN_DAU, PHI_GD, SLIPPAGE, VON_MOI_LENH, DON_BAY, cooldown_nen=_COOLDOWN_NEN)
         all_trades.extend(trades)
 
     start_str = start_filter.strftime('%Y-%m-%d') if isinstance(start_filter, datetime) else str(start_filter)
     end_str = end_filter.strftime('%Y-%m-%d') if isinstance(end_filter, datetime) else str(end_filter)
-    
-                                                                                                                     
+
+
     sharpe = tinh_sharpe_ratio(all_trades, start_date=start_str, end_date=end_str, von_ban_dau=VON_BAN_DAU)
     metrics = tinh_da_chi_so(all_trades, VON_BAN_DAU, start_date=start_str, end_date=end_str, n_trials=n_trials)
     return (all_trades, sharpe, metrics)
@@ -300,7 +323,7 @@ def run_indicator_optimization(indicator_func, n_trials=60, preloaded_datasets=N
     func_name = indicator_func.__name__
     target_type, target_col_base = detect_indicator_type(indicator_func, target_timeframe or '1h')
 
-                                                            
+
     VON_BAN_DAU = float(config_backtest.get('so_du_ban_dau', 10000))
     PHI_GD = float(config_backtest.get('phi_giao_dich', 0.001))
     SLIPPAGE = float(config_backtest.get('do_truot_gia', 0.001))
@@ -314,13 +337,13 @@ def run_indicator_optimization(indicator_func, n_trials=60, preloaded_datasets=N
         print('[ERROR] Không tìm thấy cặp giao dịch nào trong config/cau_hinh_giao_dich.yaml')
         sys.exit(1)
 
-                                                                
+
     start_dt = datetime.strptime(START_DATE, '%Y-%m-%d')
     end_dt = datetime.strptime(END_DATE, '%Y-%m-%d')
     total_days = (end_dt - start_dt).days
     is_end_dt = start_dt + timedelta(days=int(total_days * IS_RATIO))
     oos_start_dt = is_end_dt + timedelta(days=1)
-    
+
     IS_START = START_DATE
     IS_END = is_end_dt.strftime('%Y-%m-%d')
     OOS_START = oos_start_dt.strftime('%Y-%m-%d')
@@ -329,7 +352,7 @@ def run_indicator_optimization(indicator_func, n_trials=60, preloaded_datasets=N
     run_id = tao_run_id()
     ALL_TIMEFRAMES = ['1m', '3m', '5m', '15m', '30m', '1h', '4h', '1d']
 
-                                                                 
+
     if target_timeframe is None:
         raise ValueError("Bản Lite chỉ hỗ trợ tối ưu hóa đơn khung (Single Timeframe). Vui lòng chọn và truyền target_timeframe cụ thể.")
     if target_timeframe not in ALL_TIMEFRAMES:
@@ -352,7 +375,7 @@ def run_indicator_optimization(indicator_func, n_trials=60, preloaded_datasets=N
             ('Run ID', run_id)
         ])
 
-                                                                                  
+
     if preloaded_datasets is not None:
         datasets = preloaded_datasets
     else:
@@ -374,6 +397,18 @@ def run_indicator_optimization(indicator_func, n_trials=60, preloaded_datasets=N
         print('[ERROR] Không nạp được dữ liệu của bất kỳ symbol nào!')
         sys.exit(1)
 
+    try:
+        import chien_luoc.quan_ly_chien_luoc_vectorized as _Q
+        _regime_on = getattr(_Q, "DUNG_REGIME_MAC_DINH", False)
+    except ImportError:
+        _regime_on = False
+    if _regime_on:
+        from chien_luoc.optimizer.trang_thai_thi_truong import pre_compute_regime
+        for sym, d in datasets.items():
+            if "regime" not in d["df_1m"].columns:
+                d["df_1m"] = pre_compute_regime(d["df_1m"])
+                d["timeframe_map"] = {tf: d["df_1m"] for tf in d["timeframe_map"]}
+
     if not silent:
         print('[SUCCESS] Đã nạp dữ liệu vào RAM thành công.')
         print(f'[INFO] Bước 2: Bắt đầu dò tham số lần lượt cho {len(TIMEFRAMES)} khung thời gian...')
@@ -383,10 +418,10 @@ def run_indicator_optimization(indicator_func, n_trials=60, preloaded_datasets=N
         if not silent:
             print(f'\n=======> [TỐI ƯU HÓA KHUNG THỜI GIAN: {ltf.upper()}] Chạy {n_trials_per_tf} bộ tham số (IS: {IS_START} -> {IS_END})...')
 
-                                                                       
+
         allowed_htfs = ALL_TIMEFRAMES[ALL_TIMEFRAMES.index(ltf):]
 
-                                                                                  
+
         khong_gian = _khong_gian_chi_bao(indicator_func, target_type, target_col_base, allowed_htfs)
         danh_sach_bo = _sinh_danh_sach_bo(khong_gian, n_trials_per_tf, seed=42)
 
@@ -408,10 +443,10 @@ def run_indicator_optimization(indicator_func, n_trials=60, preloaded_datasets=N
                 print(f'  [{func_name.upper()} - {_ltf} - Bộ {so_tt:03d}] IS Sharpe: {sharpe:+.4f} | HTF: {htf} | {ind_log}{trig_str} | SL: {base_sl}% | RR: {rr}')
             return sharpe
 
-                                                             
+
         best_bo, _, _ = _duyet_tim_tot_nhat(danh_sach_bo, _cham_diem, tong=n_trials_per_tf)
 
-                                                                         
+
         ind_p = {k[4:]: v for k, v in best_bo.items() if k.startswith('ind_')}
         thresh = {k[5:]: v for k, v in best_bo.items() if k.startswith('trig_')}
         best_htf = best_bo.get('htf', ltf)
@@ -421,25 +456,25 @@ def run_indicator_optimization(indicator_func, n_trials=60, preloaded_datasets=N
         best_params['ltf'] = ltf
         best_params['htf'] = best_htf
 
-                                       
+
         _, is_sharpe, is_metrics = _chay_backtest_cho_params(
             indicator_func, ind_p, best_htf, ltf, target_type, thresh,
             best_sl, best_rr, datasets, VON_BAN_DAU, PHI_GD, SLIPPAGE, VON_MOI_LENH, DON_BAY,
             start_filter=start_dt, end_filter=is_end_dt, n_trials=n_trials_per_tf
         )
-        
-                                                                                                  
-                                                                                       
+
+
+
         _, oos_sharpe, oos_metrics = _chay_backtest_cho_params(
             indicator_func, ind_p, best_htf, ltf, target_type, thresh,
             best_sl, best_rr, datasets, VON_BAN_DAU, PHI_GD, SLIPPAGE, VON_MOI_LENH, DON_BAY,
             start_filter=oos_start_dt, end_filter=end_dt, n_trials=1
         )
-        
-                                                      
+
+
         oos_is_ratio = oos_sharpe / is_sharpe if is_sharpe > 0 else 0.0
 
-                                                                                        
+
         oos_folds, wf_summary = [], {}
 
         if not silent:
@@ -465,7 +500,7 @@ def run_indicator_optimization(indicator_func, n_trials=60, preloaded_datasets=N
             'optimum_parameters': best_params
         }
 
-                                        
+
     if not silent:
         out_path = os.path.join(PROJECT_ROOT, 'du_lieu', 'ket_qua_uu_hoa', 'ket_qua_toi_uu_don.json')
         os.makedirs(os.path.dirname(out_path), exist_ok=True)
@@ -481,7 +516,7 @@ def run_indicator_optimization(indicator_func, n_trials=60, preloaded_datasets=N
                 'timeframe_results': timeframe_results
             }, f, indent=4, ensure_ascii=False)
 
-                                                  
+
         print('\n=============================================================================================================================')
         print(f'     IS: {IS_START} -> {IS_END}  |  OOS: {OOS_START} -> {OOS_END}')
         print('=============================================================================================================================')
@@ -536,13 +571,13 @@ def _chay_backtest_combo(combo_specs, datasets, VON_BAN_DAU, PHI_GD, SLIPPAGE,
         df_1m = data['df_1m']
         tf_map = data['timeframe_map']
 
-                                          
+
         specs_by_tf = {}
         for idx, spec in enumerate(combo_specs):
             specs_by_tf.setdefault(spec['tf'], []).append((idx, spec))
 
         dfs_dict = {'1m': df_1m}
-        spec_target = {}                                            
+        spec_target = {}
 
         for tf, idx_specs in specs_by_tf.items():
             if tf not in tf_map:
@@ -556,7 +591,7 @@ def _chay_backtest_combo(combo_specs, datasets, VON_BAN_DAU, PHI_GD, SLIPPAGE,
                     spec_target[idx] = (spec['type'], None)
                     continue
                 target_col = get_cols_by_type(new_cols, spec['type'])
-                                                                 
+
                 df_work = df_work.rename({c: f's{idx}_{c}' for c in new_cols})
                 if spec['type'] == 'channel':
                     col_up, col_lo = target_col if isinstance(target_col, tuple) else (target_col, target_col)
@@ -569,17 +604,17 @@ def _chay_backtest_combo(combo_specs, datasets, VON_BAN_DAU, PHI_GD, SLIPPAGE,
                 spec_target[idx] = (spec['type'], tcol)
             dfs_dict[tf] = df_work
 
-                                        
+
         df_merged = gop_va_dong_bo_data_polars(dfs_dict)
         if df_merged is None:
             continue
 
-                                                                                           
-                                                                                          
-                                                                                        
-         
-                                                                                                  
-                                                                                                
+
+
+
+
+
+
         resolved_specs = []
         for idx, spec in enumerate(combo_specs):
             t_type, tcol = spec_target.get(idx, (spec['type'], None))
@@ -594,9 +629,9 @@ def _chay_backtest_combo(combo_specs, datasets, VON_BAN_DAU, PHI_GD, SLIPPAGE,
             df_merged, resolved_specs, logic=logic, persistence=persistence
         )
         if not co_trigger:
-            continue                                                 
+            continue
 
-                                                                 
+
         df_merged = df_merged.filter(
             (pl.col("timestamp") >= start_filter) & (pl.col("timestamp") <= end_filter)
         )
@@ -607,7 +642,7 @@ def _chay_backtest_combo(combo_specs, datasets, VON_BAN_DAU, PHI_GD, SLIPPAGE,
             pl.col("signal").diff().fill_null(0).cast(pl.Int64).alias("entry_signal")
         )
 
-                                                                                        
+
         try:
             import chien_luoc.quan_ly_chien_luoc_vectorized as Q
             dung_regime_ml = getattr(Q, "DUNG_REGIME_MAC_DINH", False)
@@ -616,8 +651,8 @@ def _chay_backtest_combo(combo_specs, datasets, VON_BAN_DAU, PHI_GD, SLIPPAGE,
 
         df_merged = chuan_hoa_va_loc_tin_hieu(df_merged, dung_regime_ml=dung_regime_ml)
 
-                                                                                         
-                                                                                           
+
+
         df_merged = SLTP.them_sl_tp(df_merged, base_sl=base_sl, rr=rr)
         df_merged = them_don_bay_dong(df_merged, don_bay_goc=DON_BAY)
 
@@ -631,7 +666,22 @@ def _chay_backtest_combo(combo_specs, datasets, VON_BAN_DAU, PHI_GD, SLIPPAGE,
     metrics = tinh_da_chi_so(all_trades, VON_BAN_DAU, start_date=start_str, end_date=end_str, n_trials=n_trials)
     return (all_trades, sharpe, metrics)
 
-                                                                      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 _AUTO_SKIP_PARAMS = {'df', 'time_frame', 'volume_luy_ke'}
 
 
@@ -648,7 +698,7 @@ def _contract_group_a_specs(indicator_func):
         default = p.default
         if default is inspect.Parameter.empty:
             continue
-                                                                              
+
         if isinstance(default, bool) or not isinstance(default, (int, float)):
             continue
         if default <= 0:
@@ -658,9 +708,9 @@ def _contract_group_a_specs(indicator_func):
             lo = max(2, int(default * 0.5))
             hi = max(lo + 2, int(default * 2))
             specs.append({'name': name, 'kind': 'int', 'low': lo, 'high': hi})
-        else:         
+        else:
             if default < 1.0:
-                                                                                           
+
                 lo = max(1e-4, round(default * 0.5, 6))
                 hi = min(0.999, round(default * 2.0, 6))
             else:
@@ -714,7 +764,7 @@ def _khong_gian_chi_bao(indicator_func, target_type, target_col_base, allowed_ht
     return kg
 
 
-                                                                                     
+
 _TEN_NGUONG = {'oversold', 'overbought', 'lower_mult', 'upper_mult',
                'dev_below', 'dev_above', 'vol_enter', 'vol_exit'}
 
@@ -775,8 +825,15 @@ def _tach_bo_combo(bo, combo_meta):
         specs.append({'func': func, 'tf': tf, 'type': t_type,
                       'params': params, 'thresholds': thresholds, 'role': role})
     return specs, bo.get('risk_base_sl', 2.0), bo.get('risk_rr', 2.0)
-                                                                                   
+
+
+
+
+
+
+
 TINH_NANG_NANG_CAP = False
+
 
 def _yeu_cau_nang_cap(ten_tinh_nang):
     """Chặn tính năng thuộc bản nâng cấp nếu chưa mở khóa."""
@@ -809,19 +866,19 @@ def run_combo_optimization(combo, n_trials=100, preloaded_datasets=None, silent=
     Returns:
         dict kết quả gồm combo, hiệu suất IS/OOS, OOS/IS ratio và best_params.
     """
-                                                                                       
+
     if len({(item.get('key'), item.get('tf')) for item in (combo or [])}) > 1:
         _yeu_cau_nang_cap("Tối ưu Tổ hợp nhiều chỉ báo (Combo)")
 
     config_trading = lay_cau_hinh_giao_dich()
     config_backtest = lay_cau_hinh_ao()
 
-                                                                                                 
+
     objective_metric = (objective_metric or 'sharpe').lower()
     if objective_metric not in ('sharpe', 'sortino', 'calmar'):
         objective_metric = 'sharpe'
 
-                                                                              
+
     logic = (logic or 'and').lower()
     if logic not in ('and', 'or'):
         logic = 'and'
@@ -830,14 +887,14 @@ def run_combo_optimization(combo, n_trials=100, preloaded_datasets=None, silent=
     except (TypeError, ValueError):
         persistence = 1
 
-                                                                                   
+
     timeframes = set(item['tf'] for item in combo)
     if len(timeframes) > 1:
         raise ValueError("Bản Lite chỉ hỗ trợ tối ưu hóa trên cùng 1 khung thời gian (Single Timeframe). "
                          "Vui lòng cấu hình tất cả chỉ báo chạy cùng khung thời gian hoặc nâng cấp lên bản Premium để sử dụng tối ưu hóa Đa Khung Thời Gian (Multi-Timeframe).")
-                         
-                                                                           
-    combo_meta = []                                                
+
+
+    combo_meta = []
     for item in combo:
         key = item['key']
         tf = item['tf']
@@ -852,7 +909,7 @@ def run_combo_optimization(combo, n_trials=100, preloaded_datasets=None, silent=
 
     if not combo_meta:
         raise ValueError('Combo rỗng — cần ít nhất 1 chỉ báo.')
-                                                               
+
     if not any(m[5] == 'trigger' for m in combo_meta):
         raise ValueError('Cần ít nhất 1 chỉ báo vai trò Trigger (Filter chỉ để lọc).')
 
@@ -865,7 +922,7 @@ def run_combo_optimization(combo, n_trials=100, preloaded_datasets=None, silent=
     DS_SYMBOL = config_trading.get('cap_giao_dich', [])
     VON_MOI_LENH = float(config_trading.get('von_moi_lenh_usdt', 100))
 
-                                                                                            
+
     if override_symbols:
         DS_SYMBOL = list(override_symbols)
     if override_start:
@@ -877,7 +934,7 @@ def run_combo_optimization(combo, n_trials=100, preloaded_datasets=None, silent=
         print('[ERROR] Không tìm thấy cặp giao dịch nào trong config/cau_hinh_giao_dich.yaml')
         sys.exit(1)
 
-                               
+
     start_dt = datetime.strptime(START_DATE, '%Y-%m-%d')
     end_dt = datetime.strptime(END_DATE, '%Y-%m-%d')
     total_days = (end_dt - start_dt).days
@@ -902,7 +959,7 @@ def run_combo_optimization(combo, n_trials=100, preloaded_datasets=None, silent=
             ('Run ID', run_id),
         ])
 
-                          
+
     if preloaded_datasets is not None:
         datasets = preloaded_datasets
     else:
@@ -924,10 +981,22 @@ def run_combo_optimization(combo, n_trials=100, preloaded_datasets=None, silent=
         print('[ERROR] Không nạp được dữ liệu của bất kỳ symbol nào!')
         sys.exit(1)
 
+    try:
+        import chien_luoc.quan_ly_chien_luoc_vectorized as _Q
+        _regime_on = getattr(_Q, "DUNG_REGIME_MAC_DINH", False)
+    except ImportError:
+        _regime_on = False
+    if _regime_on:
+        from chien_luoc.optimizer.trang_thai_thi_truong import pre_compute_regime
+        for sym, d in datasets.items():
+            if "regime" not in d["df_1m"].columns:
+                d["df_1m"] = pre_compute_regime(d["df_1m"])
+                d["timeframe_map"] = {tf: d["df_1m"] for tf in d["timeframe_map"]}
+
     if not silent:
         print(f'[INFO] Bước 2: Dò tham số chiến lược kết hợp ({n_trials} bộ)...')
 
-                                                                              
+
     khong_gian = _khong_gian_combo(combo_meta)
     danh_sach_bo = _sinh_danh_sach_bo(khong_gian, n_trials, seed=42)
 
@@ -949,12 +1018,12 @@ def run_combo_optimization(combo, n_trials=100, preloaded_datasets=None, silent=
             print(f'  [COMBO - Bộ {so_tt:03d}] IS {objective_metric}: {diem_txt} | SL: {base_sl}% | RR: {rr}')
         return score
 
-                                                                            
+
     best_bo, _, lich_su = _duyet_tim_tot_nhat(
         danh_sach_bo, _cham_diem, progress_cb=progress_cb, should_stop=should_stop, tong=n_trials
     )
 
-                                                
+
     best_specs, best_sl, best_rr = _tach_bo_combo(best_bo, combo_meta)
     best_params_out = {}
     for idx, (key, tf, func, t_type, col_base, role) in enumerate(combo_meta):
@@ -982,39 +1051,43 @@ def run_combo_optimization(combo, n_trials=100, preloaded_datasets=None, silent=
         'regime_cho_phep': _md['regime_cho_phep'],
     }
 
-                                                                                       
+
     is_trades, is_sharpe, is_metrics = _chay_backtest_combo(
         best_specs, datasets, VON_BAN_DAU, PHI_GD, SLIPPAGE, VON_MOI_LENH, DON_BAY,
         start_filter=start_dt, end_filter=is_end_dt, base_sl=best_sl, rr=best_rr, n_trials=n_trials,
         logic=logic, persistence=persistence
     )
-                                                                                         
+
     oos_trades, oos_sharpe, oos_metrics = _chay_backtest_combo(
         best_specs, datasets, VON_BAN_DAU, PHI_GD, SLIPPAGE, VON_MOI_LENH, DON_BAY,
         start_filter=oos_start_dt, end_filter=end_dt, base_sl=best_sl, rr=best_rr, n_trials=1,
         logic=logic, persistence=persistence
     )
     oos_is_ratio = oos_sharpe / is_sharpe if is_sharpe > 0 else 0.0
-                                                                                                                                                                                                
+
+
+
     phan_tich = {
         'is': xay_dung_duong_cong(is_trades, VON_BAN_DAU, IS_START, IS_END),
         'oos': xay_dung_duong_cong(oos_trades, VON_BAN_DAU, OOS_START, OOS_END),
     }
-                                                                                                
-                                                                                               
+
+
     for _seg in phan_tich.values():
         _seg['so_du'] = round(float(VON_BAN_DAU), 2)
 
-                                                                                    
-    oos_folds, wf_summary = [], {}                                                                                      
-                                                                                        
+
+    oos_folds, wf_summary = [], {}
+
+
+
     canh_bao = []
     is_days = max((is_end_dt - start_dt).days, 0)
     oos_days = max((end_dt - oos_start_dt).days, 0)
     is_tr = int(is_metrics.get('total_trades', 0))
     oos_tr = int(oos_metrics.get('total_trades', 0))
 
-                                                                                                
+
     ngan = [t for t, d in (("IS", is_days), ("OOS", oos_days)) if d < MIN_DAYS_TIN_CAY]
     if ngan:
         chi_tiet = ", ".join(f"{t} {d}d" for t, d in (("IS", is_days), ("OOS", oos_days)) if d < MIN_DAYS_TIN_CAY)
@@ -1086,7 +1159,13 @@ def run_combo_optimization(combo, n_trials=100, preloaded_datasets=None, silent=
         print(f'[SUCCESS] Kết quả combo đã được lưu tại: du_lieu/history_uu_hoa/{filename}\n')
 
     return result
-                                                                          
+
+
+
+
+
+
+
 
 def _chay_backtest_strategy(strat, params, datasets, VON_BAN_DAU, PHI_GD, SLIPPAGE,
                             VON_MOI_LENH, DON_BAY, start_filter, end_filter,
@@ -1104,9 +1183,9 @@ def _chay_backtest_strategy(strat, params, datasets, VON_BAN_DAU, PHI_GD, SLIPPA
         tf_map = data['timeframe_map']
         try:
             df_sig = strat.sinh_tin_hieu(df_1m, tf_map, params)
-        except Exception as e:                
-                                                                                       
-                                                                              
+        except Exception as e:
+
+
             if not getattr(strat, '_da_bao_loi', False):
                 import traceback
                 print(f"[LỖI PLUGIN] sinh_tin_hieu của '{getattr(strat, 'name', '?')}' ném ngoại lệ: {e}")
@@ -1130,7 +1209,7 @@ def _chay_backtest_strategy(strat, params, datasets, VON_BAN_DAU, PHI_GD, SLIPPA
             pl.col("signal").diff().fill_null(0).cast(pl.Int64).alias("entry_signal")
         )
 
-                                                                                        
+
         try:
             import chien_luoc.quan_ly_chien_luoc_vectorized as Q
             dung_regime_ml = getattr(Q, "DUNG_REGIME_MAC_DINH", False)
@@ -1139,7 +1218,7 @@ def _chay_backtest_strategy(strat, params, datasets, VON_BAN_DAU, PHI_GD, SLIPPA
 
         df_sig = chuan_hoa_va_loc_tin_hieu(df_sig, dung_regime_ml=dung_regime_ml)
 
-                                                                                                              
+
         df_sig = SLTP.them_sl_tp(df_sig, base_sl=base_sl, rr=rr)
         df_sig = them_don_bay_dong(df_sig, don_bay_goc=DON_BAY)
         trades, _ = run_fast_backtest(df_sig, VON_BAN_DAU, PHI_GD, SLIPPAGE, VON_MOI_LENH, DON_BAY, cooldown_nen=_COOLDOWN_NEN)
@@ -1192,7 +1271,7 @@ def run_strategy_optimization(strategy_key, n_trials=100, preloaded_datasets=Non
     Tự lấy không gian tham số từ plugin.khong_gian_tham_so(), tối ưu trên IS, kiểm định
     mù OOS + walk-forward nhiều đoạn + DSR, trả result tương thích dashboard (gồm phan_tich).
     """
-    from toi_uu_hoa.dang_ky_chien_luoc import lay_plugin
+    from toi_uu_hoa_low.dang_ky_chien_luoc import lay_plugin
 
     cls = lay_plugin(strategy_key)
     if cls is None:
@@ -1260,7 +1339,19 @@ def run_strategy_optimization(strategy_key, n_trials=100, preloaded_datasets=Non
         print('[ERROR] Không nạp được dữ liệu của bất kỳ symbol nào!')
         sys.exit(1)
 
-                                                                              
+    try:
+        import chien_luoc.quan_ly_chien_luoc_vectorized as _Q
+        _regime_on = getattr(_Q, "DUNG_REGIME_MAC_DINH", False)
+    except ImportError:
+        _regime_on = False
+    if _regime_on:
+        from chien_luoc.optimizer.trang_thai_thi_truong import pre_compute_regime
+        for sym, d in datasets.items():
+            if "regime" not in d["df_1m"].columns:
+                d["df_1m"] = pre_compute_regime(d["df_1m"])
+                d["timeframe_map"] = {tf: d["df_1m"] for tf in d["timeframe_map"]}
+
+
     khong_gian_dict = _khong_gian_plugin(khong_gian)
     danh_sach_bo = _sinh_danh_sach_bo(khong_gian_dict, n_trials, seed=42)
 
@@ -1296,7 +1387,7 @@ def run_strategy_optimization(strategy_key, n_trials=100, preloaded_datasets=Non
     )
     oos_is_ratio = oos_sharpe / is_sharpe if is_sharpe > 0 else 0.0
 
-                                                                                    
+
     oos_folds, wf_summary = [], {}
 
     canh_bao = []
@@ -1332,7 +1423,7 @@ def run_strategy_optimization(strategy_key, n_trials=100, preloaded_datasets=Non
 
     from chien_luoc.quan_ly_chien_luoc_vectorized import DUNG_SL_TP_DONG, DUNG_DON_BAY_DONG, DUNG_REGIME_MAC_DINH
     _md = _tham_so_mo_dun()
-                                                                    
+
     best_params_out = {
         's0': {'key': strat.name, 'tf': '-', 'type': 'plugin', 'params': best_params_plugin, 'thresholds': {}},
         'risk': {

@@ -105,6 +105,24 @@ def chay_backtest(return_data=False, callback=None):
             logger.warning(f"Không có dữ liệu cho {symbol}, bỏ qua.")
             continue
 
+        # Pre-compute regime ML 1 lần trước khi vào loop bar-to-bar để tránh inference lặp lại mỗi nến
+        try:
+            from chien_luoc.quan_ly_chien_luoc_bar_to_bar import STRATEGIES
+            if STRATEGIES:
+                selected_strat = list(STRATEGIES.values())[0]
+                use_ml = (
+                    bool(selected_strat.config.get("dung_ml", False)) or
+                    bool(selected_strat.logic.get("dung_ml", False)) or
+                    bool(selected_strat.config.get("use_ml", False)) or
+                    bool(selected_strat.risk.get("use_ml", False))
+                )
+                if use_ml:
+                    from chien_luoc.optimizer.trang_thai_thi_truong import pre_compute_regime
+                    logger.info(f"[ML] Đang pre-compute regime cho {symbol}...")
+                    df_goc = pre_compute_regime(df_goc)
+        except Exception as e:
+            logger.warning(f"[ML] Không thể pre-compute regime: {e}")
+
         vi_the = None
         dem_cooldown = 0
         COOLDOWN_NEN = int(config_trading.get("cooldown_nen", 5))
@@ -119,7 +137,7 @@ def chay_backtest(return_data=False, callback=None):
         last_price_close = 0
         last_time_str = ""
 
-                             
+
         dinh_tai_khoan = von_hien_tai
 
         for current_time in timestamps:
@@ -164,7 +182,7 @@ def chay_backtest(return_data=False, callback=None):
 
                 if side == "buy":
                     liq_price = entry * (1 - 1 / don_bay)
-                                                                                            
+
                     if sl_price > 0 and gia_low <= sl_price:
                         can_thoat = True
                         ly_do_thoat = "SL"
@@ -179,7 +197,7 @@ def chay_backtest(return_data=False, callback=None):
                         gia_khop_thoat = liq_price
                 else:
                     liq_price = entry * (1 + 1 / don_bay)
-                                                                                            
+
                     if sl_price > 0 and gia_high >= sl_price:
                         can_thoat = True
                         ly_do_thoat = "SL"
@@ -214,7 +232,7 @@ def chay_backtest(return_data=False, callback=None):
 
                 if can_thoat:
                     if ly_do_thoat == "LIQUIDATION":
-                                                                                        
+
                         real_pnl_pct = -1 / don_bay
                         loi_nhuan_usdt = -value
                         phi_dong = 0.0
@@ -273,7 +291,7 @@ def chay_backtest(return_data=False, callback=None):
                             }
                         )
 
-                                          
+
                     if von_hien_tai > dinh_tai_khoan:
                         dinh_tai_khoan = von_hien_tai
                     account_drawdown = (
@@ -285,7 +303,7 @@ def chay_backtest(return_data=False, callback=None):
                         account_drawdown,
                     )
 
-                                  
+
                     vi_the = None
                     dem_cooldown = COOLDOWN_NEN
 
@@ -414,7 +432,7 @@ def chay_backtest(return_data=False, callback=None):
                     }
                 )
 
-                                                                                              
+
     if lich_su_lenh:
         lich_su_lenh.sort(key=lambda x: x.get("time_close", ""))
         curr_bal = VON_BAN_DAU

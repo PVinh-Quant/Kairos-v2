@@ -4,12 +4,12 @@ from datetime import datetime
 import polars as pl
 def funny_quant_runner():
     """Trả về frame hoạt hình ASCII tiếp theo, tạo danh sách frame lần đầu gọi."""
-                            
+
     if not hasattr(funny_quant_runner, "frames"):
         frames = []
-        WIDTH = 120                 
+        WIDTH = 120
 
-                              
+
         def add_frame(content):
             frames.append(content)
 
@@ -86,9 +86,9 @@ def funny_quant_runner():
     return frame
 
 
-                                                                                   
-                                                       
-                                                                                   
+
+
+
 def execute_filtering_task(
     df_main: pl.DataFrame, filters: dict, initial_capital: float
 ):
@@ -97,14 +97,14 @@ def execute_filtering_task(
         if df_main is None or df_main.is_empty():
             return [], [{"balance": initial_capital}], []
 
-                                
+
         expr = pl.lit(True)
 
         if filters.get("date"):
             expr &= pl.col("filter_date") == filters["date"]
 
         if filters.get("side"):
-                                                                                     
+
             expr &= pl.col("filter_side") == filters["side"]
 
         if filters.get("weekday") is not None:
@@ -113,20 +113,20 @@ def execute_filtering_task(
         if filters.get("hour") is not None:
             expr &= pl.col("filter_hour") == filters["hour"]
 
-                       
+
         df_step1 = df_main.filter(expr)
 
         df_final = df_step1
         if filters.get("symbol"):
             df_final = df_final.filter(pl.col("symbol") == filters["symbol"])
 
-                                             
+
         final_trades = df_final.to_dicts()
         trades_for_coin_list = df_step1.to_dicts()
 
-                           
+
         if not df_final.is_empty():
-                                                         
+
             equity_df = df_final.sort("time_close").with_columns(
                 [(pl.col("pnl_usd").cum_sum() + initial_capital).alias("balance")]
             )
@@ -141,8 +141,8 @@ def execute_filtering_task(
         return [], [{"balance": initial_capital}], []
 
 
-                                                                                   
-                                                             
-                                                                                   
+
+
+
 
 __all__ = ["funny_quant_runner", "execute_filtering_task"]

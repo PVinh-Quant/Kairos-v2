@@ -5,7 +5,7 @@ from hien_thi.giao_dien.bang_mau import (
     TEXT_MAIN, TEXT_SUB, COLOR_WIN, COLOR_LOSS,
 )
 
-GRID_COLOR = BORDER_COLOR             
+GRID_COLOR = BORDER_COLOR
 FONT_TITLE = QFont("Segoe UI", 10, QFont.Weight.Bold)
 FONT_VAL_BIG = QFont("Segoe UI", 20, QFont.Weight.Bold)
 FONT_VAL_NORM = QFont("Segoe UI", 11, QFont.Weight.Bold)

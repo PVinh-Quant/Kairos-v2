@@ -116,7 +116,7 @@ def _tao_schema(con: duckdb.DuckDBPyConnection):
             r_multiple     DOUBLE
         )
     """)
-                                                 
+
     for col, dtype, default in [
         ("hold_duration", "DOUBLE", "0.0"),
         ("session", "VARCHAR", "''"),
@@ -132,7 +132,7 @@ def _tao_schema(con: duckdb.DuckDBPyConnection):
         except Exception:
             pass
 
-                                                                                
+
     try:
         con.execute("ALTER TABLE backtest_run ADD COLUMN IF NOT EXISTS ten_chien_luoc VARCHAR DEFAULT ''")
     except Exception:
@@ -152,7 +152,7 @@ def _tao_schema(con: duckdb.DuckDBPyConnection):
         )
     """)
 
-           
+
     con.execute("""
         CREATE OR REPLACE VIEW v_lenh_day_du AS
         SELECT *,
@@ -185,7 +185,7 @@ def tao_run_id() -> str:
     return datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + uuid.uuid4().hex[:4]
 
 
-                                                                               
+
 
 
 def _chuan_hoa_lenh_vector(row: dict) -> dict:
@@ -262,7 +262,7 @@ _NORMALIZER = {
     "backtest_bar": _chuan_hoa_lenh_bar,
     "backtest_da_luong": _chuan_hoa_lenh_bar,
     "demo": _chuan_hoa_lenh_demo,
-    "realtime": _chuan_hoa_lenh_demo,                             
+    "realtime": _chuan_hoa_lenh_demo,
 }
 
 
@@ -318,7 +318,7 @@ def _build_row(chuc_nang: str, run_id: str, norm: dict) -> dict:
     }
 
 
-                                                                               
+
 
 
 def luu_run(run_id: str, chuc_nang: str, config: dict):
@@ -389,7 +389,7 @@ def luu_ket_qua_backtest(
     con.close()
 
 
-                                                                               
+
 
 
 def _where(run_id=None, chuc_nang=None) -> str:
@@ -608,7 +608,7 @@ def luu_signal(run_id: str, chuc_nang: str, signal_raw: dict):
     con.close()
 
 
-                                                                               
+
 
 
 def thong_ke_hold_duration(run_id=None, chuc_nang=None) -> pd.DataFrame:
@@ -734,9 +734,9 @@ def sharpe_ratio(run_id: str, risk_free_rate: float = 0.0) -> dict:
     run_info = con.execute(f"""
         SELECT von_ban_dau, tu_ngay, den_ngay FROM backtest_run WHERE run_id = '{run_id}'
     """).df()
-    
+
     if run_info.empty:
-                                 
+
         von_ban_dau = 10000.0
         dates_df = con.execute(f"SELECT MIN(ngay) as min_d, MAX(ngay) as max_d FROM lenh WHERE run_id = '{run_id}'").df()
         if dates_df.empty or dates_df.iloc[0]["min_d"] is None:
@@ -748,7 +748,7 @@ def sharpe_ratio(run_id: str, risk_free_rate: float = 0.0) -> dict:
         von_ban_dau = float(run_info.iloc[0]["von_ban_dau"] or 10000.0)
         tu_ngay = run_info.iloc[0]["tu_ngay"]
         den_ngay = run_info.iloc[0]["den_ngay"]
-        
+
         try:
             import datetime
             if isinstance(tu_ngay, str):
@@ -767,13 +767,13 @@ def sharpe_ratio(run_id: str, risk_free_rate: float = 0.0) -> dict:
             start_date = dates_df.iloc[0]["min_d"]
             end_date = dates_df.iloc[0]["max_d"]
 
-                                      
+
     import datetime
     if isinstance(start_date, str):
         start_date = datetime.datetime.strptime(start_date[:10], "%Y-%m-%d").date()
     elif hasattr(start_date, "date"):
         start_date = start_date.date()
-        
+
     if isinstance(end_date, str):
         end_date = datetime.datetime.strptime(end_date[:10], "%Y-%m-%d").date()
     elif hasattr(end_date, "date"):
@@ -791,7 +791,7 @@ def sharpe_ratio(run_id: str, risk_free_rate: float = 0.0) -> dict:
 
     delta = end_date - start_date
     all_dates = [start_date + datetime.timedelta(days=i) for i in range(delta.days + 1)]
-    
+
     pnl_dict = {}
     for r in df_pnl.itertuples():
         d_val = r.ngay
@@ -867,7 +867,7 @@ def kelly_criterion(run_id: str) -> dict:
         kelly = w - (1.0 - w) / R
     else:
         kelly = 0.0
-        
+
     kelly = max(0.0, min(kelly, 1.0))
 
     return {

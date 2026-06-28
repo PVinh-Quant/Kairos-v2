@@ -66,6 +66,24 @@ def backtest_1_symbol(symbol, config_backtest, config_trading, result_queue):
             logger.warning(f"Không có dữ liệu cho {symbol}, bỏ qua.")
             return []
 
+        # Pre-compute regime ML 1 lần trước khi vào loop bar-to-bar để tránh inference lặp lại mỗi nến
+        try:
+            from chien_luoc.quan_ly_chien_luoc_bar_to_bar import STRATEGIES
+            if STRATEGIES:
+                selected_strat = list(STRATEGIES.values())[0]
+                use_ml = (
+                    bool(selected_strat.config.get("dung_ml", False)) or
+                    bool(selected_strat.logic.get("dung_ml", False)) or
+                    bool(selected_strat.config.get("use_ml", False)) or
+                    bool(selected_strat.risk.get("use_ml", False))
+                )
+                if use_ml:
+                    from chien_luoc.optimizer.trang_thai_thi_truong import pre_compute_regime
+                    logger.info(f"[ML] Đang pre-compute regime cho {symbol}...")
+                    df_goc = pre_compute_regime(df_goc)
+        except Exception as e:
+            logger.warning(f"[ML] Không thể pre-compute regime: {e}")
+
         vi_the = None
         dem_cooldown = 0
         COOLDOWN_NEN = int(config_trading.get("cooldown_nen", 5))
@@ -81,10 +99,10 @@ def backtest_1_symbol(symbol, config_backtest, config_trading, result_queue):
         last_price_close = 0
         last_time_str = ""
 
-                             
+
         dinh_tai_khoan = von_hien_tai
 
-                                  
+
         for current_time in timestamps:
 
             set_log_time(current_time)
@@ -111,7 +129,7 @@ def backtest_1_symbol(symbol, config_backtest, config_trading, result_queue):
             last_time_str = str_time
 
             if vi_the:
-                                                   
+
                 side, entry, don_bay, amount = (
                     vi_the["side"],
                     vi_the["entry"],
@@ -130,10 +148,10 @@ def backtest_1_symbol(symbol, config_backtest, config_trading, result_queue):
                 ly_do_thoat = ""
                 gia_khop_thoat = gia_close
 
-                                                   
+
                 if side == "buy":
                     liq_price = entry * (1 - 1 / don_bay)
-                                                                                            
+
                     if sl_price > 0 and gia_low <= sl_price:
                         can_thoat = True
                         ly_do_thoat = "SL"
@@ -148,7 +166,7 @@ def backtest_1_symbol(symbol, config_backtest, config_trading, result_queue):
                         gia_khop_thoat = liq_price
                 else:
                     liq_price = entry * (1 + 1 / don_bay)
-                                                                                            
+
                     if sl_price > 0 and gia_high >= sl_price:
                         can_thoat = True
                         ly_do_thoat = "SL"
@@ -162,7 +180,7 @@ def backtest_1_symbol(symbol, config_backtest, config_trading, result_queue):
                         ly_do_thoat = "LIQUIDATION"
                         gia_khop_thoat = liq_price
 
-                                                                    
+
                 if not can_thoat:
                     check_thoat, reason = chien_luoc_thoat_lenh(
                         symbol,
@@ -184,7 +202,7 @@ def backtest_1_symbol(symbol, config_backtest, config_trading, result_queue):
 
                 if can_thoat:
                     if ly_do_thoat == "LIQUIDATION":
-                                                                                        
+
                         real_pnl_pct = -1 / don_bay
                         loi_nhuan_usdt = -vi_the["value"]
                         phi_dong = 0.0
@@ -235,7 +253,7 @@ def backtest_1_symbol(symbol, config_backtest, config_trading, result_queue):
 
                     result_queue.put({"symbol": symbol, "trades": lich_su_lenh})
 
-                                          
+
                     if von_hien_tai > dinh_tai_khoan:
                         dinh_tai_khoan = von_hien_tai
                     account_drawdown = (
@@ -247,7 +265,7 @@ def backtest_1_symbol(symbol, config_backtest, config_trading, result_queue):
                         account_drawdown,
                     )
 
-                                  
+
                     vi_the = None
                     dem_cooldown = COOLDOWN_NEN
 
@@ -315,7 +333,7 @@ def backtest_1_symbol(symbol, config_backtest, config_trading, result_queue):
                         f"S: {chien_luoc}"
                     )
 
-                                        
+
         if vi_the:
             side, entry, don_bay = vi_the["side"], vi_the["entry"], vi_the["leverage"]
             raw_pnl_pct = (
@@ -402,7 +420,7 @@ def chay_backtest(return_data=False, callback=None):
         result_queue = manager.Queue()
 
         with ProcessPoolExecutor(max_workers=num_workers) as executor:
-                                                   
+
             futures = {
                 executor.submit(
                     backtest_1_symbol,
@@ -416,25 +434,25 @@ def chay_backtest(return_data=False, callback=None):
 
             finished_symbols = set()
 
-                                                                                       
+
             for future in as_completed(futures):
                 symbol = futures[future]
                 try:
-                                                                            
-                                                                           
+
+
                     trades = future.result()
 
                     if symbol:
                         trades_by_symbol[symbol] = trades
                         finished_symbols.add(symbol)
 
-                                                                          
+
                         all_trades_merged = []
                         for tlist in trades_by_symbol.values():
                             if isinstance(tlist, list):
                                 all_trades_merged.extend(tlist)
 
-                                                      
+
                         all_trades_merged.sort(key=lambda x: x.get("time_close", ""))
                         curr_bal = VON_BAN_DAU
                         equity_curve = [{"time": "Start", "balance": curr_bal}]
@@ -445,7 +463,7 @@ def chay_backtest(return_data=False, callback=None):
                                 {"time": t.get("time_close"), "balance": curr_bal}
                             )
 
-                                                               
+
                         if callback:
                             progress = int(
                                 (len(finished_symbols) / len(DS_SYMBOL)) * 100

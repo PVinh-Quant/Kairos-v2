@@ -98,9 +98,9 @@ class DraggableCard(QDockWidget):
         """)
 
 
-                                                                                   
-                                    
-                                                                                   
+
+
+
 class DraggableDashboard(ChienLuocActiveMixin, QMainWindow):
     def __init__(self):
         """Khởi tạo cửa sổ dashboard backtest với toolbar, dock widgets và bộ lọc."""
@@ -108,12 +108,12 @@ class DraggableDashboard(ChienLuocActiveMixin, QMainWindow):
         self.setWindowTitle("Backtest Dashboard")
         self.resize(1600, 900)
 
-                                        
+
         bg = BG_COLOR if "BG_COLOR" in globals() else "#0e0e0e"
         self.setStyleSheet(f"background-color: {bg};")
         self.setDockNestingEnabled(True)
 
-                                 
+
         self.all_trades_raw = []
         self.all_trades_df = pl.DataFrame()
         self.initial_capital = 10000.0
@@ -133,28 +133,28 @@ class DraggableDashboard(ChienLuocActiveMixin, QMainWindow):
             "hour": None,
         }
 
-                                                                
+
         from concurrent.futures import ThreadPoolExecutor
 
         self.executor_pool = ThreadPoolExecutor(max_workers=1)
         self.current_worker = None
 
-                                 
+
         self._init_ui_elements()
         self._init_widgets()
         self._init_layout()
 
-                                                    
+
         self.anim_timer = QTimer()
         self.anim_timer.timeout.connect(self.update_status_animation)
         self.anim_timer.setInterval(100)
 
-                                                   
-                                                             
 
-                                                                               
-                            
-                                                                               
+
+
+
+
+
 
     def _init_ui_elements(self):
         """Khởi tạo Toolbar và các nút điều khiển"""
@@ -169,7 +169,7 @@ class DraggableDashboard(ChienLuocActiveMixin, QMainWindow):
         )
         self.addToolBar(toolbar)
 
-                                                 
+
         self.btn_control = QPushButton("▶ Bắt đầu Backtest")
         self.btn_control.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_control.setStyleSheet(
@@ -178,10 +178,10 @@ class DraggableDashboard(ChienLuocActiveMixin, QMainWindow):
         self.btn_control.clicked.connect(self.on_btn_control_clicked)
         toolbar.addWidget(self.btn_control)
 
-                                                 
+
         self.btn_load_csv = QPushButton("📂 Mở File CSV")
         self.btn_load_csv.setCursor(Qt.CursorShape.PointingHandCursor)
-                                                          
+
         self.btn_load_csv.setStyleSheet(
             "background-color: #2962FF; color: #FFF; font-weight: bold; padding: 6px 15px; border-radius: 4px;"
         )
@@ -208,7 +208,7 @@ class DraggableDashboard(ChienLuocActiveMixin, QMainWindow):
         self.widget_Scatter = TradeScatterWidget()
         self.widget_ls = LongShortWidget()
 
-                                            
+
         self.widget_cal.date_selected.connect(self.handle_date_filter)
         self.widget_pnl.date_clicked.connect(self.handle_date_filter)
         self.widget_coins.coin_selected_signal.connect(self.handle_coin_filter)
@@ -241,12 +241,12 @@ class DraggableDashboard(ChienLuocActiveMixin, QMainWindow):
 
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dock_stats)
         self.splitDockWidget(self.dock_stats, self.dock_coins, Qt.Orientation.Vertical)
-                                                                             
+
         self.tabifyDockWidget(self.dock_coins, self.dock_ls)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dock_pnl)
         self.splitDockWidget(self.dock_pnl, self.dock_dist, Qt.Orientation.Horizontal)
         self.splitDockWidget(self.dock_dist, self.dock_asset, Qt.Orientation.Vertical)
-                                                                               
+
         self.tabifyDockWidget(self.dock_dist, self.dock_Scatter)
         self.splitDockWidget(self.dock_pnl, self.dock_history, Qt.Orientation.Vertical)
         self.splitDockWidget(self.dock_pnl, self.dock_cal, Qt.Orientation.Horizontal)
@@ -268,9 +268,9 @@ class DraggableDashboard(ChienLuocActiveMixin, QMainWindow):
             Qt.Orientation.Vertical,
         )
 
-                                                                               
-                                  
-                                                                               
+
+
+
     def process_new_data(self, data):
         """Chuẩn hóa DataFrame lệnh với các cột filter và gọi apply_filters."""
         trades = data.get("trades", [])
@@ -333,14 +333,14 @@ class DraggableDashboard(ChienLuocActiveMixin, QMainWindow):
 
     def update_ui_filtered(self, trades, equity, coin_list_trades):
         """Cập nhật tất cả widget với dữ liệu đã lọc, chuẩn hóa kiểu dữ liệu trước."""
-                                              
+
         df_trades = pl.DataFrame(trades)
         df_coin_list = pl.DataFrame(coin_list_trades)
 
-                                                            
+
         if not df_trades.is_empty():
             cols_to_fix = []
-                              
+
             if (
                 "time_close" in df_trades.columns
                 and df_trades["time_close"].dtype == pl.Utf8
@@ -349,7 +349,7 @@ class DraggableDashboard(ChienLuocActiveMixin, QMainWindow):
                     pl.col("time_close").str.strptime(pl.Datetime, strict=False)
                 )
 
-                                                                        
+
             if (
                 "time_open" in df_trades.columns
                 and df_trades["time_open"].dtype == pl.Utf8
@@ -358,7 +358,7 @@ class DraggableDashboard(ChienLuocActiveMixin, QMainWindow):
                     pl.col("time_open").str.strptime(pl.Datetime, strict=False)
                 )
 
-                       
+
             if "pnl_usd" in df_trades.columns:
                 cols_to_fix.append(pl.col("pnl_usd").cast(pl.Float64))
 
@@ -372,7 +372,7 @@ class DraggableDashboard(ChienLuocActiveMixin, QMainWindow):
         wd_val = self.active_filters["weekday"]
         wd_idx = (wd_val - 1) if wd_val is not None else None
 
-                                                                     
+
         widgets_to_update = [
             (self.widget_pnl, "update_data", df_trades),
             (self.widget_ls, "update_data", df_trades, self.active_filters["side"]),
@@ -383,77 +383,77 @@ class DraggableDashboard(ChienLuocActiveMixin, QMainWindow):
                 df_coin_list,
                 self.active_filters["symbol"],
             ),
-                                                          
+
             (self.day_dist, "update_data", df_trades, wd_idx),
             (self.hour_dist, "update_data", df_trades, self.active_filters["hour"]),
         ]
 
         for widget, method, *args in widgets_to_update:
             try:
-                                                
+
                 if hasattr(widget, method):
                     getattr(widget, method)(*args)
             except Exception as e:
                 print(f"Lỗi render tại {widget.__class__.__name__}: {e}")
 
-                                                            
+
         recent_trades = trades[-100:] if len(trades) > 100 else trades
         self.widget_history.update_data(recent_trades)
 
-                     
+
         self.widget_cal.set_trades(trades, self.active_filters["date"])
 
-                                                                               
-                    
-                                                                               
+
+
+
     def on_btn_control_clicked(self):
         """Xử lý click nút điều khiển: bắt đầu backtest mới hoặc tạm dừng."""
         if getattr(self, "is_view_mode", False):
             self.is_view_mode = False
             self.is_started = False
 
-                                   
+
         if not self.is_started:
             self.start_backtest_process()
             self.btn_control.setText("⏸ Tạm dừng")
         else:
-                                  
+
             pass
 
     def start_backtest_process(self):
         """Xóa dữ liệu cũ, khởi tạo BacktestWorker mới và bắt đầu chạy."""
         if self.is_started:
-            return                              
+            return
 
-                                        
+
         self.reset_dashboard_data()
 
-                                      
+
         self.lbl_status.setText("🚀 Đang khởi động Backtest...")
         self.is_started = True
         self.btn_control.setText("⏸ Tạm dừng")
 
-                                         
-                                              
+
+
         if self.worker is not None:
             if self.worker.isRunning():
                 self.worker.terminate()
-                self.worker.wait()                   
+                self.worker.wait()
             self.worker = None
 
-                                                                                        
+
         self._ap_dung_chien_luoc_ghi_de()
 
-                        
-        self.worker = BacktestWorker()                                      
 
-                          
+        self.worker = BacktestWorker()
+
+
         self.worker.progress_signal.connect(self.on_live_update)
         self.worker.finished_signal.connect(self.on_process_finished)
         if hasattr(self.worker, "error_signal"):
             self.worker.error_signal.connect(self.on_worker_error)
 
-                      
+
         self.worker.start()
 
         if hasattr(self, "anim_timer"):
@@ -485,7 +485,7 @@ class DraggableDashboard(ChienLuocActiveMixin, QMainWindow):
         if hasattr(self, "anim_timer"):
             self.anim_timer.stop()
         if result:
-                                                                                              
+
             self._last_live_render = 0.0
             self.is_filtering = False
             self.process_new_data(result)
@@ -526,9 +526,9 @@ class DraggableDashboard(ChienLuocActiveMixin, QMainWindow):
         )
         self.apply_filters()
 
-                                                                               
-                                   
-                                                                               
+
+
+
     def on_btn_load_csv_clicked(self):
         """Mở dialog chọn file CSV, reset dashboard rồi load dữ liệu vào."""
         if self.worker is not None:
@@ -539,20 +539,20 @@ class DraggableDashboard(ChienLuocActiveMixin, QMainWindow):
             self.anim_timer.stop()
         self.btn_control.setText("▶ Bắt đầu Backtest")
 
-                 
+
         file_path, _ = QFileDialog.getOpenFileName(
             self, "Chọn file CSV", "", "CSV Files (*.csv)"
         )
 
         if file_path:
-                                                       
+
             self.reset_dashboard_data()
 
             self.load_csv_data(file_path)
         else:
             self.lbl_status.setText("Đã hủy chọn file.")
 
-                                                                                             
+
     VECTOR_COL_MAP = {
         "Symbol": "symbol",
         "Loại": "side",
@@ -578,14 +578,14 @@ class DraggableDashboard(ChienLuocActiveMixin, QMainWindow):
         thì giữ nguyên; nếu là file vector thì đổi tên cột, map chiều lệnh LONG/SHORT -> buy/sell
         và suy ra ROI (pnl_pct) vì vector không lưu sẵn cột này.
         """
-                                                                                    
+
         if not any(c in df.columns for c in ("PnL", "Giá vào", "Loại")):
             return df
 
         rename_map = {k: v for k, v in self.VECTOR_COL_MAP.items() if k in df.columns}
         df = df.rename(rename_map)
 
-                                                                                      
+
         if "side" in df.columns:
             side_norm = pl.col("side").cast(pl.Utf8).str.to_uppercase().str.strip_chars()
             df = df.with_columns(
@@ -597,7 +597,7 @@ class DraggableDashboard(ChienLuocActiveMixin, QMainWindow):
                 .alias("side")
             )
 
-                                                                                                      
+
         if "pnl_pct" not in df.columns and all(
             c in df.columns for c in ("entry", "exit", "leverage", "side")
         ):
@@ -618,12 +618,12 @@ class DraggableDashboard(ChienLuocActiveMixin, QMainWindow):
         try:
             self.lbl_status.setText(f"⏳ Đang đọc file: {file_path}...")
 
-                                                                                          
+
             header_cols = pl.read_csv(file_path, n_rows=1).columns
 
             if la_file_dump_vector(header_cols):
-                                                                                         
-                                                                              
+
+
                 self.lbl_status.setText("⏳ Đang tái dựng lệnh từ file dump OHLCV vector…")
                 QApplication.processEvents()
                 df = tai_dung_lenh_tu_dump(file_path)
@@ -635,7 +635,7 @@ class DraggableDashboard(ChienLuocActiveMixin, QMainWindow):
             else:
                 df = pl.read_csv(file_path, infer_schema_length=10000)
 
-                                                                                   
+
             df = self._chuan_hoa_lenh_vector(df)
 
             required_columns = ["symbol", "side", "time_close", "pnl_usd"]

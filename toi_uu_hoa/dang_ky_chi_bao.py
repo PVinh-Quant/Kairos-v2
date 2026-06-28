@@ -3,7 +3,7 @@ toi_uu_hoa_low/dang_ky_chi_bao.py
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Registry trung tâm ánh xạ tên chỉ báo → hàm triển khai.
 
-INDICATOR_REGISTRY là điểm kết nối duy nhất giữa bộ tối ưu hóa 
+INDICATOR_REGISTRY là điểm kết nối duy nhất giữa bộ tối ưu hóa
 và tất cả các hàm chỉ báo trong chien_luoc/. Thêm chỉ báo mới chỉ cần
 thêm 1 dòng vào dict này mà không cần sửa bất cứ module nào khác.
 
@@ -35,14 +35,14 @@ except ImportError as e:
     sys.exit(1)
 
 
-                                                                               
-                    
-                                  
-                                                                       
-                                                                               
+
+
+
+
+
 
 INDICATOR_REGISTRY = {
-                                                                               
+
     'rsi':               Momentum.pt_rsi,
     'stochastic':        Momentum.pt_stochastic,
     'mfi':               Momentum.pt_mfi,
@@ -51,7 +51,7 @@ INDICATOR_REGISTRY = {
     'stc':               Momentum.pt_stc,
 
 
-                                                                               
+
     'bollinger':         Volatility.pt_bollinger_squeeze,
     'keltner':           Volatility.pt_keltner_channel,
     'donchian':          Volatility.pt_donchian_channel,
@@ -60,7 +60,7 @@ INDICATOR_REGISTRY = {
     'choppiness':        Volatility.pt_choppiness_index,
 
 
-                                                                               
+
     'ema':               Trend.pt_ema_trend,
     'sma':               Trend.pt_sma,
     'adx':               Trend.pt_adx,
@@ -74,7 +74,7 @@ INDICATOR_REGISTRY = {
     'alma':              Trend.pt_alma,
     'vwma':              Trend.pt_vwma,
 
-                                                                               
+
     'volume':            Vol.pt_volume,
     'obv':               Vol.pt_obv,
     'vwap':              Vol.pt_vwap,
@@ -83,11 +83,11 @@ INDICATOR_REGISTRY = {
     'pvt':               Vol.pt_pvt,
     'chaikin_oscillator': Vol.pt_chaikin_oscillator,
 
-                                                                              
+
     'fractals':          MS.pt_fractals,
 
 
-                                                                               
+
     'elder_ray':         Pos.pt_elder_ray,
 }
 

@@ -18,7 +18,7 @@ import sys
 import time
 from datetime import datetime, timedelta
 
-                                                                                          
+
 _CACHE_ROOT = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "du_lieu", "cache_ohlcv"
 )
@@ -36,9 +36,9 @@ def gop_nen(df, timeframe_dich):
             df.group_by_dynamic(
                 "timestamp",
                 every=rule,
-                closed="left",                             
-                label="left",                            
-                start_by="window",                                                      
+                closed="left",
+                label="left",
+                start_by="window",
             )
             .agg(
                 [
@@ -52,7 +52,7 @@ def gop_nen(df, timeframe_dich):
             .drop_nulls()
         )
 
-                                   
+
         return df_res if len(df_res) >= 25 else None
 
     except Exception as e:
@@ -97,7 +97,7 @@ def fetch_raw(exchange, symbol, timeframe, limit=1000):
     """Fetch OHLCV thô từ sàn qua CCXT, trả về Polars DataFrame với timestamp đã parse."""
     try:
         ohlcv = exchange.fetch_ohlcv(symbol, timeframe, limit=limit)
-                                                          
+
         schema = {
             "timestamp": pl.Int64,
             "open": pl.Float64,
@@ -106,7 +106,7 @@ def fetch_raw(exchange, symbol, timeframe, limit=1000):
             "close": pl.Float64,
             "volume": pl.Float64,
         }
-                                                              
+
         df = pl.DataFrame(ohlcv, schema=list(schema.keys()), orient="row").with_columns(
             [pl.from_epoch("timestamp", time_unit="ms")]
         )
@@ -118,7 +118,7 @@ def fetch_raw(exchange, symbol, timeframe, limit=1000):
 
 def lay_du_lieu_nen(
     ten_san, symbol
-):                                                                                                                                                   
+):
     """Fetch 8 khung thời gian đồng thời cho một symbol từ sàn chỉ định."""
     exchange = quan_ly_san.lay_san(ten_san)
     df_1m = df_3m = df_5m = df_15m = df_30m = df_1h = df_4h = df_1d = None
@@ -127,19 +127,19 @@ def lay_du_lieu_nen(
 
     df_1m = fetch_raw(exchange, symbol, "1m", limit=300)
     if df_1m is not None:
-        df_3m = gop_nen(df_1m, "3m")       
+        df_3m = gop_nen(df_1m, "3m")
 
     df_5m = fetch_raw(exchange, symbol, "5m", limit=300)
     if df_5m is not None:
-        df_15m = gop_nen(df_5m, "15m")       
+        df_15m = gop_nen(df_5m, "15m")
 
     df_30m = fetch_raw(exchange, symbol, "30m", limit=300)
     if df_30m is not None:
-        df_1h = gop_nen(df_30m, "1h")       
+        df_1h = gop_nen(df_30m, "1h")
 
     df_4h = fetch_raw(exchange, symbol, "4h", limit=300)
     if df_4h is not None:
-        df_1d = gop_nen(df_4h, "1d")      
+        df_1d = gop_nen(df_4h, "1d")
 
     return df_1m, df_3m, df_5m, df_15m, df_30m, df_1h, df_4h, df_1d
 
@@ -232,10 +232,10 @@ def tai_du_lieu_lich_su(symbol, start_str, end_str):
     end_date = end_dt.date()
     all_dates = [start_date + timedelta(days=i) for i in range((end_date - start_date).days + 1)]
 
-    day_frames = {}                                           
-    missing = []                           
+    day_frames = {}
+    missing = []
 
-                                                                                          
+
     for d in all_dates:
         path = _file_cache_ngay(cache_dir, d)
         if d < today_utc and os.path.exists(path):
@@ -243,10 +243,10 @@ def tai_du_lieu_lich_su(symbol, start_str, end_str):
                 day_frames[d] = pl.read_parquet(path)
                 continue
             except Exception:
-                pass                       
+                pass
         missing.append(d)
 
-                                                             
+
     if missing:
         n_cached = len(all_dates) - len(missing)
         logger.info(
@@ -264,7 +264,7 @@ def tai_du_lieu_lich_su(symbol, start_str, end_str):
             df_range = _tai_1m_tu_san(exchange, symbol, since_ms, end_ms)
             if df_range is None or df_range.is_empty():
                 continue
-                                                                                                      
+
             d = g_start
             while d <= g_end:
                 df_day = df_range.filter(pl.col("timestamp").dt.date() == d)
@@ -282,7 +282,7 @@ def tai_du_lieu_lich_su(symbol, start_str, end_str):
     if not day_frames:
         return pl.DataFrame()
 
-                                                                             
+
     df = (
         pl.concat([day_frames[d] for d in sorted(day_frames)])
         .unique(subset=["timestamp"], keep="first")

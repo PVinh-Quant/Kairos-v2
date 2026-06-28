@@ -28,8 +28,8 @@ class CandlestickChartWidget(QWidget):
         self.current_symbol = "UNKNOWN"
         self.df_base_1m = pl.DataFrame()
         self.worker = None
-        self.phien = None                                                                      
-        self._active_strategy = None                                                            
+        self.phien = None
+        self._active_strategy = None
         self._active_strategy_label = ""
 
         self.main_layout = QVBoxLayout(self)
@@ -53,8 +53,8 @@ class CandlestickChartWidget(QWidget):
 
         self.splitter.addWidget(self.left_panel)
         self.splitter.addWidget(self.table)
-                                                                                
-                                                                   
+
+
         self.splitter.setSizes([1000, 300])
         self.splitter.setStretchFactor(0, 1)
         self.splitter.setStretchFactor(1, 0)
@@ -76,7 +76,7 @@ class CandlestickChartWidget(QWidget):
         self.btn_load.clicked.connect(self.run_backtest)
         tb_layout.addWidget(self.btn_load)
 
-                                                                                         
+
         self.btn_chay_cl = QPushButton("▶ Chạy chiến lược này")
         self.btn_chay_cl.setStyleSheet(
             f"background-color: {Theme.WIN}; color: #FFF; font-weight: bold; padding: 6px 15px; border-radius: 4px; border: none;"
@@ -142,14 +142,14 @@ class CandlestickChartWidget(QWidget):
         self.worker.error.connect(self.on_backtest_error)
         self.worker.start()
 
-                                                                               
+
     def gan_phien(self, phien):
         """Nhận bus phiên: lắng nghe chiến lược active do màn Tối ưu gửi sang."""
         self.phien = phien
         if phien is None:
             return
         phien.strategy_changed.connect(self._nhan_chien_luoc)
-        if phien.active_strategy:                                               
+        if phien.active_strategy:
             self._nhan_chien_luoc(phien.active_strategy)
 
     def _nhan_chien_luoc(self, result):
@@ -215,7 +215,7 @@ class CandlestickChartWidget(QWidget):
         symbol = self.combo_symbol.currentText()
         symbol_trades = [t for t in (raw_trades or []) if t.get("Symbol") == symbol]
 
-                                                                                                    
+
         symbol_trades.sort(key=lambda x: x.get("Entry_Time") if x.get("Entry_Time") else x.get("Time"))
 
         clean_trades = []
@@ -226,7 +226,7 @@ class CandlestickChartWidget(QWidget):
                 continue
 
             hold_time_str = self.calculate_hold_time(en_t, ex_t)
-            
+
             clean_trades.append({
                 "id": i + 1,
                 "direction": "Long" if str(t.get("Loại")).upper() in ("BUY", "LONG") else "Short",
@@ -234,7 +234,7 @@ class CandlestickChartWidget(QWidget):
                 "exit_time": ex_t,
                 "entry_price": float(t.get("Giá vào", 0.0)),
                 "exit_price": float(t.get("Giá đóng", 0.0)),
-                "price_change": float(t.get("PnL", 0.0)),                                   
+                "price_change": float(t.get("PnL", 0.0)),
                 "hold_time": hold_time_str,
             })
         return clean_trades
@@ -259,7 +259,7 @@ class CandlestickChartWidget(QWidget):
 
         self.df_base_1m = df.sort("timestamp")
 
-                                                                                    
+
         self.chart.trades = self.process_and_extract_trades(
             self.raw_trades, self.df_base_1m
         )

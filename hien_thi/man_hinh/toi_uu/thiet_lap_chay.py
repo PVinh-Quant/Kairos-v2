@@ -18,7 +18,7 @@ from PyQt6.QtCore import Qt, QDate
 
 from hien_thi.giao_dien.theme import Theme
 
-                                                                                        
+
 _CO_KHOANG_NGAY = {"backtest", "vectorized"}
 
 
@@ -30,7 +30,7 @@ class _DanhSachSymbol(QListWidget):
     handler đảo lần nữa = không đổi gì). Ở đây ta tự đảo 1 lần rồi nuốt sự kiện.
     """
 
-    def mousePressEvent(self, e):                                
+    def mousePressEvent(self, e):
         if e.button() == Qt.MouseButton.LeftButton:
             it = self.itemAt(e.position().toPoint())
             if it is not None and (it.flags() & Qt.ItemFlag.ItemIsUserCheckable):
@@ -71,7 +71,7 @@ class ThietLapChayDialog(QDialog):
         goi_y.setWordWrap(True)
         root.addWidget(goi_y)
 
-                                                     
+
         hang = QHBoxLayout()
         self.o_tim = QLineEdit()
         self.o_tim.setPlaceholderText("Tìm symbol…")
@@ -82,10 +82,10 @@ class ThietLapChayDialog(QDialog):
         hang.addWidget(self.chk_tat_ca)
         root.addLayout(hang)
 
-                                            
+
         self.ds = _DanhSachSymbol()
         self.ds.setSelectionMode(QListWidget.SelectionMode.NoSelection)
-                                                                         
+
         self.ds.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.ds.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.ds.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -101,7 +101,7 @@ class ThietLapChayDialog(QDialog):
         self.lbl_dem.setStyleSheet(f"color:{Theme.ACCENT}; font-size:11px;")
         root.addWidget(self.lbl_dem)
 
-                                                     
+
         if self._co_ngay:
             hang_ngay = QHBoxLayout()
             hang_ngay.setSpacing(8)
@@ -115,7 +115,7 @@ class ThietLapChayDialog(QDialog):
             hang_ngay.addStretch(1)
             root.addLayout(hang_ngay)
 
-                            
+
         nut = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
@@ -127,7 +127,7 @@ class ThietLapChayDialog(QDialog):
 
         self._cap_nhat_dem()
 
-                                                                             
+
     def _nhan(self, text):
         lbl = QLabel(text)
         lbl.setStyleSheet(f"color:{Theme.TEXT_SUB}; font-size:11px;")
@@ -159,7 +159,7 @@ class ThietLapChayDialog(QDialog):
             it.setHidden(bool(text) and text not in it.text().lower())
 
     def _toggle_tat_ca(self, state):
-                                                                                                
+
         muon = Qt.CheckState.Checked if state == Qt.CheckState.Checked.value else Qt.CheckState.Unchecked
         self.ds.blockSignals(True)
         for i in range(self.ds.count()):

@@ -32,7 +32,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QRectF, QPointF
 from PyQt6.QtGui import QColor, QFont, QPicture, QPainter, QPen, QBrush, QLinearGradient
 
-                            
+
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 if PROJECT_ROOT not in sys.path:
     sys.path.append(PROJECT_ROOT)
@@ -42,10 +42,10 @@ from chuc_nang.chay_realtime import chay_realtime
 import thuc_thi_lenh.quan_ly_lenh as quan_ly_lenh
 from thuc_thi_lenh.quan_ly_lenh import ui_signals, get_all_data
 
-                                                                                   
-                        
-                                                                                   
-                                                                     
+
+
+
+
 from hien_thi.giao_dien.bang_mau import (
     ACCENT_COLOR, BG_COLOR, CARD_BG, BORDER_COLOR,
     TEXT_MAIN, TEXT_SUB, COLOR_WIN, COLOR_LOSS,
@@ -63,12 +63,12 @@ class MainDashboard_realtime(ChienLuocActiveMixin, QMainWindow):
         """Khởi tạo cửa sổ dashboard realtime với layout dock và nút bắt đầu."""
         super().__init__()
         self.setWindowTitle("REALTIME")
-                                                                       
+
         self.resize(1000, 650)
         self.setStyleSheet(f"background-color: {BG_COLOR};")
         self.setDockNestingEnabled(True)
 
-                                                 
+
         self.toolbar = QToolBar("Realtime Controls")
         self.toolbar.setMovable(False)
         self.toolbar.setStyleSheet(
@@ -83,7 +83,7 @@ class MainDashboard_realtime(ChienLuocActiveMixin, QMainWindow):
         )
         self.btn_start.clicked.connect(self.start_realtime_mode)
         self.toolbar.addWidget(self.btn_start)
-                                                  
+
 
         self.market_view = MarketViewContainer()
         self.pos_table = PositionsTable()
@@ -100,7 +100,7 @@ class MainDashboard_realtime(ChienLuocActiveMixin, QMainWindow):
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dock_stats)
         self.splitDockWidget(self.dock_stats, self.dock_hist, Qt.Orientation.Vertical)
 
-                                                     
+
         self.resizeDocks(
             [self.dock_market, self.dock_pos], [500, 500], Qt.Orientation.Vertical
         )
@@ -119,25 +119,25 @@ class MainDashboard_realtime(ChienLuocActiveMixin, QMainWindow):
         self.worker = TradingBridge(chay_realtime)
         self.worker.data_signal.connect(self.sync_all)
 
-                                              
+
         self.statusBar().showMessage(
             "Hệ thống đang chờ... Vui lòng bấm 'BẮT ĐẦU REALTIME'."
         )
 
-                                          
+
     def start_realtime_mode(self):
         """Khóa nút và khởi động luồng realtime khi người dùng bấm bắt đầu."""
-        self.btn_start.setEnabled(False)                                       
+        self.btn_start.setEnabled(False)
         self.btn_start.setText("ĐANG CHẠY REALTIME...")
         self.btn_start.setStyleSheet(
             f"background-color: {COLOR_WIN}; color: #FFF; font-weight: bold; padding: 6px 20px; border-radius: 4px; border: none;"
         )
         self.statusBar().showMessage("Đang khởi động luồng Realtime...")
 
-                                                                                        
+
         self._ap_dung_chien_luoc_ghi_de()
 
-                                      
+
         self.worker.start()
 
     def sync_all(self, data):

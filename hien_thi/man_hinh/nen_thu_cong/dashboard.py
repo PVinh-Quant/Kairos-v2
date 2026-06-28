@@ -30,13 +30,13 @@ from hien_thi.man_hinh.toi_uu.dinh_nghia import CATEGORIES, INDICATOR_DESC, ALL_
 from hien_thi.man_hinh.bieu_do_nen.dashboard import CandlestickChartWidget
 from hien_thi.man_hinh.bieu_do_nen.worker import BacktestWorker
 
-                                      
+
 from hien_thi.man_hinh.toi_uu.thanh_phan import ModuleItem, DataChip, ModuleDropZone, DataDropZone, ActiveDatasetChip, ModuleChip
 from hien_thi.man_hinh.toi_uu.data_pool import DataPoolDialog
 from hien_thi.man_hinh.toi_uu.tien_ich import doc_bo_du_lieu, luu_bo_du_lieu
 
 
-                                                                                
+
 @lru_cache(maxsize=None)
 def _loai_chi_bao(key):
     """Loại chỉ báo ('oscillator'/'channel'/'trend'/'volume') — tự dò qua registry."""
@@ -70,7 +70,7 @@ def _tham_so_mac_dinh(key):
         d = p.default
         if d is inspect.Parameter.empty:
             d = 14
-                                                                           
+
         if isinstance(d, bool) or not isinstance(d, (int, float)):
             continue
         out[name] = d
@@ -129,7 +129,7 @@ def _combo_css():
     )
 
 
-                                                                                 
+
 class ThuCongIndicatorItem(QFrame):
     clicked = pyqtSignal(str)
 
@@ -181,34 +181,34 @@ class ThuCongIndicatorItem(QFrame):
             return
         if (event.position().toPoint() - self._press_pos).manhattanLength() < 12:
             return
-        
+
         self._press_pos = None
-        
+
         drag = QDrag(self)
         mime = QMimeData()
         mime.setText(self.key)
         drag.setMimeData(mime)
-        
+
         font = QFont("Segoe UI", 9, QFont.Weight.Bold)
         fm = QFontMetrics(font)
         text_w = fm.horizontalAdvance(self.key.upper())
         badge_w = max(text_w + 16, 60)
         badge_h = 20
-        
+
         pixmap = QPixmap(badge_w, badge_h)
         pixmap.fill(Qt.GlobalColor.transparent)
-        
+
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setBrush(QBrush(QColor(14, 14, 14, 210)))
         painter.setPen(QPen(QColor(Theme.ACCENT), 1.5))
         painter.drawRoundedRect(1, 1, badge_w - 2, badge_h - 2, 4, 4)
-        
+
         painter.setPen(QColor(Theme.TEXT_MAIN))
         painter.setFont(font)
         painter.drawText(QRect(0, 0, badge_w, badge_h), Qt.AlignmentFlag.AlignCenter, self.key.upper())
         painter.end()
-        
+
         drag.setPixmap(pixmap)
         drag.setHotSpot(QPoint(badge_w // 2, badge_h // 2))
         drag.exec(Qt.DropAction.CopyAction)
@@ -224,20 +224,20 @@ class ThuCongGridChip(QFrame):
         self._press_pos = None
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setStyleSheet("QFrame { background: %s; border: 1px solid %s; border-radius: 4px; }" % (Theme.GRID, Theme.BORDER))
-        
+
         v = QVBoxLayout(self)
         v.setContentsMargins(6, 4, 6, 6)
         v.setSpacing(4)
-        
+
         top = QHBoxLayout()
         top.setContentsMargins(0, 0, 0, 0)
         top.setSpacing(2)
-        
+
         name_str = self.key.upper()
         name = QLabel(name_str)
         font_size = 9 if len(name_str) > 12 else 11
         name.setStyleSheet(f"color: {Theme.TEXT_MAIN}; font-weight: bold; font-size: {font_size}px; background: transparent; border: none;")
-        
+
         rm = QPushButton("×")
         rm.setFixedSize(14, 14)
         rm.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -246,15 +246,15 @@ class ThuCongGridChip(QFrame):
             f"QPushButton:hover {{ color: {Theme.LOSS}; }}"
         )
         rm.clicked.connect(lambda _, idx=self.idx: self.dashboard._remove_chip(idx))
-        
+
         top.addWidget(name, 1)
         top.addWidget(rm)
         v.addLayout(top)
-        
+
         bottom = QHBoxLayout()
         bottom.setContentsMargins(0, 0, 0, 0)
         bottom.setSpacing(0)
-        
+
         role = self.spec.get("role", "trigger")
         role_btn = QPushButton("Trigger" if role == "trigger" else "Filter")
         role_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -265,7 +265,7 @@ class ThuCongGridChip(QFrame):
             f"QPushButton:hover {{ background: {rc}1a; }}"
         )
         role_btn.clicked.connect(lambda _, idx=self.idx: self.dashboard._toggle_role(idx))
-        
+
         bottom.addWidget(role_btn)
         bottom.addStretch()
         v.addLayout(bottom)
@@ -286,31 +286,31 @@ class ThuCongGridChip(QFrame):
         mime = QMimeData()
         mime.setText(f"move:{self.idx}:{self.key}")
         drag.setMimeData(mime)
-        
+
         font = QFont("Segoe UI", 9, QFont.Weight.Bold)
         fm = QFontMetrics(font)
         text_w = fm.horizontalAdvance(self.key.upper())
         badge_w = max(text_w + 16, 60)
         badge_h = 20
-        
+
         pixmap = QPixmap(badge_w, badge_h)
         pixmap.fill(Qt.GlobalColor.transparent)
-        
+
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setBrush(QBrush(QColor(14, 14, 14, 210)))
         painter.setPen(QPen(QColor(Theme.ACCENT), 1.5))
         painter.drawRoundedRect(1, 1, badge_w - 2, badge_h - 2, 4, 4)
-        
+
         painter.setPen(QColor(Theme.TEXT_MAIN))
         painter.setFont(font)
         painter.drawText(QRect(0, 0, badge_w, badge_h), Qt.AlignmentFlag.AlignCenter, self.key.upper())
         painter.end()
-        
+
         drag.setPixmap(pixmap)
         drag.setHotSpot(QPoint(badge_w // 2, badge_h // 2))
         action = drag.exec(Qt.DropAction.MoveAction)
-                                                                  
+
         if action == Qt.DropAction.IgnoreAction:
             self.dashboard._remove_chip(self.idx)
 
@@ -328,12 +328,12 @@ class ThuCongTimeframeColumn(QFrame):
         lay = QVBoxLayout(self)
         lay.setContentsMargins(4, 6, 4, 6)
         lay.setSpacing(4)
-        
+
         head = QLabel(tf)
         head.setAlignment(Qt.AlignmentFlag.AlignCenter)
         head.setStyleSheet(f"color: {Theme.TEXT_MAIN}; font-weight: bold; font-size: 13px; background: transparent; border: none;")
         lay.addWidget(head)
-        
+
         self.body = QVBoxLayout()
         self.body.setSpacing(4)
         lay.addLayout(self.body)
@@ -341,10 +341,10 @@ class ThuCongTimeframeColumn(QFrame):
         self._base_style()
 
     def _base_style(self):
-                                                  
+
         has_chips = len([w for w in self.findChildren(ThuCongGridChip)]) > 0
         if has_chips:
-                                                                              
+
             self.setStyleSheet(
                 f"ThuCongTimeframeColumn {{ background: {Theme.CARD}; border: 1.5px solid {Theme.ACCENT}80; border-radius: 6px; }}"
             )
@@ -354,7 +354,7 @@ class ThuCongTimeframeColumn(QFrame):
             )
 
     def _hi_style(self):
-                                  
+
         self.setStyleSheet(
             f"ThuCongTimeframeColumn {{ background: {Theme.GRID}; border: 2px solid {Theme.ACCENT}; border-radius: 6px; }}"
         )
@@ -398,7 +398,7 @@ class ThuCongTimeframeColumn(QFrame):
         self._base_style()
 
 
-                                                                                
+
 class TheChiBao(QFrame):
     """Một thẻ cấu hình cho 1 chỉ báo: người dùng tự nhập mọi tham số & ngưỡng."""
     removed = pyqtSignal(int)
@@ -419,34 +419,34 @@ class TheChiBao(QFrame):
         lay.setContentsMargins(12, 6, 12, 6)
         lay.setSpacing(6)
 
-                                                                                                 
+
         head = QHBoxLayout()
         head.setContentsMargins(0, 0, 0, 0)
         head.setSpacing(10)
-        
+
         name = QLabel(f"{self.key.upper()} ({self.spec.get('tf', '5m')})")
         name.setStyleSheet(f"color: {Theme.ACCENT}; font-size: 12px; font-weight: bold; background: transparent; border: none;")
         head.addWidget(name)
-        
+
         desc = QLabel(f"·  {INDICATOR_DESC.get(self.key, self.key)}  ·  {self.itype}")
         desc.setStyleSheet(f"color: {Theme.TEXT_SUB}; font-size: 11px; background: transparent; border: none;")
         head.addWidget(desc)
-        
+
         head.addSpacing(20)
         head.addWidget(self._lbl("Vai trò:"))
-        
+
         self.cb_role = QComboBox()
         self.cb_role.addItem("Trigger (vào lệnh)", "trigger")
         self.cb_role.addItem("Filter (lọc)", "filter")
         self.cb_role.setStyleSheet(_combo_css())
         self.cb_role.setFixedWidth(140)
         self.cb_role.setFixedHeight(22)
-        
+
         role_val = self.spec.get("role", "trigger")
         idx_role = self.cb_role.findData(role_val)
         if idx_role >= 0:
             self.cb_role.setCurrentIndex(idx_role)
-            
+
         head.addWidget(self.cb_role)
         head.addStretch()
 
@@ -461,7 +461,7 @@ class TheChiBao(QFrame):
         head.addWidget(btn_x)
         lay.addLayout(head)
 
-                                                                                               
+
         grid = QGridLayout()
         grid.setContentsMargins(0, 2, 0, 2)
         grid.setHorizontalSpacing(16)
@@ -488,7 +488,7 @@ class TheChiBao(QFrame):
                 col = 0
                 row += 1
 
-                                                                 
+
         default_params = _tham_so_mac_dinh(self.key)
         spec_params = self.spec.get("params", {})
         merged_params = {}
@@ -535,7 +535,7 @@ class TheChiBao(QFrame):
         }
 
 
-                                                                                
+
 class BieuDoNenThuCong(QWidget):
     """Tab 'Chỉ báo thủ công': nhập tham số tay cho từng chỉ báo → biểu đồ nến kết quả."""
 
@@ -563,18 +563,18 @@ class BieuDoNenThuCong(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-                                     
+
         self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
         self.main_splitter.setStyleSheet(f"QSplitter::handle {{ background-color: {Theme.BORDER}; }}")
         self.main_splitter.setHandleWidth(1)
         root.addWidget(self.main_splitter, 1)
 
-                                       
+
         self.left_panel = self._build_left_panel()
         self.left_panel.setMinimumWidth(220)
         self.main_splitter.addWidget(self.left_panel)
 
-                                                                             
+
         self.right_widget = QWidget()
         right_lay = QVBoxLayout(self.right_widget)
         right_lay.setContentsMargins(0, 0, 0, 0)
@@ -589,10 +589,10 @@ class BieuDoNenThuCong(QWidget):
         self.main_splitter.setStretchFactor(1, 1)
         self.main_splitter.setSizes([230, 1000])
 
-                       
+
         self._build_statusbar(root)
 
-                                                                                
+
     def _build_left_panel(self):
         panel = QFrame()
         panel.setMinimumWidth(220)
@@ -601,7 +601,7 @@ class BieuDoNenThuCong(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(0)
 
-                   
+
         tabbar = QHBoxLayout()
         tabbar.setContentsMargins(0, 0, 0, 0)
         tabbar.setSpacing(0)
@@ -617,9 +617,9 @@ class BieuDoNenThuCong(QWidget):
         lay.addLayout(tabbar)
 
         self.left_stack = QStackedWidget()
-        self.left_stack.addWidget(self._build_indicator_palette())     
-        self.left_stack.addWidget(self._build_module_palette())        
-        self.left_stack.addWidget(self._build_data_pool_palette())     
+        self.left_stack.addWidget(self._build_indicator_palette())
+        self.left_stack.addWidget(self._build_module_palette())
+        self.left_stack.addWidget(self._build_data_pool_palette())
         lay.addWidget(self.left_stack, 1)
         self._switch_left_tab(0)
         return panel
@@ -664,7 +664,7 @@ class BieuDoNenThuCong(QWidget):
         self.list_layout = QVBoxLayout(container)
         self.list_layout.setContentsMargins(6, 0, 6, 10)
         self.list_layout.setSpacing(2)
-        
+
         self.category_headers = []
         for cat, keys in CATEGORIES.items():
             cat_lbl = QLabel(cat.upper())
@@ -816,10 +816,10 @@ class BieuDoNenThuCong(QWidget):
             cat_lbl.setVisible(cat_visible)
 
     def _select_quick(self, key):
-                                                                     
+
         self._on_drop("5m", key)
 
-                                                                                
+
     def _build_config_panel(self):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -832,12 +832,12 @@ class BieuDoNenThuCong(QWidget):
         lay.setContentsMargins(16, 12, 16, 12)
         lay.setSpacing(10)
 
-                                
+
         self.lbl_builder_title = QLabel("Kéo chỉ báo từ trái thả vào cột khung thời gian → bấm '▶ Chạy'")
         self.lbl_builder_title.setStyleSheet(f"color: {Theme.TEXT_MAIN}; font-weight: bold; font-size: 13px;")
         lay.addWidget(self.lbl_builder_title)
 
-                                                                                     
+
         settings_panel = QFrame()
         settings_panel.setStyleSheet(
             f"QFrame {{ background: {Theme.CARD}; border: 1px solid {Theme.BORDER}; border-radius: 6px; }}"
@@ -894,7 +894,7 @@ class BieuDoNenThuCong(QWidget):
 
         quick.addStretch()
 
-                                                         
+
         self.btn_run = QPushButton("▶ Chạy")
         self.btn_run.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_run.setStyleSheet(
@@ -929,27 +929,27 @@ class BieuDoNenThuCong(QWidget):
 
         lay.addWidget(settings_panel)
 
-                                                                        
+
         self.data_zone = DataDropZone()
         self.data_zone.setToolTip("Kéo 1 bộ dữ liệu (Symbol + khoảng ngày) vào đây để backtest trên dữ liệu đó. Để trống = dùng Symbol/ngày trong config.")
         self.data_zone.data_dropped.connect(self._on_data_drop)
         lay.addWidget(self.data_zone)
         self._render_data_zone()
 
-                                                                 
+
         self.module_zone = ModuleDropZone()
         self.module_zone.setToolTip("Kéo các mô-đun (Regime ML / SL-TP động / Đòn bẩy động) vào khung này để bật.")
         self.module_zone.module_dropped.connect(self._on_module_drop)
         lay.addWidget(self.module_zone)
         self._render_modules()
 
-                                                           
+
         grid_frame = QFrame()
         grid_frame.setStyleSheet(f"background: {Theme.BG}; border: 1px solid {Theme.BORDER}; border-radius: 6px;")
         grid_lay = QHBoxLayout(grid_frame)
         grid_lay.setContentsMargins(6, 6, 6, 6)
         grid_lay.setSpacing(6)
-        
+
         self.tf_columns = {}
         for tf in ALL_TIMEFRAMES:
             col = ThuCongTimeframeColumn(tf)
@@ -958,7 +958,7 @@ class BieuDoNenThuCong(QWidget):
             grid_lay.addWidget(col, 1)
         lay.addWidget(grid_frame)
 
-                                  
+
         self.lbl_strategy_desc = QLabel(
             "Mỗi cột là 1 khung; đặt được nhiều chỉ báo, và cùng 1 chỉ báo có thể đặt ở nhiều khung. "
             "Chiến lược chỉ vào lệnh khi các chỉ báo đồng thuận — người dùng tự nhập ngưỡng tối ưu cho từng chỉ báo/khung."
@@ -967,7 +967,7 @@ class BieuDoNenThuCong(QWidget):
         self.lbl_strategy_desc.setStyleSheet(f"color: {Theme.TEXT_SUB}; font-size: 11px;")
         lay.addWidget(self.lbl_strategy_desc)
 
-                                            
+
         self.cards_container = QWidget()
         self.cards_container.setStyleSheet("background: transparent;")
         self.cards_layout = QVBoxLayout(self.cards_container)
@@ -1003,7 +1003,7 @@ class BieuDoNenThuCong(QWidget):
             f"QAbstractSpinBox::down-arrow:hover {{ border-top-color: {Theme.TEXT_MAIN}; }}"
         )
 
-                                                                                 
+
     def _save_cards_to_specs(self):
         """Đồng bộ giá trị từ các widget trên thẻ cấu hình ngược lại self.combo_specs."""
         for card in self.cards:
@@ -1072,7 +1072,7 @@ class BieuDoNenThuCong(QWidget):
         self.lbl_status.setText("Đã xóa hết chỉ báo.")
 
     def _render_grid_and_cards(self):
-                              
+
         by_tf = {tf: [] for tf in ALL_TIMEFRAMES}
         for i, spec in enumerate(self.combo_specs):
             by_tf.setdefault(spec["tf"], []).append((i, spec))
@@ -1081,7 +1081,7 @@ class BieuDoNenThuCong(QWidget):
             chips = [ThuCongGridChip(i, spec, self) for i, spec in by_tf.get(tf, [])]
             col.set_chips(chips)
 
-                                        
+
         for card in list(self.cards):
             card.setParent(None)
             card.deleteLater()
@@ -1095,7 +1095,7 @@ class BieuDoNenThuCong(QWidget):
 
         self.empty_lbl.setVisible(len(self.combo_specs) == 0)
 
-                                                                               
+
     def _build_config(self):
         """Dựng config best_params (s0..,logic,risk) từ các thẻ — None nếu chưa có thẻ."""
         self._save_cards_to_specs()
@@ -1144,18 +1144,18 @@ class BieuDoNenThuCong(QWidget):
 
         config = self._build_config()
         if self.phien is not None:
-                                                                                   
+
             self.phien.set_active_dataset(self.active_dataset, im_lang=True)
             result = {
                 "best_params": config,
                 "combo_label": "Chỉ báo thủ công"
             }
             self.phien.set_active_strategy(result)
-            
-                                                                           
+
+
             self.phien.yeu_cau_xem("vectorized")
-            
-                                                                                                   
+
+
             parent = self.parent()
             shell = None
             while parent is not None:
@@ -1163,7 +1163,7 @@ class BieuDoNenThuCong(QWidget):
                     shell = parent
                     break
                 parent = parent.parent()
-            
+
             if shell is not None:
                 man_nen = shell._man_con.get("vectorized")
                 if man_nen is not None:
@@ -1174,12 +1174,12 @@ class BieuDoNenThuCong(QWidget):
         self.btn_run.setText("▶ Chạy")
         self.lbl_status.setText(f"Lỗi: {err}")
 
-                                                                               
+
     def gan_phien(self, phien):
         """Nhận bus phiên (không bắt buộc dùng) — màn này độc lập, chỉ lưu tham chiếu."""
         self.phien = phien
-        
-                                                                                                
+
+
         parent = self.parent()
         shell = None
         while parent is not None:
@@ -1187,10 +1187,10 @@ class BieuDoNenThuCong(QWidget):
                 shell = parent
                 break
             parent = parent.parent()
-            
+
         if shell is not None:
             original_mo = shell._mo_da_luu
-            
+
             def custom_mo():
                 ten = shell._ten_da_chon()
                 if not ten:
@@ -1201,7 +1201,7 @@ class BieuDoNenThuCong(QWidget):
                 if not result:
                     shell.lbl_status.setText(f"✗ Không đọc được: {ten}")
                     return
-                
+
                 is_manual = result.get("nguon") == "thu_cong"
                 if is_manual:
                     shell.di_toi_man("thu_cong")
@@ -1209,10 +1209,10 @@ class BieuDoNenThuCong(QWidget):
                     shell.lbl_status.setText(f"Đã mở từ thư viện vào Chỉ báo thủ công: {ten}")
                 else:
                     original_mo()
-            
+
             shell._mo_da_luu = custom_mo
-            
-                                                            
+
+
             from PyQt6.QtWidgets import QPushButton
             buttons = shell.findChildren(QPushButton)
             for btn in buttons:
@@ -1225,7 +1225,7 @@ class BieuDoNenThuCong(QWidget):
 
     def nap_chien_luoc_tu_thu_vien(self, result):
         """Nạp cấu hình chiến lược từ thư viện vào giao diện Chỉ báo thủ công"""
-                                  
+
         combo = result.get("combo", [])
         self.combo_specs = []
         for c in combo:
@@ -1237,8 +1237,8 @@ class BieuDoNenThuCong(QWidget):
                 "params": c.get("params", {}),
                 "thresholds": c.get("thresholds", {}),
             })
-            
-                                      
+
+
         logic = result.get("logic", {})
         if isinstance(logic, dict):
             mode = logic.get("mode", "and")
@@ -1246,19 +1246,19 @@ class BieuDoNenThuCong(QWidget):
         else:
             mode = logic
             persist = 1
-            
+
         idx_logic = self.cb_logic.findData(mode)
         if idx_logic >= 0:
             self.cb_logic.setCurrentIndex(idx_logic)
         self.sp_persist.setValue(int(persist))
-        
-                                             
+
+
         best_params = result.get("best_params", {})
         risk = best_params.get("risk", {})
         self.sp_sl.setValue(float(risk.get("base_sl", 2.5)))
         self.sp_rr.setValue(float(risk.get("rr", 2.0)))
-        
-                                           
+
+
         self._render_grid_and_cards()
         self.lbl_status.setText("Đã nạp cấu hình chiến lược.")
 
@@ -1285,7 +1285,7 @@ class BieuDoNenThuCong(QWidget):
         else:
             self.lbl_status.setText("⚠ Không tìm thấy phiên kết nối.")
 
-                                                                         
+
     def _on_data_drop(self, mime):
         if not mime.startswith("data:"):
             return
@@ -1436,8 +1436,8 @@ class BieuDoNenThuCong(QWidget):
         if config is None:
             self.lbl_status.setText("Chưa có chỉ báo nào để lưu.")
             return
-        
-                                                 
+
+
         combo = []
         for spec in self.combo_specs:
             combo.append({
@@ -1448,10 +1448,10 @@ class BieuDoNenThuCong(QWidget):
                 "params": spec.get("params", {}),
                 "thresholds": spec.get("thresholds", {}),
             })
-        
+
         combo_label = " + ".join([f"{c['key'].upper()}@{c['tf']}" for c in combo])
-        
-                                                     
+
+
         result = {
             "combo": combo,
             "combo_label": combo_label,
@@ -1468,17 +1468,17 @@ class BieuDoNenThuCong(QWidget):
             "oos_is_ratio": 1.0,
             "nguon": "thu_cong",
         }
-        
+
         try:
             from toi_uu_hoa.thu_vien import luu_chien_luoc
             ten = luu_chien_luoc(result)
         except Exception as e:
             self.lbl_status.setText(f"✗ Lưu thất bại: {e}")
             return
-            
+
         self.lbl_status.setText(f"✓ Đã lưu vào thư viện: {ten}")
-        
-                                                                               
+
+
         parent = self.parent()
         shell = None
         while parent is not None:
@@ -1486,17 +1486,17 @@ class BieuDoNenThuCong(QWidget):
                 shell = parent
                 break
             parent = parent.parent()
-            
+
         if shell is not None:
             shell._nap_thu_vien()
             if self.phien is None and getattr(shell, "phien", None) is not None:
                 self.phien = shell.phien
-            
-                                          
+
+
         if self.phien is not None:
             self.phien.yeu_cau_xem("da_luu")
-            
-                                     
+
+
         self.btn_save.setText("✔️ Đã lưu")
         from PyQt6.QtCore import QTimer
         QTimer.singleShot(1500, lambda: self.btn_save.setText("💾 Lưu"))

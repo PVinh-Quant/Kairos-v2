@@ -29,7 +29,7 @@ class BacktestWorker(QThread):
                 return
             strategies = None
             if self.strategy_config:
-                                                                                        
+
                 from chien_luoc.quan_ly_chien_luoc_vectorized import xay_strategies_tu_config
                 strategies = xay_strategies_tu_config(self.strategy_config)
             trades, dict_dfs = vectorized_backtest(strategies=strategies, dataset=self.dataset)
@@ -65,7 +65,7 @@ class DataProcessorWorker(QThread):
                     ),
                 ]
 
-                                                     
+
                 for col_name in ["signal", "entry_signal", "buy_score", "sell_score"]:
                     if col_name in self.df_base.columns:
                         agg_cols.append(pl.col(col_name).last())
@@ -82,5 +82,5 @@ class DataProcessorWorker(QThread):
             self.finished.emit(self.df_base, timestamps)
 
 
-                                            
-                              
+
+

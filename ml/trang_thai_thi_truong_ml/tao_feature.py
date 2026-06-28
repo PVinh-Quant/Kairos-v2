@@ -19,9 +19,9 @@ import pandas as pd
 import numpy as np
 
 
-                                                                       
-                                                                  
-                                                                       
+
+
+
 def calc_core_features(df: pl.DataFrame) -> pl.DataFrame:
     """
     Chứa 100% công thức tính toán 18 Features chuẩn.
@@ -30,7 +30,7 @@ def calc_core_features(df: pl.DataFrame) -> pl.DataFrame:
     EMA_LEN, ADX_LEN, RSI_LEN, BB_LEN = 50, 14, 14, 20
     VOL_MA_LEN, ATR_LEN, CHOP_LEN, ER_LEN = 20, 14, 14, 10
 
-                       
+
     df = df.with_columns(
         [
             pl.col("close").diff().alias("diff"),
@@ -40,7 +40,7 @@ def calc_core_features(df: pl.DataFrame) -> pl.DataFrame:
         ]
     ).with_columns([pl.max_horizontal(["hl", "hc", "lc"]).alias("tr")])
 
-                        
+
     df = df.with_columns(
         [
             pl.col("close").ewm_mean(span=EMA_LEN, adjust=False).alias("ema_50"),
@@ -49,7 +49,7 @@ def calc_core_features(df: pl.DataFrame) -> pl.DataFrame:
         ]
     )
 
-            
+
     df = (
         df.with_columns(
             [
@@ -76,7 +76,7 @@ def calc_core_features(df: pl.DataFrame) -> pl.DataFrame:
         .with_columns([(pl.col("RSI") - pl.col("RSI").shift(3)).alias("RSIslope")])
     )
 
-            
+
     df = (
         df.with_columns(
             [
@@ -123,7 +123,7 @@ def calc_core_features(df: pl.DataFrame) -> pl.DataFrame:
         )
     )
 
-                
+
     df = df.with_columns(
         [
             pl.col("close").rolling_mean(BB_LEN).alias("bb_mid"),
@@ -138,7 +138,7 @@ def calc_core_features(df: pl.DataFrame) -> pl.DataFrame:
         ]
     )
 
-                                     
+
     df = df.with_columns(
         [
             pl.col("volume").rolling_mean(VOL_MA_LEN).alias("vol_sma"),
@@ -155,7 +155,7 @@ def calc_core_features(df: pl.DataFrame) -> pl.DataFrame:
         ]
     )
 
-                                                                           
+
     return df.select(
         [
             pl.col("timestamp"),
@@ -217,9 +217,9 @@ def calc_core_features(df: pl.DataFrame) -> pl.DataFrame:
     )
 
 
-                                                                       
-                                          
-                                                                       
+
+
+
 def feature_dataset(df_5m, df_15m, df_1h, df_4h, last_state=0):
     """Dùng khi Bot nhận Data từng cây nến và truyền vào."""
     if any(df is None or len(df) < 120 for df in [df_5m, df_15m, df_1h, df_4h]):
@@ -227,11 +227,11 @@ def feature_dataset(df_5m, df_15m, df_1h, df_4h, last_state=0):
 
     feature_row = {}
 
-                                                                 
+
     for i in range(8):
         feature_row[f"ctx_last_state_{i}"] = 1.0 if last_state == i else 0.0
 
-                                                       
+
     ordered_suffixes = ["5M", "15M", "1H", "4H"]
     data_dict = {"5M": df_5m, "15M": df_15m, "1H": df_1h, "4H": df_4h}
 
@@ -241,16 +241,16 @@ def feature_dataset(df_5m, df_15m, df_1h, df_4h, last_state=0):
             df = pl.DataFrame(df)
 
         try:
-                                                                      
+
             df_closed = df.head(df.height - 1)
 
-                                          
+
             df_feat = calc_core_features(df_closed)
 
-                                                                        
+
             row = df_feat.tail(1).to_dicts()[0]
 
-                         
+
             for k, v in row.items():
                 if k != "timestamp":
                     feature_row[f"{k}_{suffix}"] = v
@@ -259,19 +259,19 @@ def feature_dataset(df_5m, df_15m, df_1h, df_4h, last_state=0):
             print(f"❌ Lỗi tính toán tại {suffix}: {e}")
             return None
 
-                                    
+
     feature_df = pd.DataFrame([feature_row])
     feature_df = feature_df.replace([np.inf, -np.inf], 0.0).fillna(0.0)
 
     return feature_df
 
 
-                                                                       
-                                                           
-                                                                       
+
+
+
 def features_vectorized(df_1m: pl.DataFrame) -> pl.DataFrame:
     """Dùng khi xử lý Data Lịch sử quy mô lớn để Train AI hoặc Backtest hàng loạt."""
-                                                                 
+
     if "volume" not in df_1m.columns:
         df_1m = df_1m.with_columns(pl.lit(0.0).cast(pl.Float64).alias("volume"))
 
@@ -279,7 +279,7 @@ def features_vectorized(df_1m: pl.DataFrame) -> pl.DataFrame:
         """Gộp nến theo khung thời gian, tính features và dịch chuyển timestamp."""
         rule = interval_str.lower().replace("min", "m")
 
-                                                          
+
         df_sorted = df.sort("timestamp")
         df_res = (
             df_sorted.group_by_dynamic(
@@ -297,17 +297,17 @@ def features_vectorized(df_1m: pl.DataFrame) -> pl.DataFrame:
             .drop_nulls()
         )
 
-                                                
+
         features = calc_core_features(df_res)
 
-                                                        
+
         features = features.with_columns(
             (pl.col("timestamp") + pl.duration(minutes=shift_minutes)).alias(
                 "timestamp"
             )
         )
 
-                                         
+
         features = features.select(
             [pl.col("timestamp")]
             + [
@@ -318,13 +318,13 @@ def features_vectorized(df_1m: pl.DataFrame) -> pl.DataFrame:
         )
         return features
 
-                                                  
+
     f5m = process_timeframe(df_1m, "5m", "5M", 5)
     f15m = process_timeframe(df_1m, "15m", "15M", 15)
     f1h = process_timeframe(df_1m, "1h", "1H", 60)
     f4h = process_timeframe(df_1m, "4h", "4H", 240)
 
-                                                       
+
     df_base = df_1m.select(["timestamp"])
 
     if "regime" in df_1m.columns:
@@ -342,7 +342,7 @@ def features_vectorized(df_1m: pl.DataFrame) -> pl.DataFrame:
                 pl.lit(1.0 if i == 0 else 0.0).alias(f"ctx_last_state_{i}")
             )
 
-                                                                         
+
     df_features = (
         df_base.join(f5m, on="timestamp", how="left")
         .join(f15m, on="timestamp", how="left")
@@ -350,9 +350,9 @@ def features_vectorized(df_1m: pl.DataFrame) -> pl.DataFrame:
         .join(f4h, on="timestamp", how="left")
         .fill_null(strategy="forward")
         .drop_nulls()
-    )                                                     
+    )
 
-                                                                                  
+
     feature_cols = [c for c in df_features.columns if c != "timestamp"]
 
     df_features = df_features.with_columns(

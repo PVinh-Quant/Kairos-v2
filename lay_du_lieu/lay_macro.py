@@ -17,7 +17,7 @@ def lay_du_lieu_cam_xuc():
         data = r.json()
         return int(data["data"][0]["value"])
     except:
-        return 50                                 
+        return 50
 
 
 session = requests.Session()
@@ -30,16 +30,16 @@ def lay_du_lieu_io(symbol="BTC/USDT", period="5m", limit=30):
     params = {"symbol": symbol, "period": period, "limit": limit}
 
     try:
-                                                  
+
         response = session.get(url, params=params, timeout=5)
 
-                                                                                     
+
         response.raise_for_status()
 
         data = response.json()
         df = pd.DataFrame(data)
 
-                                                 
+
         if not df.empty:
             df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
             df["sumOpenInterest"] = df["sumOpenInterest"].astype(float)

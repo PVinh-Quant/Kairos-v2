@@ -17,11 +17,11 @@ chạy độc lập qua khối `if __name__ == "__main__"`); chúng đã đượ
 
 import os
 
-                                          
+
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
-                                                                          
+
 DU_LIEU = os.path.join(PROJECT_ROOT, "du_lieu")
 
-                                                 
+
 ASSETS_DIR = os.path.join(PROJECT_ROOT, "hien_thi", "assets")

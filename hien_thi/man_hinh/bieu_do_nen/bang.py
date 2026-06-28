@@ -14,7 +14,7 @@ class TradesTableWidget(QTableWidget):
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
 
-                                                                             
+
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
@@ -26,16 +26,16 @@ class TradesTableWidget(QTableWidget):
             QTableWidget::item:selected {{ background-color: {Theme.ACCENT}; color: white; }}
             QScrollBar:vertical, QScrollBar:horizontal {{ width: 0px; height: 0px; background: transparent; }}
         """)
-                                                                                         
-                                                                                         
+
+
         hdr = self.horizontalHeader()
         hdr.setMinimumSectionSize(30)
-        hdr.setResizeContentsPrecision(50)                                              
-        hdr.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)      
-        hdr.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)        
-        hdr.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)        
-        hdr.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)                   
-        self.setMinimumWidth(260)                                                   
+        hdr.setResizeContentsPrecision(50)
+        hdr.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        hdr.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        hdr.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        hdr.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
+        self.setMinimumWidth(260)
 
     def load_trades(self, trades):
         """Nạp danh sách lệnh vào bảng, tô màu theo lãi/lỗ."""
@@ -67,5 +67,5 @@ class TradesTableWidget(QTableWidget):
                 self.setItem(row_idx, col, item)
 
 
-                                            
-                                     
+
+

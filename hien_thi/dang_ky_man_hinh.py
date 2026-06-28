@@ -24,11 +24,11 @@ Mỗi entry:
 Thứ tự các entry = thứ tự tab hiển thị trong app.
 """
 
-                                                    
-NHOM_GIAO_DICH = "giao_dich"                              
-NHOM_PHAN_TICH = "phan_tich"                                     
-NHOM_BIEU_DO = "bieu_do"                                   
-NHOM_HE_THONG = "he_thong"                                 
+
+NHOM_GIAO_DICH = "giao_dich"
+NHOM_PHAN_TICH = "phan_tich"
+NHOM_BIEU_DO = "bieu_do"
+NHOM_HE_THONG = "he_thong"
 
 MAN_HINH = [
     {

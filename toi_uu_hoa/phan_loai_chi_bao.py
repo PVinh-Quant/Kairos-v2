@@ -3,8 +3,8 @@ toi_uu_hoa_low/phan_loai_chi_bao.py
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Phân loại chỉ báo kỹ thuật và tạo tín hiệu giao dịch tổng quát.
 
-Hỗ trợ bộ tối ưu hóa  chạy thử nghiệm chiến lược cho mọi chỉ báo 
-trong INDICATOR_REGISTRY mà không cần biết logic nội bộ của từng hàm. 
+Hỗ trợ bộ tối ưu hóa  chạy thử nghiệm chiến lược cho mọi chỉ báo
+trong INDICATOR_REGISTRY mà không cần biết logic nội bộ của từng hàm.
 
 Hệ thống tự động:
 1. Nhận diện loại chỉ báo (Oscillator, Channel, Trend, Volume) qua whitelist hoặc chạy thử.
@@ -16,10 +16,10 @@ import pandas as pd
 import numpy as np
 
 
-                                                                               
-                              
-                                                                                    
-                                                                               
+
+
+
+
 
 _OSCILLATOR_FUNCS = [
     'pt_rsi', 'pt_stochastic',
@@ -41,25 +41,25 @@ _VOLUME_FUNCS = [
     'pt_pvt', 'pt_chaikin_oscillator',
 ]
 
-                                                                             
+
 _OSCILLATOR_KEYWORDS = ['rsi', 'stoch', 'mfi', 'ultimate']
 _CHANNEL_KEYWORDS    = ['upper', 'lower', 'band', 'channel', 'ub', 'lb', 'high_band', 'low_band']
 _TREND_KEYWORDS      = ['ema', 'sma', 'ma', 'trend', 'direction', 'psar', 'supertrend', 'adx', 'aroon', 'vortex', 'macd']
 _VOLUME_KEYWORDS     = ['obv', 'vwap', 'cmf', 'volume', 'mfi_vol']
 
-                                            
+
 _OSCILLATOR_FUNCS_SET = set(f.lower() for f in _OSCILLATOR_FUNCS)
 _CHANNEL_FUNCS_SET    = set(f.lower() for f in _CHANNEL_FUNCS)
 _TREND_FUNCS_SET      = set(f.lower() for f in _TREND_FUNCS)
 _VOLUME_FUNCS_SET     = set(f.lower() for f in _VOLUME_FUNCS)
 
-                                                                               
-                                                    
-                                                                               
-                                                                         
-                                                                           
-                                                                             
-                                                                    
+
+
+
+
+
+
+
 _CENTERED_OSC_BASES = {'power', 'eom'}
 
 
@@ -74,9 +74,9 @@ def is_centered_oscillator(col):
     return any(tok in _CENTERED_OSC_BASES for tok in col.lower().split('_'))
 
 
-                                                                               
-                
-                                                                               
+
+
+
 
 def _build_test_df(n=200):
     """
@@ -110,12 +110,12 @@ def get_cols_by_type(new_cols, t_type):
     col_lower = next((c for c in new_cols if any(k in c.lower() for k in ['lower', 'low_band', 'bot', 'support', 'lb'])), None)
     col_upper = next((c for c in new_cols if any(k in c.lower() for k in ['upper', 'high_band', 'top', 'resist', 'ub'])), None)
     col_rsi = next((c for c in new_cols if any(k in c.lower() for k in ['rsi', 'mfi', 'stoch', 'ult'])), None)
-    
+
     col_bool_signal = next((c for c in new_cols if any(k in c.lower() for k in [
-        'has_trend', 'is_strong_trend',                           
-        'is_st_uptrend',                                                 
-        'macd_cross_up', 'macd_cross_down', 'macd_bullish',                
-        'is_bull', 'is_uptrend', 'is_psar_bull'                             
+        'has_trend', 'is_strong_trend',
+        'is_st_uptrend',
+        'macd_cross_up', 'macd_cross_down', 'macd_bullish',
+        'is_bull', 'is_uptrend', 'is_psar_bull'
     ])), None)
     col_ma = next((c for c in new_cols if any(k in c.lower() for k in ['ema', 'sma', 'ma', 'trend', 'line', 'signal', 'psar', 'aroon'])), None)
     col_adx_raw = next((c for c in new_cols if c.lower().startswith('adx_')), None)
@@ -129,7 +129,7 @@ def get_cols_by_type(new_cols, t_type):
             return (new_cols[0], new_cols[1])
         else:
             return (new_cols[0], new_cols[0])
-    else:                         
+    else:
         if col_bool_signal:
             return col_bool_signal
         elif col_ma:
@@ -150,9 +150,9 @@ def _pick_primary_col(new_cols, indicator_type, fallback_name):
     return res if res else fallback_name
 
 
-                                                                               
-               
-                                                                               
+
+
+
 
 def detect_indicator_type(indicator_func, time_frame='1h'):
     """
@@ -175,7 +175,7 @@ def detect_indicator_type(indicator_func, time_frame='1h'):
     """
     func_name = indicator_func.__name__.lower()
 
-                                           
+
     if func_name in _OSCILLATOR_FUNCS_SET:
         indicator_type = 'oscillator'
     elif func_name in _CHANNEL_FUNCS_SET:
@@ -185,14 +185,14 @@ def detect_indicator_type(indicator_func, time_frame='1h'):
     elif func_name in _TREND_FUNCS_SET:
         indicator_type = 'trend'
     else:
-        indicator_type = None                                       
+        indicator_type = None
 
-                                                             
+
     test_df = _build_test_df()
     sig     = inspect.signature(indicator_func)
     params  = sig.parameters
 
-                                                                                       
+
     kwargs = {}
     if 'window'    in params: kwargs['window']    = 14
     if 'deviation' in params: kwargs['deviation'] = 2.0
@@ -207,7 +207,7 @@ def detect_indicator_type(indicator_func, time_frame='1h'):
         print(f"[WARN] Không thể chạy thử chỉ báo '{indicator_func.__name__}': {e}")
         new_cols  = []
 
-                                                              
+
     if indicator_type is None:
         col_str  = ' '.join(new_cols).lower()
         has_upper = any(k in col_str for k in ['upper', 'ub', 'high_band', 'band_h', 'resist'])
@@ -222,7 +222,7 @@ def detect_indicator_type(indicator_func, time_frame='1h'):
         else:
             indicator_type = 'trend'
 
-                               
+
     target_col_base = _pick_primary_col(new_cols, indicator_type, func_name)
     return (indicator_type, target_col_base)
 
@@ -246,7 +246,7 @@ def generate_generic_signals(df, target_type, target_col, suggested_params):
     def _get_col(tc):
         return tc if isinstance(tc, str) else (tc[0] if tc else None)
 
-                                           
+
     if target_type == 'oscillator':
         col = _get_col(target_col)
         if col is None or col not in df_pl.columns:
@@ -255,12 +255,12 @@ def generate_generic_signals(df, target_type, target_col, suggested_params):
         series = pl.col(col)
 
         if is_centered_oscillator(col):
-                                                                                  
+
             oversold = suggested_params.get('oversold')
             overbought = suggested_params.get('overbought')
 
             if oversold is not None and overbought is not None:
-                                                                                    
+
                 prev = pl.col(col).shift(1)
                 buy_signal = (prev < oversold) & (series >= oversold)
                 sell_signal = (prev > overbought) & (series <= overbought)
@@ -268,12 +268,12 @@ def generate_generic_signals(df, target_type, target_col, suggested_params):
                     .when(sell_signal).then(-1) \
                     .otherwise(0)
             else:
-                                                                   
+
                 sig_expr = pl.when(series > 0).then(1) \
                     .when(series < 0).then(-1) \
                     .otherwise(0)
         else:
-                                                                                            
+
             oversold   = suggested_params.get('oversold',   30)
             overbought = suggested_params.get('overbought', 70)
             prev = pl.col(col).shift(1)
@@ -293,7 +293,7 @@ def generate_generic_signals(df, target_type, target_col, suggested_params):
             .alias("signal")
         )
 
-                                                         
+
     elif target_type == 'channel':
         if isinstance(target_col, tuple):
             col_upper, col_lower = target_col
@@ -308,52 +308,52 @@ def generate_generic_signals(df, target_type, target_col, suggested_params):
 
         buy_signal  = pl.col('close') <= pl.col(col_lower) * lower_mult
         sell_signal = pl.col('close') >= pl.col(col_upper) * upper_mult
-        
+
         sig_expr = pl.when(buy_signal).then(1) \
             .when(sell_signal).then(-1) \
             .otherwise(0)
-            
+
         df_pl = df_pl.with_columns(sig_expr.alias("signal"))
 
-                                                        
+
     elif target_type == 'trend':
         col = _get_col(target_col)
         if col is None or col not in df_pl.columns:
             return df if is_pandas else df_pl
 
-                                                                              
+
         col_dtype = df_pl.schema[col]
         is_bool_col = col_dtype == pl.Boolean
-        
+
         if is_bool_col:
-                                                                                                                        
+
             col_lower = col.lower()
             is_cross_signal = 'cross_up' in col_lower or 'cross_down' in col_lower
-            
+
             if is_cross_signal:
-                                                                      
-                                                                      
+
+
                 if 'cross_up' in col_lower:
                     sig_expr = pl.when(pl.col(col) == True).then(1).otherwise(0)
-                else:              
+                else:
                     sig_expr = pl.when(pl.col(col) == True).then(-1).otherwise(0)
                 df_pl = df_pl.with_columns(sig_expr.alias("signal"))
             else:
-                                                                       
-                                                                          
+
+
                 signal_col = pl.col(col)
                 prev_signal = pl.col(col).shift(1)
-                
+
                 buy_signal  = (prev_signal == False) & (signal_col == True)
                 sell_signal = (prev_signal == True) & (signal_col == False)
-                
+
                 sig_expr = pl.when(buy_signal).then(1) \
                     .when(sell_signal).then(-1) \
                     .otherwise(0)
-                    
+
                 df_pl = df_pl.with_columns(sig_expr.alias("signal"))
-                
-                                                                                 
+
+
                 df_pl = df_pl.with_columns(
                     pl.when(pl.col("signal") == 0).then(None).otherwise(pl.col("signal"))
                     .forward_fill()
@@ -362,23 +362,23 @@ def generate_generic_signals(df, target_type, target_col, suggested_params):
                     .alias("signal")
                 )
         else:
-                                                 
+
             dev_above = suggested_params.get('dev_above', 1.0) / 100.0
             dev_below = suggested_params.get('dev_below', 1.0) / 100.0
-            
+
             ma = pl.col(col)
             prev_close = pl.col('close').shift(1)
             prev_ma = pl.col(col).shift(1)
 
             buy_signal  = (prev_close < prev_ma * (1.0 + dev_above)) & (pl.col('close') >= ma * (1.0 + dev_above))
             sell_signal = (prev_close > prev_ma * (1.0 - dev_below)) & (pl.col('close') <= ma * (1.0 - dev_below))
-            
+
             sig_expr = pl.when(buy_signal).then(1) \
                 .when(sell_signal).then(-1) \
                 .otherwise(0)
-                
+
             df_pl = df_pl.with_columns(sig_expr.alias("signal"))
-            
+
             df_pl = df_pl.with_columns(
                 pl.when(pl.col("signal") == 0).then(None).otherwise(pl.col("signal"))
                 .forward_fill()
@@ -387,15 +387,15 @@ def generate_generic_signals(df, target_type, target_col, suggested_params):
                 .alias("signal")
             )
 
-                                                                      
+
     elif target_type == 'volume':
         col = _get_col(target_col)
         if col is None or col not in df_pl.columns:
             return df if is_pandas else df_pl
 
-                                                                               
-                                                                                        
-                                                                                        
+
+
+
         vol_enter = suggested_params.get('vol_enter', 1.0)
         vol_exit  = suggested_params.get('vol_exit', 1.0)
 
@@ -407,7 +407,7 @@ def generate_generic_signals(df, target_type, target_col, suggested_params):
         enter_short = (series > rolling_mean * vol_enter) & (pl.col('close') < prev_close)
         exit_flat   = series < rolling_mean * vol_exit
 
-                                                                                   
+
         sig_expr = pl.when(enter_long).then(1) \
             .when(enter_short).then(-1) \
             .when(exit_flat).then(0) \

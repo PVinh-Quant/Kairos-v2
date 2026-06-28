@@ -33,9 +33,9 @@ import chien_luoc.quan_ly_chien_luoc_vectorized as Q
 from toi_uu_hoa.dong_co_backtest import run_fast_backtest
 
 
-                                                                               
-                                                                                
-                                                                               
+
+
+
 def _reference_combine(df, resolved, logic, persistence):
     """Bản sao NGUYÊN VĂN logic kết hợp cũ (trước khi gộp về ket_hop_tin_hieu_spec)."""
     trig_long_list, trig_short_list = [], []
@@ -101,16 +101,16 @@ def test_b_ket_hop_tin_hieu_khop_tham_chieu():
         assert new_df["signal"].equals(ref_df["signal"]), f"signal lệch tham chiếu (logic={logic}, pers={pers})"
         assert new_ct == ref_ct, f"co_trigger lệch (logic={logic}, pers={pers})"
 
-                                                                     
+
     only_filter = [{"t_type": "oscillator", "tcol": "s1_rsi_1h", "thresholds": {}, "role": "filter"}]
     nf_df, nf_ct = ket_hop_tin_hieu_spec(df, only_filter, logic="and", persistence=1)
     assert nf_ct is False
     assert int((nf_df["signal"] != 0).sum()) == 0
 
 
-                                                                               
-                                                                                     
-                                                                               
+
+
+
 def _df_ohlc_1m(days=7):
     rng = np.random.default_rng(11)
     n = days * 1440
@@ -132,22 +132,22 @@ def test_d_khung_atr_sl_tp_dong_bo():
     base_sl, rr = 2.5, 2.0
     _old_dyn, _old_tf = getattr(Q, "DUNG_SL_TP_DONG", False), getattr(Q, "SL_TP_TIME_FRAME", None)
     try:
-                                                                             
+
         Q.DUNG_SL_TP_DONG = True
         Q.SL_TP_TIME_FRAME = None
-        opt_new = SLTP.them_sl_tp(df, base_sl=base_sl, rr=rr)                                
-        vec = SLTP.tinh_sl_tp(df, time_frame="15m", base_sl=base_sl, rr=rr)                      
+        opt_new = SLTP.them_sl_tp(df, base_sl=base_sl, rr=rr)
+        vec = SLTP.tinh_sl_tp(df, time_frame="15m", base_sl=base_sl, rr=rr)
         assert opt_new["sl_pct"].equals(vec["sl_pct"]) and opt_new["tp_pct"].equals(vec["tp_pct"]), \
             "optimizer != vectorized(15m) khi tf=None"
 
-                                                
+
         Q.SL_TP_TIME_FRAME = "30m"
         opt_ovr = SLTP.them_sl_tp(df, base_sl=base_sl, rr=rr)
         vec_ovr = SLTP.tinh_sl_tp(df, time_frame="30m", base_sl=base_sl, rr=rr)
         assert opt_ovr["sl_pct"].equals(vec_ovr["sl_pct"]) and opt_ovr["tp_pct"].equals(vec_ovr["tp_pct"]), \
             "optimizer != vectorized(30m) khi override"
 
-                                                                
+
         Q.DUNG_SL_TP_DONG = False
         Q.SL_TP_TIME_FRAME = None
         f_new = SLTP.them_sl_tp(df, base_sl=base_sl, rr=rr)
@@ -158,9 +158,9 @@ def test_d_khung_atr_sl_tp_dong_bo():
         Q.DUNG_SL_TP_DONG, Q.SL_TP_TIME_FRAME = _old_dyn, _old_tf
 
 
-                                                                               
-                                                   
-                                                                               
+
+
+
 def _df_lenh(signals, closes, lows, sl_pct=0.02, tp_pct=0.05, lev=1):
     n = len(closes)
     highs = [c * 1.001 for c in closes]
@@ -175,7 +175,7 @@ def _df_lenh(signals, closes, lows, sl_pct=0.02, tp_pct=0.05, lev=1):
 def test_e_hach_toan_phi_nhat_quan():
     """#4: tổng pnl ghi nhận == thay đổi số dư (phí mở nằm trong pnl)."""
     von_ban_dau, von_moi_lenh, phi_gd, slippage = 10000.0, 100.0, 0.001, 0.0005
-                                                              
+
     n = 12
     signals = [0] * n; signals[5] = 1
     closes = [100.0] * n
@@ -185,7 +185,7 @@ def test_e_hach_toan_phi_nhat_quan():
     trades, von_cuoi = run_fast_backtest(df, von_ban_dau, phi_gd, slippage, von_moi_lenh, 1, cooldown_nen=5)
     assert len(trades) == 1, f"kỳ vọng 1 lệnh, có {len(trades)}"
     tong_pnl = sum(t["pnl"] for t in trades)
-                                                                      
+
     assert abs(tong_pnl - (von_cuoi - von_ban_dau)) < 1e-6, \
         f"pnl ghi nhận ({tong_pnl}) != thay đổi số dư ({von_cuoi - von_ban_dau}) → phí mở bị bỏ sót"
 
@@ -197,7 +197,7 @@ def test_e_thanh_ly_tru_phi_mo():
     n = 12
     signals = [0] * n; signals[5] = 1
     closes = [100.0] * n
-    lows = [c * 0.999 for c in closes]; lows[8] = 88.0                                    
+    lows = [c * 0.999 for c in closes]; lows[8] = 88.0
     df = _df_lenh(signals, closes, lows, sl_pct=0.15, lev=lev)
 
     trades, von_cuoi = run_fast_backtest(df, von_ban_dau, phi_gd, slippage, von_moi_lenh, lev, cooldown_nen=5)

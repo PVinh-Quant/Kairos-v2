@@ -29,7 +29,7 @@ def main(argv=None):
                         help="Tên file chiến lược trong thư viện (tùy chọn).")
     args = parser.parse_args(argv)
 
-                                                                  
+
     if sys.platform == "win32":
         try:
             import ctypes
@@ -43,8 +43,8 @@ def main(argv=None):
 
     app = QApplication.instance() or QApplication(sys.argv)
 
-                                                                                   
-                                                                      
+
+
     phien = PhienNghienCuu()
     ten_cl = None
     if args.chien_luoc:
@@ -56,13 +56,13 @@ def main(argv=None):
                 ten_cl = args.chien_luoc
                 phien.set_active_dataset(payload.get("dataset"), im_lang=True)
                 phien.set_active_strategy(result, im_lang=True)
-        except Exception as e:                
+        except Exception as e:
             print(f"[chay_man] Không nạp được chiến lược '{args.chien_luoc}': {e}", flush=True)
 
-                                                                               
+
     try:
         w = lay_lop(args.man)()
-    except Exception as e:                
+    except Exception as e:
         print(f"[chay_man] Lỗi tạo màn '{args.man}': {e}", flush=True)
         return 1
     w.phien = phien
@@ -70,8 +70,8 @@ def main(argv=None):
     if callable(gan):
         gan(phien)
 
-                                                                                    
-                                                            
+
+
     if isinstance(w, QMainWindow):
         win = w
     else:
@@ -93,7 +93,7 @@ def _nhan_man(khoa):
         for mh in danh_sach_man_hinh():
             if mh["khoa"] == khoa:
                 return mh["nhan"]
-    except Exception:                
+    except Exception:
         pass
     return khoa
 
@@ -109,7 +109,7 @@ def _gan_icon(win, app):
             if app is not None:
                 app.setWindowIcon(icon)
             win.setWindowIcon(icon)
-    except Exception:                
+    except Exception:
         pass
 
 

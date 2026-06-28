@@ -58,17 +58,17 @@ def gop_va_dong_bo_data(dfs_dict):
 
     def chuẩn_hóa_df(df, name):
         """Làm sạch và chuẩn hóa tên cột, đảm bảo cột timestamp tồn tại."""
-                                                                   
+
         df = df.loc[:, ~df.columns.str.contains("^unnamed", case=False)]
 
-                          
+
         if "" in df.columns:
             df = df.drop(columns=[""])
 
-                                         
+
         df.columns = [col.strip().lower() for col in df.columns]
 
-                                                              
+
         if "timestamp" not in df.columns:
             if df.index.name and df.index.name.lower() == "timestamp":
                 df = df.reset_index()
@@ -77,10 +77,10 @@ def gop_va_dong_bo_data(dfs_dict):
 
         df["timestamp"] = pd.to_datetime(df["timestamp"])
 
-                                         
+
         return df.sort_values("timestamp").reset_index(drop=True)
 
-                          
+
     if "1m" not in dfs_dict:
         return None
 
@@ -92,7 +92,7 @@ def gop_va_dong_bo_data(dfs_dict):
 
         df_tf = chuẩn_hóa_df(df.copy(), tf)
 
-                                                                     
+
         cols_to_exclude = ["open", "high", "low", "close", "volume"]
         cols_to_use = [
             col
@@ -105,14 +105,14 @@ def gop_va_dong_bo_data(dfs_dict):
             df_tf[cols_to_use],
             on="timestamp",
             direction="backward",
-            suffixes=("", f"_{tf}"),                                               
+            suffixes=("", f"_{tf}"),
         )
 
-                                                      
-                                                      
+
+
     main_df.set_index("timestamp", inplace=True)
 
-                                        
+
     if "index" in main_df.columns:
         main_df.drop(columns=["index"], inplace=True)
 
@@ -145,7 +145,7 @@ def gop_va_dong_bo_data_polars(dfs_dict):
 
         df_tf = chuẩn_hóa_df_pl(df, tf)
 
-        cols_to_exclude = ["open", "high", "low", "close", "volume"]
+        cols_to_exclude = ["open", "high", "low", "close", "volume", "regime", "confidence"]
         cols_to_use = [
             col
             for col in df_tf.columns

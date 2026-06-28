@@ -49,7 +49,7 @@ def _rai_xuong_tu_khung_lon(df, polars_time_frame, suffix, tinh_1m):
     htf = htf.with_columns(pl.col("timestamp").dt.offset_by(polars_time_frame))
     feat = [c for c in htf.columns if c not in base]
     ren = {c: c[:-2] + suffix for c in feat if c.endswith("_1m")}
-    htf = htf.rename(ren)                                                                           
+    htf = htf.rename(ren)
     feat = [ren.get(c, c) for c in feat]
     return df.join_asof(
         htf.select(["timestamp"] + feat), on="timestamp", strategy="backward"
@@ -128,7 +128,7 @@ def pt_volume(df, time_frame, window=20, volume_luy_ke=True):
             "vol_live": c_vol_live
         })
 
-                             
+
     df_out = df_out.with_columns([
         (pl.col(c_vol_live).fill_nan(None) > pl.col(c_vol_mean).fill_nan(None)).fill_null(False).alias(f"vol_tang_{time_frame}"),
         (pl.col(c_vol_live).fill_nan(None) > (pl.col(c_vol_mean).fill_nan(None) * 2)).fill_null(False).alias(f"vol_tang_manh_{time_frame}"),
@@ -227,7 +227,7 @@ def pt_volume_ma(df, time_frame, fast_window=5, slow_window=20, volume_luy_ke=Tr
             "slow": c_vol_slow
         })
 
-                             
+
     df_out = df_out.with_columns([
         (pl.col(c_vol_fast).fill_nan(None) > pl.col(c_vol_slow).fill_nan(None)).fill_null(False).alias(f"vol_trend_up_{time_frame}"),
         (pl.col(c_vol_live).fill_nan(None) > (pl.col(c_vol_slow).fill_nan(None) * 1.5)).fill_null(False).alias(f"vol_surge_{time_frame}"),
@@ -304,13 +304,13 @@ def pt_obv(df, time_frame, sma_window=20):
     obv_roc = pl.col(c_obv).diff(5)
     obv_roc_std_50 = obv_roc.rolling_std(window_size=50)
 
-                             
+
     df_out = df_out.with_columns([
         (pl.col(c_obv).fill_nan(None) > pl.col(c_obv_sma).fill_nan(None)).fill_null(False).alias(f"obv_bullish_{time_frame}"),
         (obv_roc.fill_nan(None) > (obv_roc_std_50.fill_nan(None) * 2)).fill_null(False).alias(f"obv_surge_{time_frame}")
     ])
 
-                                                         
+
     df_out = df_out.with_columns((pl.col(c_obv) - pl.col(c_obv_sma)).alias(f"obv_osc_{time_frame}"))
 
     return df_out
@@ -333,7 +333,7 @@ def pt_vwap(df, time_frame, window=20):
 
     c_vwap = f"vwap_{time_frame}"
 
-                                                              
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, polars_time_frame, time_frame, lambda d: pt_vwap(d, "1m", window)
@@ -347,13 +347,13 @@ def pt_vwap(df, time_frame, window=20):
         df_out = df.with_columns(pl.Series(c_vwap, vwap_ind.volume_weighted_average_price()))
     distance_pct = (pl.col("close") - pl.col(c_vwap)).abs() / pl.col(c_vwap)
 
-                                                            
+
     _vwap_safe = pl.when(pl.col(c_vwap) != 0).then(pl.col(c_vwap)).otherwise(None)
     df_out = df_out.with_columns(
         ((pl.col("close") - pl.col(c_vwap)) / _vwap_safe).alias(f"vwap_dist_{time_frame}")
     )
 
-                             
+
     df_out = df_out.with_columns([
         (pl.col("close").fill_nan(None) > pl.col(c_vwap).fill_nan(None)).fill_null(False).alias(f"vwap_bullish_{time_frame}"),
         (distance_pct.fill_nan(None) > 0.03).fill_null(False).alias(f"vwap_overextended_{time_frame}")
@@ -375,21 +375,21 @@ def pt_volume_profile(df, time_frame="1D", price_step=10):
     c_vah = f"vp_vah_{time_frame}"
     c_val = f"vp_val_{time_frame}"
 
-                                                     
+
     df_pd = df.select(["timestamp", "high", "low", "close", "volume"]).to_pandas()
     pandas_freq = polars_time_frame.replace("m", "min").replace("d", "D").replace("w", "W")
     df_pd["session"] = df_pd["timestamp"].dt.floor(pandas_freq)
     tp = (df_pd["high"] + df_pd["low"] + df_pd["close"]) / 3
     df_pd["price_zone"] = (tp / price_step).apply(np.floor) * price_step
 
-                                   
+
     vol_by_price = df_pd.groupby(["session", "price_zone"])["volume"].sum().reset_index()
     vol_by_price = vol_by_price.sort_values(by=["session", "price_zone"])
 
-                                 
+
     poc_data = vol_by_price.sort_values(by=["session", "volume", "price_zone"], ascending=[True, False, True]).groupby("session").first().reset_index()[["session", "price_zone"]].rename(columns={"price_zone": "POC"})
 
-                                       
+
     vol_sorted = vol_by_price.sort_values(by=["session", "volume", "price_zone"], ascending=[True, False, False])
     vol_sorted["cum_vol_pct"] = vol_sorted.groupby("session")["volume"].cumsum() / vol_sorted.groupby("session")["volume"].transform("sum")
     value_area = vol_sorted[vol_sorted["cum_vol_pct"] <= 0.70]
@@ -399,28 +399,28 @@ def pt_volume_profile(df, time_frame="1D", price_step=10):
         VAL="min"
     ).reset_index()
 
-           
+
     profile_data = pd.merge(poc_data, vah_val_data, on="session", how="left")
     profile_data = profile_data.sort_values("session")
 
-                                                         
+
     profile_data["POC_closed"] = profile_data["POC"].shift(1)
     profile_data["VAH_closed"] = profile_data["VAH"].shift(1)
     profile_data["VAL_closed"] = profile_data["VAL"].shift(1)
 
-                      
+
     df_pd = pd.merge(df_pd, profile_data[["session", "POC_closed", "VAH_closed", "VAL_closed"]], on="session", how="left")
     df_pd["POC_closed"] = df_pd["POC_closed"].ffill()
     df_pd["VAH_closed"] = df_pd["VAH_closed"].ffill()
     df_pd["VAL_closed"] = df_pd["VAL_closed"].ffill()
 
-                                                                                            
+
     session_close = df_pd.groupby("session")["close"].last().reset_index().sort_values("session")
     session_close["close_closed"] = session_close["close"].shift(1)
     df_pd = pd.merge(df_pd, session_close[["session", "close_closed"]], on="session", how="left")
     df_pd["close_closed"] = df_pd["close_closed"].ffill()
 
-                           
+
     df = df.with_columns([
         pl.Series(c_poc, df_pd["POC_closed"]),
         pl.Series(c_vah, df_pd["VAH_closed"]),
@@ -428,7 +428,7 @@ def pt_volume_profile(df, time_frame="1D", price_step=10):
         pl.Series("_ref_close", df_pd["close_closed"])
     ])
 
-                                                                          
+
     distance_to_poc = (pl.col("_ref_close") - pl.col(c_poc)).abs() / pl.col(c_poc)
 
     df_out = df.with_columns([
@@ -437,7 +437,7 @@ def pt_volume_profile(df, time_frame="1D", price_step=10):
         (distance_to_poc.fill_nan(None) < 0.005).fill_null(False).alias(f"vp_near_poc_{time_frame}")
     ])
 
-                                                                  
+
     _poc_safe = pl.when(pl.col(c_poc) != 0).then(pl.col(c_poc)).otherwise(None)
     df_out = df_out.with_columns(((pl.col("_ref_close") - pl.col(c_poc)) / _poc_safe).alias(f"vp_poc_dist_{time_frame}"))
 
@@ -500,7 +500,7 @@ def pt_cmf(df, time_frame, window=20):
         htf_to_join = htf_features.select(["timestamp", "cmf"])
         df_out = df.join_asof(htf_to_join, on="timestamp", strategy="backward").rename({"cmf": c_cmf})
 
-                             
+
     df_out = df_out.with_columns([
         (pl.col(c_cmf).fill_nan(None) > 0.1).fill_null(False).alias(f"cmf_bull_{time_frame}"),
         (pl.col(c_cmf).fill_nan(None) < -0.1).fill_null(False).alias(f"cmf_bear_{time_frame}"),
@@ -524,7 +524,7 @@ def pt_ad_line(df, time_frame):
 
     c_ad = f"ad_{time_frame}"
 
-                                                              
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, polars_time_frame, time_frame, lambda d: pt_ad_line(d, "1m")
@@ -534,7 +534,7 @@ def pt_ad_line(df, time_frame):
         df_pd = df.select(["high", "low", "close", "volume"]).to_pandas()
         ad = ta.volume.acc_dist_index(high=df_pd["high"], low=df_pd["low"], close=df_pd["close"], volume=df_pd["volume"])
         df_out = df.with_columns(pl.Series(c_ad, ad))
-                             
+
     ad_trend = pl.col(c_ad) - pl.col(c_ad).shift(10)
     price_trend = pl.col("close") - pl.col("close").shift(10)
 
@@ -546,7 +546,7 @@ def pt_ad_line(df, time_frame):
         .alias(f"ad_vs_price_{time_frame}")
     ])
 
-                                                      
+
     df_out = df_out.with_columns(
         (pl.col(c_ad) - pl.col(c_ad).ewm_mean(span=20, adjust=False)).alias(f"ad_osc_{time_frame}")
     )
@@ -612,7 +612,7 @@ def pt_mfi_volume(df, time_frame, window=14):
 
         df_out = df_joined.with_columns(pl.col("mfi").alias(c_mfi)).drop("mfi")
 
-                             
+
     df_out = df_out.with_columns([
         (pl.col(c_mfi).fill_nan(None) > 80).fill_null(False).alias(f"mfi_vol_ob_{time_frame}"),
         (pl.col(c_mfi).fill_nan(None) < 20).fill_null(False).alias(f"mfi_vol_os_{time_frame}")
@@ -678,7 +678,7 @@ def pt_ease_of_movement(df, time_frame, window=14):
 
         df_out = df_joined.with_columns(pl.col("eom").alias(c_eom)).drop("eom")
 
-                             
+
     df_out = df_out.with_columns(
         (pl.col(c_eom).fill_nan(None) > 0.0).fill_null(False).alias(f"eom_bull_{time_frame}")
     )
@@ -724,12 +724,12 @@ def pt_pvt(df, time_frame):
         htf_pvt = htf_pvt.with_columns(
             pl.col("timestamp").dt.offset_by(polars_time_frame)
         )
-        
+
         htf_to_join = htf_pvt.select(["timestamp", "pvt"])
         df_joined = df.join_asof(htf_to_join, on="timestamp", strategy="backward")
         df_out = df_joined.with_columns(pl.col("pvt").alias(c_pvt)).drop("pvt")
 
-                             
+
     df_out = df_out.with_columns(
         (pl.col(c_pvt).fill_nan(None) > pl.col(c_pvt).shift(1).fill_nan(None)).fill_null(False).alias(f"pvt_rising_{time_frame}")
     )
@@ -792,12 +792,12 @@ def pt_chaikin_oscillator(df, time_frame, fast_period=3, slow_period=10):
         htf_chaikin = htf_chaikin.with_columns(
             pl.col("timestamp").dt.offset_by(polars_time_frame)
         )
-        
+
         htf_to_join = htf_chaikin.select(["timestamp", "chaikin"])
         df_joined = df.join_asof(htf_to_join, on="timestamp", strategy="backward")
         df_out = df_joined.with_columns(pl.col("chaikin").alias(c_chaikin)).drop("chaikin")
 
-                             
+
     df_out = df_out.with_columns(
         (pl.col(c_chaikin).fill_nan(None) > 0.0).fill_null(False).alias(f"chaikin_bull_{time_frame}")
     )

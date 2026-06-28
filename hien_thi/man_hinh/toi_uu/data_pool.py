@@ -266,7 +266,7 @@ class DataPoolDialog(QDialog):
         v.setContentsMargins(22, 18, 22, 18)
         v.setSpacing(14)
 
-                       
+
         header = QLabel("Tạo bộ dữ liệu mới" if not item.get("ten") else "Chỉnh sửa bộ dữ liệu")
         header.setStyleSheet(
             f"color: {Theme.TEXT_MAIN}; font-size: 16px; font-weight: bold; "
@@ -274,7 +274,7 @@ class DataPoolDialog(QDialog):
         )
         v.addWidget(header)
 
-                               
+
         sep = QFrame()
         sep.setFixedHeight(2)
         sep.setStyleSheet(
@@ -283,14 +283,14 @@ class DataPoolDialog(QDialog):
         )
         v.addWidget(sep)
 
-                              
+
         v.addWidget(self._lbl("TÊN BỘ DỮ LIỆU"))
         self.ed_ten = QLineEdit(item.get("ten", ""))
         self.ed_ten.setPlaceholderText("VD: BTC+ETH Q1-Q2 2026")
         self.ed_ten.setStyleSheet(self._INPUT_CSS)
         v.addWidget(self.ed_ten)
 
-                                             
+
         sym_header = QHBoxLayout()
         sym_header.setSpacing(8)
         sym_header.addWidget(self._lbl("CHỌN SYMBOL"))
@@ -305,7 +305,7 @@ class DataPoolDialog(QDialog):
         sym_header.addWidget(self.lbl_count)
         sym_header.addStretch()
 
-                                         
+
         btn_all = QPushButton("Chọn tất cả")
         btn_all.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_all.setStyleSheet(self._mini_btn_css())
@@ -318,7 +318,7 @@ class DataPoolDialog(QDialog):
         sym_header.addWidget(btn_none)
         v.addLayout(sym_header)
 
-                                     
+
         self.ed_search = QLineEdit()
         self.ed_search.setPlaceholderText("🔍  Tìm symbol...")
         self.ed_search.setStyleSheet(
@@ -328,7 +328,7 @@ class DataPoolDialog(QDialog):
         self.ed_search.textChanged.connect(self._filter_symbols)
         v.addWidget(self.ed_search)
 
-                                
+
         self.list_sym = QListWidget()
         self.list_sym.setMinimumHeight(140)
         self.list_sym.setMaximumHeight(220)
@@ -348,12 +348,12 @@ class DataPoolDialog(QDialog):
         v.addWidget(self.list_sym)
         self._update_count()
 
-                           
+
         cfg = {}
         try:
             from utils.doc_cau_hinh import lay_cau_hinh_ao
             cfg = lay_cau_hinh_ao() or {}
-        except Exception:                
+        except Exception:
             cfg = {}
 
         row = QHBoxLayout()
@@ -370,7 +370,7 @@ class DataPoolDialog(QDialog):
         row.addLayout(box2, 1)
         v.addLayout(row)
 
-                                      
+
         v.addSpacing(4)
         btn_row = QHBoxLayout()
         btn_row.setSpacing(10)
@@ -424,7 +424,7 @@ class DataPoolDialog(QDialog):
         btn_row.addWidget(btn_cancel)
         v.addLayout(btn_row)
 
-                   
+
     def _lbl(self, t):
         l = QLabel(t)
         l.setStyleSheet(
@@ -453,27 +453,27 @@ class DataPoolDialog(QDialog):
         d = QDate.fromString(str(s), "yyyy-MM-dd")
         de.setDate(d if d.isValid() else QDate(2026, 1, 1))
 
-                                    
+
         cal = de.calendarWidget()
         if cal is not None:
             cal.setStyleSheet(self._CALENDAR_CSS)
             cal.setVerticalHeaderFormat(QCalendarWidget.VerticalHeaderFormat.NoVerticalHeader)
             cal.setFixedSize(320, 260)
 
-                                               
+
             hdr_fmt = QTextCharFormat()
             hdr_fmt.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
             hdr_fmt.setForeground(QColor(Theme.ACCENT))
             hdr_fmt.setBackground(QColor("#1a1c24"))
             cal.setHeaderTextFormat(hdr_fmt)
 
-                              
+
             normal_fmt = QTextCharFormat()
             normal_fmt.setFont(QFont("Segoe UI", 9))
             normal_fmt.setForeground(QColor(Theme.TEXT_MAIN))
             normal_fmt.setBackground(QColor("transparent"))
 
-                                                   
+
             weekend_fmt = QTextCharFormat()
             weekend_fmt.setFont(QFont("Segoe UI", 9))
             weekend_fmt.setForeground(QColor("#8a7050"))
@@ -516,7 +516,7 @@ class DataPoolDialog(QDialog):
             if self.list_sym.item(i).checkState() == Qt.CheckState.Checked
         )
         self.lbl_count.setText(str(n))
-                                   
+
         if n > 0:
             self.lbl_count.setStyleSheet(
                 f"color: #0e0e0e; background: {Theme.ACCENT}; "
@@ -551,8 +551,8 @@ class DataPoolDialog(QDialog):
 
 
 
-                                                                                
-                                                       
-                                                                                
+
+
+
 
 __all__ = ["DataPoolDialog"]

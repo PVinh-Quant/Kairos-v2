@@ -14,14 +14,14 @@ from utils.doc_cau_hinh import lay_cau_hinh_giao_dich
 
 _config_trade = lay_cau_hinh_giao_dich() or {}
 
-                                               
+
 DUNG_SL_TP_DONG = False
 DUNG_DON_BAY_DONG = False
 DON_BAY_CO_DINH = int(_config_trade.get("don_bay", 5))
 BASE_SL_DEFAULT = 2.5
 RR_DEFAULT = 2.0
 
-                                                       
+
 JSON_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
     "du_lieu", "danh_sach_chien_luoc",
@@ -39,10 +39,10 @@ if os.path.exists(JSON_DIR):
             strat = JSONStrategy(f)
             strat_name = strat.name.lower()
 
-                                                                                                     
+
             is_rejected = "vd_reject" in filename
 
-                                                                                             
+
             strat_config = strat.config or {}
             is_active_field = strat_config.get("active", True)
             status_field = str(strat_config.get("status", "")).lower()
@@ -52,7 +52,7 @@ if os.path.exists(JSON_DIR):
                 logger.info(f"[bar-to-bar] Bỏ qua chiến lược {strat.name} (bị tắt bên trong cấu hình JSON hoặc status={status_field})")
                 continue
 
-                                                                                                      
+
             if list_kich_hoat_lower:
                 name_matches = (strat_name in list_kich_hoat_lower) or (filename in list_kich_hoat_lower)
                 if not name_matches:
@@ -93,7 +93,7 @@ def dat_chien_luoc_ghi_de(config, ten="active"):
             _json.dump(config, f, ensure_ascii=False)
         strat = JSONStrategy(path)
         try:
-            os.remove(path)                                                            
+            os.remove(path)
         except OSError:
             pass
         STRATEGIES = {strat.name.lower(): strat}
@@ -114,7 +114,7 @@ def _to_pl(frame):
 def _danh_gia_strat_now(strat, frames_by_tf):
     """Đánh giá 1 JSONStrategy tại NẾN HIỆN TẠI trên các khung đã gộp. Trả -1/0/1."""
     if getattr(strat, "_is_plugin", False):
-        return 0                                                     
+        return 0
 
     df_1m = frames_by_tf.get("1m")
     df_3m = frames_by_tf.get("3m")
@@ -159,7 +159,7 @@ def _trade_allowed_now(df_1m, use_ml=False, regime_cho_phep=None):
         df = loc_trang_thai_thi_truong(df, regime_cho_phep=regime_cho_phep)
         if "trade_allowed" in df.columns and df.height > 0:
             return bool(df["trade_allowed"][-1])
-    except Exception as e:                
+    except Exception as e:
         logger.error(f"[bar-to-bar] lỗi trade_allowed: {e}")
     return True
 
@@ -183,7 +183,7 @@ def danh_gia_tin_hieu_bar(symbol, frames_by_tf):
     selected_strat = None
     strategy_name = "union"
 
-                                                             
+
     for strat in STRATEGIES.values():
         s = _danh_gia_strat_now(strat, frames_by_tf)
         if s != 0:
@@ -195,7 +195,7 @@ def danh_gia_tin_hieu_bar(symbol, frames_by_tf):
     if selected_strat is None:
         selected_strat = list(STRATEGIES.values())[0]
 
-                                                                     
+
     use_sl_tp_dong = (
         bool(selected_strat.config.get("dung_sl_tp_dong", False)) or
         bool(selected_strat.risk.get("dung_sl_tp_dong", False)) or
@@ -214,7 +214,7 @@ def danh_gia_tin_hieu_bar(symbol, frames_by_tf):
         bool(selected_strat.config.get("use_ml", False)) or
         bool(selected_strat.logic.get("use_ml", False))
     )
-                                                                                        
+
     regime_cho_phep = None
     for _src in (selected_strat.logic, selected_strat.config, selected_strat.risk):
         if isinstance(_src, dict) and _src.get("regime_cho_phep") is not None:
@@ -227,10 +227,10 @@ def danh_gia_tin_hieu_bar(symbol, frames_by_tf):
     df_15m = frames_by_tf.get("15m")
     df_1m = frames_by_tf.get("1m")
 
-                        
+
     base_sl = float(selected_strat.risk.get("base_sl", BASE_SL_DEFAULT))
     rr = float(selected_strat.risk.get("rr", RR_DEFAULT))
-                                                                          
+
     sl_tp_tf = (selected_strat.risk.get("sl_tp_time_frame")
                 or selected_strat.config.get("sl_tp_time_frame") or "15m")
 
@@ -241,7 +241,7 @@ def danh_gia_tin_hieu_bar(symbol, frames_by_tf):
             sl_frame = _to_pl(frames_by_tf.get(sl_tp_tf))
             if sl_frame is None or sl_frame.is_empty():
                 sl_frame = df15
-                                                                                              
+
             close = float(sl_frame["close"][-1])
             sl_p, tp_p = tinh_sl_tp_live(sl_frame, close, "buy", base_sl=base_sl, rr=rr, time_frame=sl_tp_tf)
             if sl_p and tp_p and close > 0:
@@ -258,16 +258,16 @@ def danh_gia_tin_hieu_bar(symbol, frames_by_tf):
         sl_pct = base_sl / 100.0
         tp_pct = (base_sl * rr) / 100.0
 
-                          
+
     fixed_leverage = int(
-        selected_strat.risk.get("fixed_leverage") or 
-        selected_strat.config.get("fixed_leverage") or 
-        selected_strat.risk.get("don_bay_goc") or 
-        selected_strat.config.get("don_bay_goc") or 
+        selected_strat.risk.get("fixed_leverage") or
+        selected_strat.config.get("fixed_leverage") or
+        selected_strat.risk.get("don_bay_goc") or
+        selected_strat.config.get("don_bay_goc") or
         DON_BAY_CO_DINH
     )
 
-                                                                                      
+
     max_lev = int(selected_strat.risk.get("max_leverage")
                   or selected_strat.config.get("max_leverage") or 50)
     don_bay_tf = (selected_strat.risk.get("don_bay_tf")
@@ -364,7 +364,7 @@ def chien_luoc_thoat_lenh(
     return False, "Giữ lệnh"
 
 
-                                                                           
+
 
 def tinh_sl_tp_theo_atr(gia_vao, tin_hieu, df_15m):
     """Wrapper tính SL/TP động theo cấu hình chiến lược hiện tại hoặc mặc định."""

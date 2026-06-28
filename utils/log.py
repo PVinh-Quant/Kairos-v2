@@ -82,7 +82,7 @@ def reset_log_time():
 logger = thiet_lap_logger()
 
 
-                                                                               
+
 
 
 def banner_khoi_dong(ten: str, rows: list[tuple]):

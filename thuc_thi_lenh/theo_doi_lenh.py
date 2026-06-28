@@ -18,7 +18,7 @@ def kiem_tra_trang_thai_vi_the(san, symbol):
     try:
         positions = exchange.fetch_positions([symbol])
         for pos in positions:
-                                                            
+
             size = (
                 float(pos["contracts"] or 0)
                 if "contracts" in pos
@@ -32,7 +32,7 @@ def kiem_tra_trang_thai_vi_the(san, symbol):
                     "entry_price": float(pos["entryPrice"]),
                     "amount": size,
                 }
-        return None                   
+        return None
     except Exception as e:
         logger.error(f"Lỗi theo dõi vị thế {symbol}: {e}")
         return None

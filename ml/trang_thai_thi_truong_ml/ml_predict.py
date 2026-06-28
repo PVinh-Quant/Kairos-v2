@@ -19,7 +19,7 @@ from datetime import datetime
 import pandas as pd
 import csv
 
-                      
+
 import torch
 import numpy as np
 import polars as pl
@@ -35,64 +35,64 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 STATE_MAP = {
-    0: "Đóng_Băng",                             
-    1: "Nén_Chặt",                                        
-    2: "Đầu_Xu_Hướng",                                          
-    3: "Xu_Hướng_Mạnh",                                       
-    4: "Cao_Trào",                                           
-    5: "Hồi_Quy",                                             
-    6: "Nhiễu_Động",                                 
-    7: "Quét_Thanh_Khoản",                                         
+    0: "Đóng_Băng",
+    1: "Nén_Chặt",
+    2: "Đầu_Xu_Hướng",
+    3: "Xu_Hướng_Mạnh",
+    4: "Cao_Trào",
+    5: "Hồi_Quy",
+    6: "Nhiễu_Động",
+    7: "Quét_Thanh_Khoản",
 }
 
-                                                                           
+
 STRATEGY_MAP = {
-    0: None,                            
-    1: "Squeeze",                                             
-    2: "Breakout",                                            
-    3: "Trend_following",                                      
-    4: "Mean_reversion",                                        
-    5: "Mean_reversion",                                         
-    6: "Scalping",                                  
-    7: None,                                           
+    0: None,
+    1: "Squeeze",
+    2: "Breakout",
+    3: "Trend_following",
+    4: "Mean_reversion",
+    5: "Mean_reversion",
+    6: "Scalping",
+    7: None,
 }
 
 
 def du_doan_trang_thai_ml(df_5m, df_15m, df_1h, df_4h, last_state=None):
     """Dự đoán regime hiện tại (bar-to-bar) từ 4 khung thời gian; trả về ML packet hoặc None."""
-                                                                                          
-                                                                                 
+
+
     feature_dict = feature_dataset(df_5m, df_15m, df_1h, df_4h, last_state=last_state)
 
-                                                                                         
+
     if feature_dict is None or (
         isinstance(feature_dict, pd.DataFrame) and feature_dict.empty
     ):
         return None
 
-                                                                                               
+
     input_vector = {k: v.iloc[-1] for k, v in feature_dict.items()}
 
-                                                            
-                                                                                     
+
+
     state_id, conf, probs = engine.predict(input_vector)
 
     if state_id is None:
         return None
 
-                                                                            
+
     strategy = STRATEGY_MAP.get(state_id)
 
-                                                                                                    
+
     if strategy is None:
         return None
 
-                                                                                                 
+
     packet = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "state_id": state_id,
         "state_name": STATE_MAP.get(state_id, "UNKNOWN"),
-        "strategy_name": strategy,                                                            
+        "strategy_name": strategy,
         "confidence": round(conf, 4),
         "probs": probs,
         "features_snapshot": input_vector,
@@ -105,12 +105,12 @@ def du_doan_trang_thai_ml_vector(df_1m: pl.DataFrame) -> pl.DataFrame:
     Nhận DataFrame 1m gốc. Xuất ra DataFrame có cột 'regime' và 'confidence'
     do mô hình AI dự đoán (Xử lý hàng loạt - Vectorized Inference).
     """
-                                                                                 
-                                                                                
+
+
     df_dummy = df_1m.with_columns(pl.lit(0).alias("regime"))
     df_feat = features_vectorized(df_dummy)
 
-                                        
+
     if df_feat is None or df_feat.is_empty():
         return df_1m.with_columns(
             [pl.lit(0).alias("regime"), pl.lit(0.0).alias("confidence")]
@@ -118,7 +118,7 @@ def du_doan_trang_thai_ml_vector(df_1m: pl.DataFrame) -> pl.DataFrame:
 
     engine_vector = AI_Engine()
 
-                                                                                        
+
     if engine_vector.model is None or engine_vector.scaler is None:
         print(
             "⚠️ CẢNH BÁO: AI Model hoặc Scaler chưa được huấn luyện! Trả về Regime 0 mặc định."
@@ -129,7 +129,7 @@ def du_doan_trang_thai_ml_vector(df_1m: pl.DataFrame) -> pl.DataFrame:
 
     feature_cols = engine_vector.feature_names
 
-                                                                  
+
     missing_cols = [c for c in feature_cols if c not in df_feat.columns]
     if len(missing_cols) > 0:
         print(
@@ -139,49 +139,49 @@ def du_doan_trang_thai_ml_vector(df_1m: pl.DataFrame) -> pl.DataFrame:
             [pl.lit(0).alias("regime"), pl.lit(0.0).alias("confidence")]
         )
 
-                                                                                                   
+
     X_numpy = df_feat.select(feature_cols).to_numpy().copy()
     ctx_indices = [feature_cols.index(f"ctx_last_state_{i}") for i in range(8)]
 
-                                                          
+
     for idx in ctx_indices:
         X_numpy[:, idx] = 0.0
 
     preds_np = np.zeros(len(df_feat), dtype=np.int32)
     confs_np = np.zeros(len(df_feat), dtype=np.float64)
 
-                                                                   
+
     mean_np = engine_vector.scaler.mean.cpu().numpy()
     std_np = engine_vector.scaler.std.cpu().numpy()
 
-                                                                                                               
+
     X_scaled = (X_numpy - mean_np) / std_np
-    
-                                                                           
+
+
     val_ctx_1 = (1.0 - mean_np[ctx_indices]) / std_np[ctx_indices]
 
-                                                   
+
     X_scaled_tensor = torch.tensor(X_scaled, dtype=torch.float32)
 
     engine_vector.model.eval()
-    
-                                                              
+
+
     try:
         dummy_input = torch.randn(1, len(feature_cols)).to(device)
         model_traced = torch.jit.trace(engine_vector.model, dummy_input)
     except Exception:
         model_traced = engine_vector.model
 
-                                                                                      
+
     old_threads = torch.get_num_threads()
     torch.set_num_threads(1)
 
     last_state = 0
     tong = len(df_feat)
 
-                                                                                  
-                                                                                 
-                                                                        
+
+
+
     log_progress = tong >= 5000
     buoc_log = max(1, tong // 10)
     if log_progress:
@@ -190,10 +190,10 @@ def du_doan_trang_thai_ml_vector(df_1m: pl.DataFrame) -> pl.DataFrame:
     try:
         with torch.no_grad():
             for t in range(tong):
-                                                                              
+
                 X_scaled_tensor[t, ctx_indices[last_state]] = float(val_ctx_1[last_state])
 
-                                                            
+
                 row_tensor = X_scaled_tensor[t].unsqueeze(0).to(device)
                 logits = model_traced(row_tensor)
                 probs = torch.softmax(logits, dim=1)[0]
@@ -203,19 +203,19 @@ def du_doan_trang_thai_ml_vector(df_1m: pl.DataFrame) -> pl.DataFrame:
                 preds_np[t] = pred_state
                 confs_np[t] = float(conf.item())
 
-                                                       
+
                 last_state = pred_state
 
                 if log_progress and (t + 1) % buoc_log == 0:
                     logger.info(f"[ML]   regime {t + 1:,}/{tong:,} nến ({(t + 1) * 100 // tong}%)")
     finally:
-                               
+
         torch.set_num_threads(old_threads)
 
     if log_progress:
         logger.info(f"[ML] Hoàn tất suy diễn regime cho {tong:,} nến.")
 
-                                      
+
     df_results = pl.DataFrame(
         {
             "timestamp": df_feat["timestamp"],
@@ -224,10 +224,10 @@ def du_doan_trang_thai_ml_vector(df_1m: pl.DataFrame) -> pl.DataFrame:
         }
     )
 
-                                                                                  
-                                                                                          
-                                                                                      
-                                                           
+
+
+
+
     cols_goc = [c for c in df_1m.columns if c not in ("regime", "confidence")]
     df_final = df_1m.select(cols_goc).join(df_results, on="timestamp", how="left").with_columns(
         [
@@ -243,8 +243,8 @@ def du_doan_trang_thai_ml_vector(df_1m: pl.DataFrame) -> pl.DataFrame:
 
 def danh_gia_ml(packet, pnl, dd, correct=None):
     """Tính reward từ PnL/DD và ghi vào trading_memory.csv để phục vụ self-supervised learning."""
-                                                    
-                                                                                   
+
+
     if not packet or not isinstance(packet, dict) or "state_name" not in packet:
         return
 
@@ -253,15 +253,15 @@ def danh_gia_ml(packet, pnl, dd, correct=None):
 
     state_name = packet["state_name"]
 
-                                                                                        
-                                                                                                         
+
+
     if pnl > 0:
         reward = pnl * 1.0
     else:
         reward = pnl * 2.0
 
-                                                                                                             
-    if state_name == "Nhiễu_Động":                                           
+
+    if state_name == "Nhiễu_Động":
         if pnl < 0:
             reward -= 2.0
         elif 0 < pnl < 0.5:
@@ -269,14 +269,14 @@ def danh_gia_ml(packet, pnl, dd, correct=None):
     elif state_name in (
         "Nén_Chặt",
         "Đầu_Xu_Hướng",
-    ):                                                              
+    ):
         if pnl < 0:
             reward -= 2.0
         elif pnl > 2.0:
             reward += 2.0
     elif (
         state_name == "Xu_Hướng_Mạnh"
-    ):                                                                           
+    ):
         if pnl < 0:
             reward *= 1.5
         elif pnl > 3.0:
@@ -284,21 +284,21 @@ def danh_gia_ml(packet, pnl, dd, correct=None):
     elif state_name in (
         "Cao_Trào",
         "Hồi_Quy",
-    ):                                                                        
+    ):
         if pnl < -1.0:
             reward -= 3.0
         elif pnl > 1.5:
             reward += 2.0
     else:
-                                                                                 
+
         if dd < -1.0:
             reward -= 1.0
 
-                                                                                         
+
     reward = max(min(reward, 10), -10)
 
-                                                                                                
-                                                                                                   
+
+
     log_row = {
         "timestamp": packet["timestamp"],
         "state": packet["state_id"],

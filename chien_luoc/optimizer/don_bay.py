@@ -88,7 +88,7 @@ def them_don_bay_dong(df, don_bay_goc=5, max_leverage=50):
         dung_don_bay_dong = False
 
     if dung_don_bay_dong:
-                                                                                     
+
         if Q is not None:
             don_bay_goc = int(getattr(Q, "DON_BAY_GOC", don_bay_goc) or don_bay_goc)
             max_leverage = int(getattr(Q, "MAX_LEVERAGE", max_leverage) or max_leverage)
@@ -122,12 +122,12 @@ def tinh_don_bay_live(symbol, don_bay, df_1m, df_3m, df_5m, df_15m, df_30m, df_1
         df_calc = tinh_don_bay(frame, don_bay_goc=don_bay, max_leverage=max_leverage, time_frame=time_frame)
         if df_calc is None or len(df_calc) == 0:
             return don_bay
-        
+
         if hasattr(df_calc, "clone"):
-                    
+
             return int(df_calc["leverage"][-1])
         else:
-                    
+
             return int(df_calc["leverage"].iloc[-1])
     except Exception as e:
         from utils.log import logger

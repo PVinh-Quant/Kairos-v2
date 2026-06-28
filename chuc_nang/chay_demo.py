@@ -123,7 +123,7 @@ def luong_quet_thi_truong_demo():
                 )
 
                 if tin_hieu:
-                                                                                       
+
                     don_bay = int(packet.get("leverage") or DON_BAY)
 
                     msg = f"Tin hieu {tin_hieu.upper()} cho {symbol} (Diem: {diem:.2f})"
@@ -143,7 +143,7 @@ def luong_quet_thi_truong_demo():
                     phi_mo = gia_tri_lenh * PHI_GIAO_DICH
                     VON_AO -= phi_mo
 
-                                                                                  
+
                     sl_pct = float(packet.get("sl_pct") or 0.0)
                     tp_pct = float(packet.get("tp_pct") or 0.0)
                     if tin_hieu == "buy":
@@ -199,7 +199,7 @@ def luong_quan_ly_vi_the_demo():
     global VON_AO
     logger.info("[DEMO] Bat dau quan ly vi the...")
 
-    dinh_tai_khoan = VON_AO                                      
+    dinh_tai_khoan = VON_AO
 
     while DANG_CHAY:
         ds_dang_giu = quan_ly_lenh.lay_danh_sach_symbol_dang_co()
@@ -239,7 +239,7 @@ def luong_quan_ly_vi_the_demo():
                 chien_luoc = vt.get("chien_luoc")
 
 
-                packet_ml = vt.get("packet_ml")                          
+                packet_ml = vt.get("packet_ml")
 
                 can_thoat = False
                 ly_do = ""
@@ -329,8 +329,8 @@ def luong_quan_ly_vi_the_demo():
 
                     quan_ly_lenh.xoa_lenh(CHUC_NANG, symbol)
 
-                                                                                        
-                                                                                      
+
+
                     if VON_AO > dinh_tai_khoan:
                         dinh_tai_khoan = VON_AO
                     account_drawdown = (VON_AO - dinh_tai_khoan) / dinh_tai_khoan * 100
@@ -373,7 +373,7 @@ def chay_demo():
     except Exception:
         _ten_cl = ""
     luu_run(DEMO_RUN_ID, "demo", {"von_ban_dau": VON_AO, "symbols": LIST_COIN, "ten_chien_luoc": _ten_cl})
-                                        
+
     try:
         quan_ly_lenh.dang_ky_chay_bot(CHUC_NANG, DEMO_RUN_ID)
     except Exception as e:

@@ -40,7 +40,7 @@ from PyQt6.QtGui import (
     QColor, QDrag, QPainter, QPen, QBrush, QFont,
     QPainterPath, QLinearGradient, QFontMetrics,
 )
-                                                                   
+
 from hien_thi.giao_dien.theme import Theme
 
 

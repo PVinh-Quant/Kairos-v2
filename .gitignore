@@ -1,3 +1,9 @@
+# Private modules (not for public release)
+tools/
+indicator_high/
+
+toi_uu_hoa_high/
+
 # Virtual environment
 env/
 venv/

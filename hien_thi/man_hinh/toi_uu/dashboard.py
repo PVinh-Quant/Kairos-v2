@@ -52,8 +52,8 @@ import numpy as np
 from hien_thi.duong_dan import PROJECT_ROOT, ASSETS_DIR
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
-from toi_uu_hoa.kiem_dinh import danh_gia_guardrails, MIN_TRADES_OOS              
-from toi_uu_hoa.dong_co_backtest import MIN_DAYS_TIN_CAY              
+from toi_uu_hoa.kiem_dinh import danh_gia_guardrails, MIN_TRADES_OOS
+from toi_uu_hoa.dong_co_backtest import MIN_DAYS_TIN_CAY
 from .theme import *
 from .dinh_nghia import *
 from .tien_ich import *
@@ -65,9 +65,9 @@ from .trang_chu import TrangChuMixin
 from .thong_bao import hien_thong_bao
 
 
-                                                                                       
+
 NAV_AN_KHOI = {"realtime", "demo", "backtest", "vectorized"}
-                                                                               
+
 CHAY_CHUC_NANG = [
     ("realtime", "Realtime"),
     ("demo", "Demo"),
@@ -168,7 +168,7 @@ class StrategyCard(QFrame):
     CARD_W = 188
     CARD_H = 142
 
-                                                                             
+
     _STATUS = {
         "DEPLOY": ("PASS", "#22C55E"),
         "REJECT": ("REJECT", "#EF4444"),
@@ -189,21 +189,21 @@ class StrategyCard(QFrame):
             lambda pos: self.menuRequested.emit(self, self.mapToGlobal(pos))
         )
 
-                                                                                       
-                                                           
+
+
         self._glow = None
 
         self._build_ui()
         self._apply_style()
 
-                                                                              
+
     def _build_ui(self):
         lay = QVBoxLayout(self)
         lay.setContentsMargins(13, 11, 13, 10)
         lay.setSpacing(0)
         inner_w = self.CARD_W - 26
 
-                                                                 
+
         name = QLabel()
         name_font = QFont()
         name_font.setPixelSize(13)
@@ -215,7 +215,7 @@ class StrategyCard(QFrame):
         name.setStyleSheet(f"color: {Theme.TEXT_MAIN}; background: transparent;")
         lay.addWidget(name)
 
-                                       
+
         combo = QLabel(self.data.get("combo_label", "") or "—")
         cf = QFont(); cf.setPixelSize(12)
         combo.setFont(cf)
@@ -226,7 +226,7 @@ class StrategyCard(QFrame):
 
         lay.addSpacing(8)
 
-                                               
+
         sh = self.data.get("oos_sharpe", 0.0)
         sh_txt = "—" if sh <= -9.99 else f"{sh:+.3f}"
         lay.addLayout(self._metric_row("Sharpe", sh_txt, Theme.ENTRY))
@@ -234,7 +234,7 @@ class StrategyCard(QFrame):
 
         lay.addStretch(1)
 
-                                          
+
         label, color = self._STATUS.get(self.data.get("verdict", ""), self._STATUS_DEFAULT)
         status = QLabel(f"●  {label}")
         sff = QFont(); sff.setPixelSize(12); sff.setBold(True)
@@ -244,14 +244,14 @@ class StrategyCard(QFrame):
 
         lay.addSpacing(3)
 
-                                                        
+
         ts = QLabel(f"🕒  {self._fmt_ngay(self.data.get('ngay_luu', ''))}")
         tf = QFont(); tf.setPixelSize(11)
         ts.setFont(tf)
         ts.setStyleSheet(f"color: {Theme.TEXT_SUB}; background: transparent;")
         lay.addWidget(ts)
 
-                                                
+
         self._check = QLabel("✓", self)
         self._check.setFixedSize(18, 18)
         self._check.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -291,7 +291,7 @@ class StrategyCard(QFrame):
         except Exception:
             return s or "—"
 
-                                                                              
+
     def set_selected(self, on):
         self._selected = bool(on)
         self._check.setVisible(self._selected)
@@ -300,7 +300,7 @@ class StrategyCard(QFrame):
     def _apply_style(self):
         if self._selected:
             border = Theme.ACCENT
-            self._set_glow(QColor(200, 170, 110, 150), 20)               
+            self._set_glow(QColor(200, 170, 110, 150), 20)
         elif self._hover:
             border = "#3A4252"
             self._set_glow(QColor(120, 130, 150, 90), 14)
@@ -316,7 +316,7 @@ class StrategyCard(QFrame):
         """Gắn/gỡ hiệu ứng glow theo nhu cầu; gỡ hẳn khi nhàn rỗi để nhẹ bộ nhớ/vẽ."""
         if color is None:
             if self._glow is not None:
-                self.setGraphicsEffect(None)                    
+                self.setGraphicsEffect(None)
                 self._glow = None
             return
         if self._glow is None:
@@ -326,7 +326,7 @@ class StrategyCard(QFrame):
         self._glow.setColor(color)
         self._glow.setBlurRadius(blur)
 
-                                                                              
+
     def enterEvent(self, event):
         self._hover = True
         self._apply_style()
@@ -355,12 +355,12 @@ class StylizedBrandLabel(QWidget):
         self.setFixedHeight(38)
         self.setStyleSheet("background: transparent; border: none;")
 
-                                         
+
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(1)
 
-                                                                                                  
+
         self.brand = QLabel("KAIROS")
         font = QFont("Segoe UI", 14, QFont.Weight.Bold)
         font.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 5)
@@ -369,7 +369,7 @@ class StylizedBrandLabel(QWidget):
         self.brand.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.brand)
 
-                                                                
+
         self.subtitle = QLabel("Analytics System v2")
         font_sub = QFont("Segoe UI", 7, QFont.Weight.Bold)
         font_sub.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 1)
@@ -417,7 +417,7 @@ class HomeTile(QFrame):
 class SparklineWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setMinimumHeight(30)                                                       
+        self.setMinimumHeight(30)
         self.points = [10, 15, 12, 18, 14, 22, 19, 28, 25, 35, 32, 45, 40, 52, 48, 60]
 
     def paintEvent(self, event):
@@ -426,7 +426,7 @@ class SparklineWidget(QWidget):
         w = self.width()
         h = self.height()
         if not self.points:
-                                                                                              
+
             painter.setPen(QPen(QColor(Theme.BORDER), 1, Qt.PenStyle.DashLine))
             painter.drawLine(0, int(h / 2), w, int(h / 2))
             painter.setPen(QColor("#555861"))
@@ -438,7 +438,7 @@ class SparklineWidget(QWidget):
         max_val = max(self.points)
         min_val = min(self.points)
         rng = (max_val - min_val) if max_val != min_val else 1
-        
+
         path = QPainterPath()
         for i, val in enumerate(self.points):
             x = i * (w / (n - 1))
@@ -447,17 +447,17 @@ class SparklineWidget(QWidget):
                 path.moveTo(x, y)
             else:
                 path.lineTo(x, y)
-                
+
         gradient_path = QPainterPath(path)
         gradient_path.lineTo(w, h)
         gradient_path.lineTo(0, h)
         gradient_path.closeSubpath()
-        
+
         gradient = QLinearGradient(0, 0, 0, h)
         gradient.setColorAt(0, QColor(200, 170, 110, 60))
         gradient.setColorAt(1, QColor(200, 170, 110, 0))
         painter.fillPath(gradient_path, QBrush(gradient))
-        
+
         pen = QPen(QColor(Theme.ACCENT), 1.5)
         painter.setPen(pen)
         painter.drawPath(path)
@@ -470,23 +470,23 @@ class PipelineProgressWidget(QWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        
+
         w = self.width()
         h = self.height()
-        
+
         padding = w / 12
         step_w = w / 6
-        
+
         painter.setPen(QPen(QColor("#2A2E39"), 2, Qt.PenStyle.DashLine))
         painter.drawLine(int(padding), int(h/2), int(w - padding), int(h/2))
-        
+
         painter.setPen(QPen(QColor(Theme.ACCENT), 2, Qt.PenStyle.SolidLine))
         painter.drawLine(int(padding), int(h/2), int(padding + 3 * step_w), int(h/2))
-        
+
         for i in range(6):
             cx = padding + i * step_w
             cy = h / 2
-            
+
             if i < 4:
                 painter.setBrush(QColor(Theme.BG))
                 painter.setPen(QPen(QColor(Theme.ACCENT), 2))
@@ -513,20 +513,20 @@ class CustomIconWidget(QWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        
+
         w = self.width()
         h = self.height()
-        
-                            
+
+
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(QColor(self.bg_color)))
-        
+
         if self.is_circle:
             painter.drawEllipse(QRectF(0, 0, w, h))
         else:
             painter.drawRoundedRect(QRectF(0, 0, w, h), 6, 6)
-            
-                                  
+
+
         if self.border_style == "active":
             painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.setPen(QPen(QColor(Qt.GlobalColor.white), 2))
@@ -534,30 +534,30 @@ class CustomIconWidget(QWidget):
                 painter.drawEllipse(QRectF(1, 1, w - 2, h - 2))
             else:
                 painter.drawRoundedRect(QRectF(1, 1, w - 2, h - 2), 6, 6)
-                
-                                  
+
+
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(QColor(Qt.GlobalColor.white)))
-        
+
         if self.icon_type == 'database':
             bar_w = w * 0.44
             bar_h = h * 0.11
             gap = h * 0.05
-            
+
             total_h = 3 * bar_h + 2 * gap
             start_y = (h - total_h) / 2
             start_x = (w - bar_w) / 2
-            
+
             for i in range(3):
                 y = start_y + i * (bar_h + gap)
                 painter.drawRoundedRect(QRectF(start_x, y, bar_w, bar_h), bar_h / 2, bar_h / 2)
-                
+
         elif self.icon_type == 'features':
             font = QFont("Segoe UI", int(self.icon_size * 0.45), QFont.Weight.Bold)
             painter.setFont(font)
             painter.setPen(QPen(QColor(Qt.GlobalColor.white)))
             painter.drawText(QRectF(0, 0, w, h), Qt.AlignmentFlag.AlignCenter, "Σ")
-            
+
         elif self.icon_type == 'toi_uu':
             path = QPainterPath()
             start_x = w * 0.24
@@ -571,33 +571,33 @@ class CustomIconWidget(QWidget):
                 angle = t * 2 * math.pi
                 y_i = center_y - math.sin(angle) * amp
                 path.lineTo(x_i, y_i)
-            
+
             pen = QPen(QColor(Qt.GlobalColor.white), 2, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
             painter.setPen(pen)
             painter.drawPath(path)
-            
+
         elif self.icon_type == 'backtest':
             bar_w = w * 0.09
             gap = w * 0.06
             total_w = 3 * bar_w + 2 * gap
             start_x = (w - total_w) / 2
             base_y = h * 0.72
-            
+
             h1 = h * 0.24
             h2 = h * 0.46
             h3 = h * 0.34
-            
+
             painter.drawRoundedRect(QRectF(start_x, base_y - h1, bar_w, h1), 0.5, 0.5)
             painter.drawRoundedRect(QRectF(start_x + bar_w + gap, base_y - h2, bar_w, h2), 0.5, 0.5)
             painter.drawRoundedRect(QRectF(start_x + 2 * (bar_w + gap), base_y - h3, bar_w, h3), 0.5, 0.5)
-            
+
         elif self.icon_type == 'chart':
             candle_w = w * 0.09
             gap = w * 0.07
             total_w = 3 * candle_w + 2 * gap
             start_x = (w - total_w) / 2
             center_y = h * 0.5
-            
+
             candles = [
                 (0, -h*0.09, h*0.19, -h*0.19, h*0.38),
                 (1, -h*0.19, h*0.25, -h*0.28, h*0.50),
@@ -607,32 +607,32 @@ class CustomIconWidget(QWidget):
                 cx = start_x + idx * (candle_w + gap)
                 painter.setPen(QPen(QColor(Qt.GlobalColor.white), 1.2))
                 painter.drawLine(QPointF(cx + candle_w / 2, center_y + wy), QPointF(cx + candle_w / 2, center_y + wy + wh))
-                
+
                 painter.setPen(Qt.PenStyle.NoPen)
                 painter.setBrush(QColor(Qt.GlobalColor.white))
                 painter.drawRect(QRectF(cx, center_y + by, candle_w, bh))
-                
+
         elif self.icon_type == 'demo':
             path = QPainterPath()
             tri_w = w * 0.26
             tri_h = h * 0.30
             start_x = w * 0.40
             start_y = h * 0.5
-            
+
             path.moveTo(start_x, start_y - tri_h / 2)
             path.lineTo(start_x + tri_w, start_y)
             path.lineTo(start_x, start_y + tri_h / 2)
             path.closeSubpath()
-            
+
             painter.drawPath(path)
-            
+
         elif self.icon_type == 'realtime':
             bar_w = w * 0.07
             gap = w * 0.05
             total_w = 4 * bar_w + 3 * gap
             start_x = (w - total_w) / 2
             base_y = h * 0.69
-            
+
             for i in range(4):
                 bar_h = h * (0.13 + i * 0.13)
                 bx = start_x + i * (bar_w + gap)
@@ -655,33 +655,33 @@ class ActionRow(QFrame):
                 background-color: {Theme.GRID};
             }}
         """)
-        
+
         lay = QHBoxLayout(self)
         lay.setContentsMargins(12, 6, 12, 6)
         lay.setSpacing(12)
-        
+
         icon = CustomIconWidget(icon_type=icon_type, bg_color=icon_color, is_circle=False, size=32, parent=self)
-        
+
         text_box = QVBoxLayout()
         text_box.setSpacing(2)
         text_box.setContentsMargins(0, 0, 0, 0)
-        
+
         lbl_title = QLabel(title)
         lbl_title.setStyleSheet(f"color: {Theme.TEXT_MAIN}; font-size: 13px; font-weight: bold; background: transparent;")
-        
+
         lbl_desc = QLabel(desc)
         lbl_desc.setStyleSheet("color: #787B86; font-size: 10px; background: transparent;")
-        
+
         text_box.addWidget(lbl_title)
         text_box.addWidget(lbl_desc)
-        
+
         chevron = QLabel("→")
         chevron.setStyleSheet("color: #555861; font-size: 14px; background: transparent;")
-        
+
         lay.addWidget(icon)
         lay.addLayout(text_box, 1)
         lay.addWidget(chevron)
-        
+
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit()
@@ -695,28 +695,28 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         self.indicator_items = {}
         self._selected_indicator_key = None
         self.tf_columns = {}
-        self.combo_specs = []                                                               
+        self.combo_specs = []
         self.combo_result = None
         self.combo_result_specs = []
         self.nav_btns = {}
         self.worker = None
-        self.phien = None                                                                                
-        self.active_modules = {}                                              
-        self.module_zone = None                                                    
-        self.module_items = {}                                       
-        self.bo_du_lieu = doc_bo_du_lieu()                                     
+        self.phien = None
+        self.active_modules = {}
+        self.module_zone = None
+        self.module_items = {}
+        self.bo_du_lieu = doc_bo_du_lieu()
         for _i, _it in enumerate(self.bo_du_lieu):
             _it.setdefault("id", f"ds_load_{_i}")
-        self.active_dataset = None                                                         
-        self.data_zone = None                                                    
-        self.data_pool_layout = None                                    
+        self.active_dataset = None
+        self.data_zone = None
+        self.data_pool_layout = None
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
         self._build_header(root)
 
-                                                                                            
+
         self._workspace = QSplitter(Qt.Orientation.Horizontal)
         self._workspace.setStyleSheet(f"QSplitter::handle {{ background-color: {Theme.BORDER}; }}")
         self._workspace.setHandleWidth(1)
@@ -727,8 +727,8 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         self._workspace.setStretchFactor(1, 1)
         self._workspace.setSizes([230, 1000])
 
-                                                                                        
-                                                                                              
+
+
         self._man_con = {}
         self.outer_stack = QStackedWidget()
         self.outer_stack.addWidget(self._workspace)
@@ -744,7 +744,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         self._init_modules_from_Q()
         self._render_modules()
 
-                                                                              
+
     def _build_header(self, parent_layout):
         header = QFrame()
         header.setObjectName("header_frame")
@@ -753,17 +753,17 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         lay = QHBoxLayout(header)
         lay.setContentsMargins(18, 4, 18, 4)
         lay.setSpacing(10)
-                                                                                                                       
+
         brand = StylizedBrandLabel()
         lay.addWidget(brand)
         lay.addSpacing(22)
 
-                                                                                        
-                                                                                           
-                                                                           
-                                                  
-                                                                                       
-                                                                                            
+
+
+
+
+
+
         nav = [("home", "Trang chủ"), ("toi_uu", "Tối ưu")]
         van_hanh = []
         try:
@@ -777,7 +777,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
                     van_hanh.append((mh["khoa"], mh["nhan"]))
             nav.append(("da_luu", "Đã lưu"))
             nav += van_hanh
-        except Exception:                
+        except Exception:
             nav += [("thu_cong", "Chỉ báo thủ công"), ("da_luu", "Đã lưu"), ("cai_dat", "Cài đặt")]
 
         for khoa, name in nav:
@@ -790,7 +790,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         lay.addStretch()
         parent_layout.addWidget(header)
 
-                                                                                
+
     def di_toi_man(self, khoa):
         """Điều hướng nav toàn cục.
 
@@ -806,12 +806,12 @@ class DashboardToiUu(TrangChuMixin, QWidget):
             self._lam_moi_trang_chu()
         else:
             w = self._man_con.get(khoa)
-            if w is None:                                                                        
+            if w is None:
                 from PyQt6.QtWidgets import QApplication
                 from PyQt6.QtCore import Qt
                 self.lbl_status.setText(f"Đang mở {khoa}… (lần đầu hơi lâu do nạp dữ liệu)")
                 QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
-                QApplication.processEvents()                                                     
+                QApplication.processEvents()
                 try:
                     w = self._tao_man_con(khoa)
                 finally:
@@ -828,7 +828,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         try:
             from hien_thi import lay_lop
             w = lay_lop(khoa)()
-        except Exception as e:                
+        except Exception as e:
             print(f"[toi_uu shell] Lỗi tạo màn {khoa}: {e}", flush=True)
             return None
         if getattr(self, "phien", None) is not None:
@@ -850,8 +850,8 @@ class DashboardToiUu(TrangChuMixin, QWidget):
             )
             btn.setStyleSheet(style + " QPushButton { padding: 4px 12px; font-size: 13px; }")
 
-                                                                              
-                                                                            
+
+
     def _build_left_panel(self):
         panel = QFrame()
         panel.setMinimumWidth(220)
@@ -860,7 +860,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(0)
 
-                   
+
         tabbar = QHBoxLayout()
         tabbar.setContentsMargins(0, 0, 0, 0)
         tabbar.setSpacing(0)
@@ -876,10 +876,10 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         lay.addLayout(tabbar)
 
         self.left_stack = QStackedWidget()
-        self.left_stack.addWidget(self._build_indicator_palette())     
-        self.left_stack.addWidget(self._build_module_palette())        
-        self.left_stack.addWidget(self._build_plugin_palette())        
-        self.left_stack.addWidget(self._build_data_pool_palette())     
+        self.left_stack.addWidget(self._build_indicator_palette())
+        self.left_stack.addWidget(self._build_module_palette())
+        self.left_stack.addWidget(self._build_plugin_palette())
+        self.left_stack.addWidget(self._build_data_pool_palette())
         lay.addWidget(self.left_stack, 1)
         self._switch_left_tab(0)
         return panel
@@ -1131,11 +1131,11 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         else:
             self.data_zone.set_chips([])
 
-                                                                              
+
     def _build_right_panel(self):
         self.stack = QStackedWidget()
-        self.stack.addWidget(self._build_builder_page())      
-        self.stack.addWidget(self._build_thu_vien_page())     
+        self.stack.addWidget(self._build_builder_page())
+        self.stack.addWidget(self._build_thu_vien_page())
         return self.stack
 
     def _build_builder_page(self):
@@ -1191,7 +1191,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         quick.addWidget(self.spin_persist)
         self.spin_persist.valueChanged.connect(lambda _: self._update_builder_title())
 
-                                                                           
+
         quick.addWidget(self._mk_label("Trials:"))
         self.spin_trials = QSpinBox()
         self.spin_trials.setRange(7, 5000)
@@ -1201,7 +1201,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
 
         quick.addStretch()
 
-                                                                                    
+
         self.btn_run = QPushButton("▶ Tối ưu")
         self.btn_run.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_run.setStyleSheet(self._btn_style(Theme.ACCENT))
@@ -1215,7 +1215,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         self.btn_save.clicked.connect(self._luu_ket_qua)
         quick.addWidget(self.btn_save)
 
-                                                                               
+
         self.btn_load_last = QPushButton("↻ Mở lại")
         self.btn_load_last.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_load_last.setStyleSheet(self._btn_style(Theme.BORDER, text_color=Theme.TEXT_MAIN) + "QPushButton { padding: 7px 10px; }")
@@ -1223,7 +1223,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         self.btn_load_last.clicked.connect(self._nap_lan_chay_gan_nhat)
         quick.addWidget(self.btn_load_last)
 
-        quick.addWidget(btn_clear)                          
+        quick.addWidget(btn_clear)
 
         self.btn_stop = QPushButton("■ Dừng")
         self.btn_stop.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -1234,14 +1234,14 @@ class DashboardToiUu(TrangChuMixin, QWidget):
 
         lay.addLayout(quick)
 
-                                                                        
+
         self.data_zone = DataDropZone()
         self.data_zone.setToolTip("Kéo 1 bộ dữ liệu (Symbol + khoảng ngày) vào đây để tối ưu trên dữ liệu đó. Để trống = dùng Symbol/ngày trong config.")
         self.data_zone.data_dropped.connect(self._on_data_drop)
         lay.addWidget(self.data_zone)
         self._render_data_zone()
 
-                                                                 
+
         self.module_zone = ModuleDropZone()
         self.module_zone.setToolTip("Kéo các mô-đun (Regime ML / SL-TP động / Đòn bẩy động) vào khung này để bật và chỉnh thông số riêng.")
         self.module_zone.module_dropped.connect(self._on_module_drop)
@@ -1264,7 +1264,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         self.lbl_strategy_desc.setStyleSheet(f"color: {Theme.TEXT_SUB}; font-size: 11px;")
         lay.addWidget(self.lbl_strategy_desc)
 
-                        
+
         self.combo_banner = QLabel("")
         self.combo_banner.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.combo_banner.setFixedHeight(0)
@@ -1285,12 +1285,12 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         mlay.addLayout(self.combo_metrics_grid)
         lay.addWidget(metrics_frame)
 
-                                                                    
+
         row_columns = QHBoxLayout()
         row_columns.setSpacing(10)
         row_columns.setContentsMargins(0, 0, 0, 0)
 
-                                                                                
+
         guardrail_frame = QFrame()
         guardrail_frame.setObjectName("card")
         guardrail_frame.setStyleSheet(f"QFrame#card {{ background: transparent; border: 1px solid {Theme.BORDER}; border-radius: 8px; }}")
@@ -1305,7 +1305,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         glay.addLayout(self.combo_guardrail_box)
         row_columns.addWidget(guardrail_frame, 1)
 
-                                                                          
+
         wf_frame = QFrame()
         wf_frame.setObjectName("card")
         wf_frame.setStyleSheet(f"QFrame#card {{ background: transparent; border: 1px solid {Theme.BORDER}; border-radius: 8px; }}")
@@ -1322,7 +1322,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
 
         lay.addLayout(row_columns)
 
-                                                                                         
+
         tbl_head = QLabel("THAM SỐ TỐI ƯU CHO TỪNG CHỈ BÁO (ở đúng khung của nó)")
         tbl_head.setStyleSheet(f"color: {Theme.TEXT_SUB}; font-size: 10px; font-weight: bold;")
         lay.addWidget(tbl_head)
@@ -1332,7 +1332,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         self.combo_table.setHorizontalHeaderLabels(cols)
         self.combo_table.verticalHeader().setVisible(False)
         self.combo_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.combo_table.setWordWrap(True)                                              
+        self.combo_table.setWordWrap(True)
         self.combo_table.setMinimumHeight(150)
         self.combo_table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.combo_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -1343,12 +1343,12 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         self.combo_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         lay.addWidget(self.combo_table)
 
-                                                                                    
+
         self.bieu_do_phan_tich = BieuDoPhanTich(self)
         self.bieu_do_phan_tich.setMinimumHeight(430)
         lay.addWidget(self.bieu_do_phan_tich)
 
-                                                                
+
         heatmap_frame = QFrame()
         heatmap_frame.setObjectName("card")
         heatmap_frame.setStyleSheet(f"QFrame#card {{ background: {Theme.CARD}; border: 1px solid {Theme.BORDER}; border-radius: 8px; }}")
@@ -1362,32 +1362,32 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         h_lbl.setStyleSheet(f"color: {Theme.TEXT_SUB}; font-size: 10px; font-weight: bold; background: transparent; border: none;")
         h_header.addWidget(h_lbl)
         h_header.addStretch()
-        
+
         h_header.addWidget(self._mk_label("Trục X:"))
         self.cb_param_x = QComboBox()
         self.cb_param_x.setStyleSheet(self._combo_style() + "QComboBox { min-width: 100px; font-size: 11px; }")
         self.cb_param_x.currentIndexChanged.connect(self._ve_heatmap_do_nhay)
         h_header.addWidget(self.cb_param_x)
-        
+
         h_header.addSpacing(8)
-        
+
         h_header.addWidget(self._mk_label("Trục Y:"))
         self.cb_param_y = QComboBox()
         self.cb_param_y.setStyleSheet(self._combo_style() + "QComboBox { min-width: 100px; font-size: 11px; }")
         self.cb_param_y.currentIndexChanged.connect(self._ve_heatmap_do_nhay)
         h_header.addWidget(self.cb_param_y)
-        
+
         hlay.addLayout(h_header)
-        
-                    
-                                      
+
+
+
         self.heatmap_canvas = ParameterSensitivityScatterWidget(self)
         self.heatmap_canvas.setMinimumHeight(360)
         hlay.addWidget(self.heatmap_canvas)
-        
+
         lay.addWidget(heatmap_frame)
 
-                                                                          
+
         lay.setSizeConstraint(QVBoxLayout.SizeConstraint.SetMinAndMaxSize)
 
         scroll = QScrollArea()
@@ -1406,7 +1406,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         lay.setContentsMargins(28, 22, 28, 18)
         lay.setSpacing(16)
 
-                                                                                                     
+
         title_box = QVBoxLayout()
         title_box.setSpacing(3)
         title = QLabel("Thư viện tham số đã nghiên cứu")
@@ -1417,7 +1417,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         title_box.addWidget(self.thu_vien_count)
         lay.addLayout(title_box)
 
-                                                                           
+
         self.thu_vien_scroll = QScrollArea()
         self.thu_vien_scroll.setWidgetResizable(True)
         self.thu_vien_scroll.setFrameShape(QFrame.Shape.NoFrame)
@@ -1443,7 +1443,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         self._thu_vien_selected_ten = None
         return page
 
-                                                                              
+
     def _thu_vien_chon_card(self, card):
         """Single click: chọn thẻ; bấm lại đúng thẻ đang chọn để bỏ chọn."""
         if card is self._thu_vien_selected_card:
@@ -1513,18 +1513,18 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         Ưu tiên pythonw.exe để không kèm cửa sổ console.
         """
         import subprocess
-                                                                                        
+
         ovr = self._hoi_thiet_lap_chay(khoa, ten)
         if ovr is None:
-            return                      
+            return
         cmd = [sys.executable, "-m", "hien_thi.app.chay_man", "--man", khoa]
         if ten:
             cmd += ["--chien-luoc", ten]
-                                                                                             
+
         env = dict(os.environ)
         env["PYTHONUTF8"] = "1"
         env["PYTHONIOENCODING"] = "utf-8"
-                                                                                     
+
         if ovr.get("symbols"):
             import json as _json
             env["KAIROS_RUN_SYMBOLS"] = _json.dumps(ovr["symbols"])
@@ -1532,7 +1532,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
             env["KAIROS_RUN_TU_NGAY"] = ovr["tu_ngay"]
         if ovr.get("den_ngay"):
             env["KAIROS_RUN_DEN_NGAY"] = ovr["den_ngay"]
-                                                                                                
+
         kwargs = {
             "cwd": PROJECT_ROOT,
             "env": env,
@@ -1551,7 +1551,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         try:
             subprocess.Popen(cmd, **kwargs)
             self.lbl_status.setText(f"▶ Đã mở {nhan} (tiến trình riêng) cho: {ten}")
-        except Exception as e:                
+        except Exception as e:
             self.lbl_status.setText(f"✗ Không mở được {nhan}: {e}")
 
     def _hoi_thiet_lap_chay(self, khoa, ten):
@@ -1565,7 +1565,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         if not universe:
             return {}
 
-                                                                                                 
+
         default_symbols, default_tu, default_den = None, None, None
         try:
             from toi_uu_hoa.thu_vien import doc_chien_luoc
@@ -1575,7 +1575,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
                 default_symbols = ds.get("symbols")
                 default_tu = ds.get("tu_ngay")
                 default_den = ds.get("den_ngay")
-        except Exception:                
+        except Exception:
             pass
         if not default_tu or not default_den:
             cfg_ao = lay_cau_hinh_ao() or {}
@@ -1636,7 +1636,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         from toi_uu_hoa.thu_vien import danh_sach_da_luu
         ds = danh_sach_da_luu()
 
-                                        
+
         while self.thu_vien_flow.count():
             item = self.thu_vien_flow.takeAt(0)
             w = item.widget()
@@ -1645,7 +1645,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
                 w.deleteLater()
         self._thu_vien_cards = []
 
-                                                       
+
         ten_chon = self._thu_vien_selected_ten
         self._thu_vien_selected_card = None
 
@@ -1684,13 +1684,13 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         try:
             from toi_uu_hoa.thu_vien import luu_chien_luoc
             ten = luu_chien_luoc(self.combo_result)
-        except Exception as e:                
+        except Exception as e:
             self.lbl_status.setText(f"✗ Lưu thất bại: {e}")
             return
         self._nap_thu_vien()
         self.lbl_status.setText(f"✓ Đã lưu vào thư viện: {ten}")
-        
-                                           
+
+
         self.btn_save.setText("✔️ Đã lưu")
         from PyQt6.QtCore import QTimer
         QTimer.singleShot(1500, lambda: self.btn_save.setText("💾 Lưu"))
@@ -1752,7 +1752,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         lay.addWidget(self.lbl_status)
         lay.addStretch()
 
-                                                                                      
+
         self.btn_gui_bieu_do = QPushButton("Gửi sang Biểu đồ nến →")
         self.btn_gui_bieu_do.setStyleSheet(self._btn_style(Theme.ACCENT) + "QPushButton { padding: 3px 12px; font-size: 11px; }")
         self.btn_gui_bieu_do.setEnabled(False)
@@ -1772,7 +1772,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         lay.addWidget(self.progress_bar)
         parent_layout.addWidget(bar)
 
-                                                                                
+
     def _xuat_ban_chien_luoc(self, result):
         """Đẩy chiến lược (+ dataset) đang xem lên bus phiên để các tab khác đồng bộ.
 
@@ -1797,10 +1797,10 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         self._xuat_ban_chien_luoc(result)
         phien = getattr(self, "phien", None)
         if phien is not None:
-            phien.yeu_cau_xem("vectorized")                                     
+            phien.yeu_cau_xem("vectorized")
         self.lbl_status.setText("✓ Đã gửi chiến lược sang Biểu đồ nến.")
 
-                                                                              
+
     def _mk_label(self, text):
         lbl = QLabel(text)
         lbl.setStyleSheet(f"color: {Theme.TEXT_SUB}; font-size: 11px; background: transparent;")
@@ -1834,7 +1834,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
             f"QPushButton:disabled {{ background-color: {Theme.GRID}; color: {Theme.TEXT_SUB}; }}"
         )
 
-                                                                              
+
     def _filter_indicators(self, text):
         text = text.strip().lower()
         for cat_lbl, keys in self.category_headers:
@@ -1856,7 +1856,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
             for k, it in self.indicator_items.items():
                 it.set_selected(k == key)
 
-                                                                              
+
     def _on_drop(self, tf, key_or_mime):
         if self.worker is not None and self.worker.isRunning():
             self.lbl_status.setText("⚠ Vui lòng dừng hoặc chờ tối ưu xong trước khi sửa chiến lược.")
@@ -1946,17 +1946,17 @@ class DashboardToiUu(TrangChuMixin, QWidget):
                 )
                 self.lbl_strategy_desc.setStyleSheet(f"color: {Theme.TEXT_SUB}; font-size: 11px;")
             return
-            
+
         short_label = " + ".join(f"{s['key']}@{s['tf']}" for s in self.combo_specs)
         self.lbl_builder_title.setText(f"CHIẾN LƯỢC TỔ HỢP: {short_label}")
-        
-                                          
+
+
         logic = self.combo_logic.currentData() or "and"
         persistence = self.spin_persist.value()
-        
+
         triggers = [s for s in self.combo_specs if s.get("role", "trigger") == "trigger"]
         filters = [s for s in self.combo_specs if s.get("role", "trigger") == "filter"]
-        
+
         parts = []
         if triggers:
             trigger_descs = []
@@ -1964,8 +1964,8 @@ class DashboardToiUu(TrangChuMixin, QWidget):
                 key_upper = s["key"].upper()
                 tf_val = s["tf"]
                 trigger_descs.append(f"giá chạm tới ngưỡng {key_upper} ở Khung {tf_val}")
-            
-                                            
+
+
             conj = " và " if logic == "and" else " hoặc "
             trigger_phrase = conj.join(trigger_descs)
             if len(triggers) > 1:
@@ -1973,7 +1973,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
             parts.append(f"vào lệnh khi {trigger_phrase}")
         else:
             parts.append("vào lệnh khi có tín hiệu trigger")
-            
+
         if filters:
             filter_descs = []
             for s in filters:
@@ -1982,20 +1982,20 @@ class DashboardToiUu(TrangChuMixin, QWidget):
                 filter_descs.append(f"{key_upper} ở Khung {tf_val}")
             filter_phrase = " và ".join(filter_descs)
             parts.append(f"ĐỒNG THỜI thỏa mãn điều kiện lọc của {filter_phrase}")
-            
+
         if persistence > 1:
             parts.append(f"(hiệu lực tín hiệu giữ trong {persistence} nến 1m ~ {persistence} phút)")
-            
+
         explanation = ", ".join(parts)
-        
+
         if explanation:
             explanation = explanation[0].upper() + explanation[1:]
-            
+
         if hasattr(self, "lbl_strategy_desc"):
             self.lbl_strategy_desc.setText(f"💡 Giải thích chiến lược: {explanation}")
             self.lbl_strategy_desc.setStyleSheet(f"color: {Theme.ACCENT}; font-size: 11px; font-weight: bold;")
 
-                                                                               
+
     def _default_module_params(self, mid):
         p = dict(DEFAULT_MODULE_PARAMS.get(mid, {}))
         if mid == "don_bay":
@@ -2060,7 +2060,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         try:
             import chien_luoc.quan_ly_chien_luoc_vectorized as Q
             setattr(Q, flag, bool(on))
-        except Exception as e:                
+        except Exception as e:
             self.lbl_status.setText(f"✗ Không đặt được mô-đun {mid}: {e}")
             return
         self.lbl_status.setText(f"{MODULE_DEFS[mid]['name']}: {'BẬT' if on else 'TẮT'} (dùng chung optimizer + backtest danh mục)")
@@ -2130,11 +2130,11 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         self.active_modules = {}
         self._sync_module_flags_to_Q()
 
-                                                                              
+
     def run_builder(self):
         if self.worker is not None and self.worker.isRunning():
             return
-        self._sync_module_flags_to_Q()                                                      
+        self._sync_module_flags_to_Q()
         seen, specs = set(), []
         for s in self.combo_specs:
             k = (s["key"], s["tf"])
@@ -2148,8 +2148,8 @@ class DashboardToiUu(TrangChuMixin, QWidget):
             self.lbl_status.setText("⚠ Cần ít nhất 1 chỉ báo vai trò Trigger (Filter chỉ để lọc). Bấm badge để đổi.")
             return
 
-                                                                                  
-                                                                            
+
+
         from toi_uu_hoa.bo_dieu_phoi import TINH_NANG_NANG_CAP
         if len(specs) > 1 and not TINH_NANG_NANG_CAP:
             hien_thong_bao(
@@ -2192,7 +2192,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
 
         self._xuat_ban_chien_luoc(result)
 
-                                                                                
+
     def _nap_lai_plugin(self):
         from toi_uu_hoa.dang_ky_chien_luoc import nap_plugins, danh_sach_plugins
         nap_plugins()
@@ -2235,7 +2235,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
     def run_plugin(self):
         if self.worker is not None and self.worker.isRunning():
             return
-        self._sync_module_flags_to_Q()                                             
+        self._sync_module_flags_to_Q()
         khoa = self._selected_plugin_key
         if not khoa:
             self.lbl_status.setText("⚠ Chưa chọn plugin (thêm file vào chien_luoc/user_strategies/).")
@@ -2266,7 +2266,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         self.lbl_status.setText(f"✓ Hoàn tất plugin · {ket_luan_chien_luoc(result)} · OOS Sharpe {sharpe_txt}")
         self._xuat_ban_chien_luoc(result)
 
-                                                                              
+
     def stop_worker(self):
         if self.worker is not None and self.worker.isRunning():
             if hasattr(self.worker, "stop"):
@@ -2305,11 +2305,11 @@ class DashboardToiUu(TrangChuMixin, QWidget):
             if hasattr(self, "btn_run_plugin"):
                 self.btn_run_plugin.setText("▶ Tối ưu plugin")
 
-                                                                              
+
     def _progress_busy(self):
         self.progress_bar.setRange(0, 0)
         self.progress_bar.setVisible(True)
-                                                                          
+
         self.lbl_progress.setText("⏳ Đang nạp dữ liệu & chuẩn bị...")
 
     def _progress_set(self, done, total):
@@ -2327,11 +2327,11 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         self._progress_set(done, total)
         best_txt = "" if best is None else f" · best IS {float(best):+.2f}"
         self.lbl_progress.setText(f"Bộ {done}/{total}{best_txt}")
-                                                                               
+
         nut = self.btn_run_plugin if isinstance(self.worker, StrategyWorker) else self.btn_run
         nut.setText(f"⏳ Bộ {done}/{total}")
 
-                                                                              
+
     def _clear_grid(self, grid):
         while grid.count():
             item = grid.takeAt(0)
@@ -2507,26 +2507,26 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         self.cb_param_y.blockSignals(True)
         self.cb_param_x.clear()
         self.cb_param_y.clear()
-        
+
         if not trials_data or len(trials_data) == 0:
             self.cb_param_x.blockSignals(False)
             self.cb_param_y.blockSignals(False)
             self._ve_heatmap_do_nhay()
             return
-            
+
         first_trial = trials_data[0]
         params = list(first_trial.get("params", {}).keys())
-        
+
         if len(params) > 0:
             self.cb_param_x.addItems(params)
             self.cb_param_y.addItems(params)
-            
+
             self.cb_param_x.setCurrentIndex(0)
             if len(params) > 1:
                 self.cb_param_y.setCurrentIndex(1)
             else:
                 self.cb_param_y.setCurrentIndex(0)
-                
+
         self.cb_param_x.blockSignals(False)
         self.cb_param_y.blockSignals(False)
         self._ve_heatmap_do_nhay()
@@ -2547,7 +2547,7 @@ class DashboardToiUu(TrangChuMixin, QWidget):
         self.stack.setCurrentIndex(idx)
         if getattr(self, "outer_stack", None) is not None:
             self.outer_stack.setCurrentWidget(self._workspace)
-                                                                                                
+
         if getattr(self, "_left_panel", None) is not None:
             self._left_panel.setVisible(idx == 0)
         self._highlight_nav("toi_uu" if idx == 0 else "da_luu")
@@ -2604,7 +2604,7 @@ if __name__ == "__main__":
     app = QApplication.instance() or QApplication(sys.argv)
     win = DashboardToiUu()
     win.setWindowTitle("Kairos v2 — Tối ưu chiến lược tổ hợp")
-    
+
     icon_path = os.path.join(ASSETS_DIR, "logo.png")
     if os.path.exists(icon_path):
         try:
@@ -2614,6 +2614,6 @@ if __name__ == "__main__":
             win.setWindowIcon(icon)
         except Exception:
             pass
-            
+
     win.show()
     sys.exit(app.exec())

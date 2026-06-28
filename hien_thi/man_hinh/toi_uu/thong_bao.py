@@ -19,7 +19,7 @@ from PyQt6.QtGui import QColor
 
 from hien_thi.giao_dien.theme import Theme
 
-                                            
+
 _KIEU = {
     "info":     (Theme.ENTRY,  "ℹ",  "Thông báo"),
     "success":  (Theme.WIN,    "✓",  "Hoàn tất"),
@@ -47,7 +47,7 @@ class ThongBao(QDialog):
         self.setModal(True)
         self._drag = None
 
-                                                           
+
         card = QFrame(self)
         card.setObjectName("card")
         card.setStyleSheet(
@@ -61,14 +61,14 @@ class ThongBao(QDialog):
         card.setGraphicsEffect(shadow)
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(18, 16, 18, 20)                         
+        root.setContentsMargins(18, 16, 18, 20)
         root.addWidget(card)
 
         lay = QVBoxLayout(card)
         lay.setContentsMargins(22, 18, 22, 18)
         lay.setSpacing(13)
 
-                                                        
+
         hang = QHBoxLayout()
         hang.setSpacing(12)
         cham = QLabel(icon)
@@ -86,7 +86,7 @@ class ThongBao(QDialog):
         hang.addWidget(tieu, 1)
         lay.addLayout(hang)
 
-                  
+
         noi = QLabel(noi_dung)
         noi.setWordWrap(True)
         noi.setMinimumWidth(360)
@@ -96,7 +96,7 @@ class ThongBao(QDialog):
         )
         lay.addWidget(noi)
 
-                               
+
         hang_nut = QHBoxLayout()
         hang_nut.addStretch(1)
         nut = QPushButton("OK")
@@ -112,7 +112,7 @@ class ThongBao(QDialog):
         hang_nut.addWidget(nut)
         lay.addLayout(hang_nut)
 
-                                                                              
+
     def mousePressEvent(self, e):
         if e.button() == Qt.MouseButton.LeftButton:
             self._drag = e.globalPosition().toPoint() - self.frameGeometry().topLeft()

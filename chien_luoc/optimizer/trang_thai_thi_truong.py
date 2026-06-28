@@ -11,11 +11,11 @@ Các điều kiện lọc:
 
 import pandas as pd
 
-                                                                            
+
 TAT_CA_REGIME = set(range(8))
 
-                                                                         
-                                                                                 
+
+
 _REGIME_CAM_MAC_DINH = {0, 7}
 _REGIME_KHONG_TRADE = set(_REGIME_CAM_MAC_DINH)
 
@@ -47,13 +47,13 @@ def _tap_cam_tu_cho_phep(regime_cho_phep):
     return TAT_CA_REGIME - {int(x) for x in regime_cho_phep}
 
 
-                                                                                
-                                                                               
-                                                                                 
-                                                                                  
-                                                                         
-_REGIME_CACHE = {}                                                                            
-_REGIME_CACHE_MAX = 32                                                              
+
+
+
+
+
+_REGIME_CACHE = {}
+_REGIME_CACHE_MAX = 32
 
 
 def _van_tay_ohlcv(df_pl):
@@ -97,7 +97,7 @@ def du_doan_trang_thai_thi_truong(df):
         else:
             df_pl = df.select(required_cols)
 
-                                                                                   
+
         van_tay = _van_tay_ohlcv(df_pl)
         df_regime = _REGIME_CACHE.get(van_tay) if van_tay is not None else None
         if df_regime is None:
@@ -105,10 +105,10 @@ def du_doan_trang_thai_thi_truong(df):
             df_regime = df_result.select(["timestamp", "regime", "confidence"])
             if van_tay is not None:
                 if len(_REGIME_CACHE) >= _REGIME_CACHE_MAX:
-                    _REGIME_CACHE.pop(next(iter(_REGIME_CACHE)))                       
+                    _REGIME_CACHE.pop(next(iter(_REGIME_CACHE)))
                 _REGIME_CACHE[van_tay] = df_regime
 
-                          
+
         if is_pandas:
             import pandas as pd
             df_regime_pd = df_regime.to_pandas()
@@ -196,3 +196,52 @@ def loc_trang_thai_thi_truong(df, loc_cuoi_tuan=False, loc_gio_spread=True, regi
 du_doan_trang_thai_thi_truong_vectorized = du_doan_trang_thai_thi_truong
 
 
+def pre_compute_regime(df_1m):
+    """Pre-compute regime ML 1 lần trên toàn bộ df_1m gốc (Polars).
+
+    Gọi hàm này MỘT LẦN DÀNH khi nạp data vào RAM trong optimizer, TRƯỚC khi
+    chạy các trial. Cột ``regime`` và ``confidence`` sẽ được gắn sẵn → các hàm
+    ``loc_trang_thai_thi_truong`` / ``chuan_hoa_va_loc_tin_hieu`` sẽ SKIP ML
+    inference nhờ kiểm tra ``"regime" not in df.columns`` trả False.
+
+    Args:
+        df_1m: Polars DataFrame OHLCV gốc (chưa filter, chưa merge).
+
+    Returns:
+        Polars DataFrame giống df_1m nhưng có thêm cột ``regime`` (Int32)
+        và ``confidence`` (Float64). Nếu ML thất bại → regime=0, confidence=0.
+    """
+    import polars as pl
+
+    if "regime" in df_1m.columns:
+        return df_1m
+
+    try:
+        from ml.trang_thai_thi_truong_ml.ml_predict import du_doan_trang_thai_ml_vector
+
+        required = ["timestamp", "open", "high", "low", "close", "volume"]
+        missing = [c for c in required if c not in df_1m.columns]
+        if missing:
+            raise ValueError(f"Thiếu cột: {missing}")
+
+        df_result = du_doan_trang_thai_ml_vector(df_1m.select(required))
+
+        #
+        df_regime = df_result.select(["timestamp", "regime", "confidence"])
+
+        #
+        cols_goc = [c for c in df_1m.columns if c not in ("regime", "confidence")]
+        df_out = df_1m.select(cols_goc).join(df_regime, on="timestamp", how="left")
+        df_out = df_out.with_columns([
+            pl.col("regime").fill_null(0).cast(pl.Int32),
+            pl.col("confidence").fill_null(0.0).cast(pl.Float64),
+        ])
+        return df_out
+
+    except Exception as e:
+        from utils.log import logger
+        logger.warning(f"[Regime] Pre-compute thất bại ({e}), gán regime=0 mặc định.")
+        return df_1m.with_columns([
+            pl.lit(0).cast(pl.Int32).alias("regime"),
+            pl.lit(0.0).cast(pl.Float64).alias("confidence"),
+        ])

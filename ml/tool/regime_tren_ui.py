@@ -24,9 +24,9 @@ except ImportError:
     vectorized_backtest = None
 
 
-                                            
-                                             
-                                            
+
+
+
 class Theme:
     BG = "#0e0e0e"
     CARD = "#0e0e0e"
@@ -41,16 +41,16 @@ class Theme:
     EXIT = "#FF9800"
     TRADE_LINE = "#4c525e"
 
-                                        
+
     REGIME_COLORS = {
-        0: "#787B86",                  
-        1: "#FFD700",                           
-        2: "#00BFFF",                                  
-        3: "#089981",                                 
-        4: "#FF4500",                               
-        5: "#9C27B0",                             
-        6: "#8D6E63",                             
-        7: "#FF1493",                            
+        0: "#787B86",
+        1: "#FFD700",
+        2: "#00BFFF",
+        3: "#089981",
+        4: "#FF4500",
+        5: "#9C27B0",
+        6: "#8D6E63",
+        7: "#FF1493",
     }
 
 
@@ -66,9 +66,9 @@ def to_datetime(val):
         return None
 
 
-                                            
-                            
-                                            
+
+
+
 class DataProcessorWorker(QThread):
     finished = pyqtSignal(object, list)
 
@@ -95,7 +95,7 @@ class DataProcessorWorker(QThread):
                     ),
                 ]
 
-                                                                                                     
+
                 for col_name in [
                     "signal",
                     "entry_signal",
@@ -118,9 +118,9 @@ class DataProcessorWorker(QThread):
             self.finished.emit(self.df_base, timestamps)
 
 
-                                            
-                                       
-                                            
+
+
+
 class RegimeLegendWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -156,7 +156,7 @@ class RegimeLegendWidget(QWidget):
             row = QHBoxLayout()
             row.setSpacing(10)
 
-                                  
+
             color_box = QLabel()
             color_box.setFixedSize(16, 16)
             color_hex = Theme.REGIME_COLORS.get(r_id, "#FFFFFF")
@@ -164,7 +164,7 @@ class RegimeLegendWidget(QWidget):
                 f"background-color: {color_hex}; border-radius: 3px; border: 1px solid #000;"
             )
 
-                        
+
             label = QLabel(desc)
             label.setFont(QFont("Segoe UI", 10))
             label.setStyleSheet(f"color: {Theme.TEXT_MAIN}; border: none;")
@@ -178,9 +178,9 @@ class RegimeLegendWidget(QWidget):
         layout.addStretch()
 
 
-                                            
-                                          
-                                            
+
+
+
 class CoreCandlestickChart(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -271,7 +271,7 @@ class CoreCandlestickChart(QWidget):
             else [0] * len(opens)
         )
 
-                                    
+
         regimes = (
             df_view["regime"].to_list()
             if "regime" in df_view.columns
@@ -287,7 +287,7 @@ class CoreCandlestickChart(QWidget):
         def get_y(price):
             return margin_top + chart_h - ((price - min_low) / price_range) * chart_h
 
-                     
+
         grid_pen = QPen(QColor(Theme.GRID), 1, Qt.PenStyle.SolidLine)
         painter.setPen(grid_pen)
         painter.setFont(QFont("Segoe UI", 8))
@@ -320,7 +320,7 @@ class CoreCandlestickChart(QWidget):
         max_vol = max(volumes) if volumes and max(volumes) > 0 else 1
         vol_max_height = chart_h * 0.25
 
-                                                                          
+
         for i in range(len(opens)):
             o, hi, lo, c, vol = opens[i], highs[i], lows[i], closes[i], volumes[i]
             x = chart_w - (len(opens) - i) * space_per_candle
@@ -328,7 +328,7 @@ class CoreCandlestickChart(QWidget):
             yo, yc, yh, yl = get_y(o), get_y(c), get_y(hi), get_y(lo)
             is_up = c >= o
 
-                                                
+
             regime_val = regimes[i]
             if regime_val is not None and int(regime_val) in Theme.REGIME_COLORS:
                 base_color = QColor(Theme.REGIME_COLORS[int(regime_val)])
@@ -344,7 +344,7 @@ class CoreCandlestickChart(QWidget):
                     QColor(255, 255, 255, 8),
                 )
 
-                       
+
             vol_h = (vol / max_vol) * vol_max_height
             vol_brush = QColor(base_color)
             vol_brush.setAlpha(80)
@@ -353,30 +353,30 @@ class CoreCandlestickChart(QWidget):
                 vol_brush,
             )
 
-                        
+
             painter.setPen(QPen(base_color, 1.5))
             painter.drawLine(int(center_x), int(yh), int(center_x), int(yl))
 
-                                                                     
+
             painter.setPen(Qt.PenStyle.NoPen)
             if is_up:
-                painter.setBrush(QColor(Theme.CARD))                     
+                painter.setBrush(QColor(Theme.CARD))
                 painter.drawRect(
                     QRectF(x, min(yo, yc), self.candle_width, max(abs(yo - yc), 1))
                 )
-                                          
+
                 painter.setPen(QPen(base_color, 1.5))
                 painter.setBrush(Qt.BrushStyle.NoBrush)
                 painter.drawRect(
                     QRectF(x, min(yo, yc), self.candle_width, max(abs(yo - yc), 1))
                 )
             else:
-                painter.setBrush(base_color)                     
+                painter.setBrush(base_color)
                 painter.drawRect(
                     QRectF(x, min(yo, yc), self.candle_width, max(abs(yo - yc), 1))
                 )
 
-                   
+
         for i in range(len(opens)):
             if (start_idx + i) % time_step == 0:
                 x = (
@@ -411,9 +411,9 @@ class CoreCandlestickChart(QWidget):
             0, int(margin_top + chart_h), int(chart_w), int(margin_top + chart_h)
         )
 
-                                                    
-                                         
-                                                    
+
+
+
         if self.mouse_pos and hovered_candle_idx != -1:
             mx, my = self.mouse_pos.x(), self.mouse_pos.y()
             mx = max(0, min(mx, chart_w))
@@ -492,9 +492,9 @@ class CoreCandlestickChart(QWidget):
             painter.drawText(int(chart_w + 6), int(my + 4), f"{cross_price:.4f}")
 
 
-                                            
-                                   
-                                            
+
+
+
 class CandlestickChartWidget(QWidget):
     def __init__(self):
         super().__init__()
@@ -510,7 +510,7 @@ class CandlestickChartWidget(QWidget):
         self.splitter = QSplitter(Qt.Orientation.Horizontal)
         self.main_layout.addWidget(self.splitter)
 
-                            
+
         self.left_panel = QWidget()
         self.left_layout = QVBoxLayout(self.left_panel)
         self.left_layout.setContentsMargins(0, 0, 0, 0)
@@ -521,13 +521,13 @@ class CandlestickChartWidget(QWidget):
         self.chart = CoreCandlestickChart()
         self.left_layout.addWidget(self.chart)
 
-                                       
+
         self.legend = RegimeLegendWidget()
 
         self.splitter.addWidget(self.left_panel)
         self.splitter.addWidget(self.legend)
 
-                                                
+
         self.splitter.setSizes([950, 250])
 
     def setup_toolbar(self):
@@ -620,7 +620,7 @@ def hien_thi_regime_tren_ui(df):
 
 
 if __name__ == "__main__":
-                                                                   
+
     app = QApplication.instance()
     if not app:
         app = QApplication(sys.argv)

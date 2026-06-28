@@ -173,22 +173,22 @@ File chính: `lay_du_lieu/lay_macro.py`
 
 ## 4. Engine chỉ báo kỹ thuật
 
-### 4.1 Cấu trúc module (cập nhật 2026-06-26)
+### 4.1 Cấu trúc module (Bản Base / PoC)
 
-Thư mục `Indicator/` gồm 7 module (tổng **8,412 dòng code**, **68 hàm `pt_*`**):
+Thư mục `Indicator/` gồm 7 module (tổng **2,847 dòng code**, **49 hàm `pt_*`**):
 
 | Module | Dòng code | Mô tả |
 |---|---:|---|
-| `xu_huong.py` | 2,052 | Xu hướng (EMA/SMA/ADX/DMI/Ichimoku/SuperTrend/Aroon/Vortex/HMA/KAMA/ALMA) |
-| `cau_truc_gia.py` | 1,766 | Cấu trúc giá (Breakout/Fractals/Pivot/FVG/Heikin Ashi) |
-| `dong_luong_dao_chieu.py` | 1,787 | Động lượng & đảo chiều (RSI/Stoch/MFI/Ultimate Osc/Stoch RSI/STC) |
-| `bien_dong.py` | 1,295 | Biến động (ATR/BB Squeeze/Keltner/Donchian/HistVol/Chaikin Vol/Chandelier) |
-| `khoi_luong.py` | 1,130 | Khối lượng (Volume/OBV/VWAP/Volume Profile/CMF/A-D/MFI Vol/EoM/PVT/Chaikin Osc) |
-| `vi_the.py` | 251 | Vị thế/sentiment (Elder Ray) |
-| `chu_ky.py` | 131 | Phiên & chu kỳ (Asian/London/NY session) |
-| **Tổng** | **8,412** | **68 chỉ báo** |
+| `xu_huong.py` | 640 | Xu hướng (EMA/SMA/ADX/DMI/Ichimoku/SuperTrend/Aroon/Vortex) |
+| `cau_truc_gia.py` | 412 | Cấu trúc giá (Breakout/Fractals/Pivot/FVG/Heikin Ashi) |
+| `dong_luong_dao_chieu.py` | 366 | Động lượng & đảo chiều (RSI/Stoch/MFI/Ultimate Osc) |
+| `bien_dong.py` | 552 | Biến động (ATR/BB Squeeze/Keltner/Donchian/HistVol/Chaikin Vol) |
+| `khoi_luong.py` | 667 | Khối lượng (Volume/OBV/VWAP/Volume Profile/CMF/A-D/MFI Vol/EoM) |
+| `vi_the.py` | 67 | Vị thế/sentiment (CVD/Funding/OB Imbalance) |
+| `chu_ky.py` | 143 | Phiên & chu kỳ (Asian/London/NY session) |
+| **Tổng** | **2,847** | **49 chỉ báo** |
 
-> **Ghi chú:** Từ version này trở đi, bản base đã được mở rộng đáng kể và bao gồm hầu hết indicator breadth cần thiết.
+> **Ghi chú:** Bản Base này đi kèm repository công khai, hỗ trợ tính năng HTF confirmed/flat để người dùng nghiên cứu và chạy thử nghiệm đầy đủ toàn bộ pipeline hệ thống.
 
 ### 4.2 Nhóm chỉ báo (chi tiết)
 
@@ -664,10 +664,10 @@ Trong repo hiện tại:
 
 ### 10.2 Khác biệt theo định vị hệ thtops
 
-| Hạng mục | Base / Open (hiện tại) | High / Closed (tham chiếu) |
+| Hạng mục | Base / Open (miễn phí công khai) | High / Closed (thương mại đóng) |
 |---|---|---|
-| **Indicator** | **68 `pt_*`**, 8.4K dòng, HTF confirmed/flat | ~75 `pt_*`, live MTF intrabar |
-| **Optimizer** | Walk-forward + DSR guardrails, 3.9K dòng | Bộ tìm kiếm thích ứng hội tụ nhanh |
+| **Indicator** | **49 `pt_*`**, 2.8K dòng, HTF confirmed/flat | **68 `pt_*`**, 7.2K dòng, live MTF intrabar |
+| **Optimizer** | Walk-forward + DSR, 3.0K dòng | Bộ tìm kiếm thích ứng hội tụ nhanh |
 | **ML** | 8 regime, 80 feature, trainer đầy đủ | Tối ưu sâu ở layer nội bộ |
 | **Backtest** | Bar-to-bar + vectorized, in-memory | Giống hệt base |
 | **Mức độ công khai** | ✅ Toàn bộ source trong repo | ❌ Không public |

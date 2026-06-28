@@ -39,7 +39,7 @@ def parse_filename_metadata(ten):
     ratio = 0.0
     timestamp = ""
     name_parts = []
-    
+
     for p in parts:
         if p.startswith("vd_"):
             verdict = p[3:]
@@ -53,23 +53,23 @@ def parse_filename_metadata(ten):
                 ratio = float(p[3:])
             except ValueError:
                 ratio = 0.0
-                                                                     
+
         elif len(p) == 15 and p[8] == "_" and p.replace("_", "").isdigit():
             timestamp = p
         else:
             name_parts.append(p)
-            
-                           
+
+
     name = "__".join(name_parts)
-    
-                                                                           
+
+
     ngay_luu = ""
     if timestamp:
         try:
             ngay_luu = f"{timestamp[:4]}-{timestamp[4:6]}-{timestamp[6:8]} {timestamp[9:11]}:{timestamp[11:13]}:{timestamp[13:15]}"
         except Exception:
             ngay_luu = ""
-            
+
     return {
         "name": name,
         "verdict": verdict,
@@ -85,8 +85,8 @@ def luu_chien_luoc(result, ten=None):
     Trả về tên đã lưu (slug).
     """
     os.makedirs(THU_MUC, exist_ok=True)
-    
-                                        
+
+
     try:
         from toi_uu_hoa_low.kiem_dinh import danh_gia_guardrails
         verdict = danh_gia_guardrails(result)["verdict"]
@@ -97,9 +97,9 @@ def luu_chien_luoc(result, ten=None):
     sharpe = _safe_float(oos.get("sharpe_ratio"))
     ratio = _safe_float(result.get("oos_is_ratio"))
 
-                                          
+
     if ten:
-                                                                                      
+
         parts = ten.split("__")
         cleaned_parts = []
         for p in parts:
@@ -111,7 +111,7 @@ def luu_chien_luoc(result, ten=None):
         base_name = "__".join(cleaned_parts)
         base_name = _slug(base_name)
     else:
-                           
+
         if not result.get("combo"):
             name_base = _slug(result.get("strategy_key", "plugin"))
             base_name = f"plugin__{name_base}"
@@ -126,29 +126,29 @@ def luu_chien_luoc(result, ten=None):
                 persistence = result.get("persistence", 1)
             base_name = f"{label_base}__{logic}_p{persistence}"
 
-                                                
+
     ts = time.strftime('%Y%m%d_%H%M%S')
     filename = f"{base_name}__vd_{verdict}__sh_{sharpe:.3f}__rt_{ratio:.2f}__{ts}"
     filename = _slug(filename)
 
-                                          
+
     clean_config = result.get("best_params", result)
-    
+
     filepath = os.path.join(THU_MUC, f"{filename}.json")
     with open(filepath, "w", encoding="utf-8") as f:
         json.dump(clean_config, f, indent=2, ensure_ascii=False)
 
-                                                            
+
     if verdict == "DEPLOY":
         ds_dir = os.path.join(PROJECT_ROOT, "du_lieu", "danh_sach_chien_luoc")
         os.makedirs(ds_dir, exist_ok=True)
-        
-                                                                               
+
+
         if not result.get("combo"):
             strategy_name = _slug(result.get("strategy_key", "plugin")).lower()
         else:
             strategy_name = _slug(result.get("combo_label", "combo").replace('@', '_').replace('+', '_')).lower()
-            
+
         ds_filepath = os.path.join(ds_dir, f"{strategy_name}.json")
         with open(ds_filepath, "w", encoding="utf-8") as f:
             json.dump(clean_config, f, indent=2, ensure_ascii=False)
@@ -167,16 +167,16 @@ def danh_sach_da_luu():
         try:
             ten = fn[:-5]
             meta = parse_filename_metadata(ten)
-            
-                                                                                 
+
+
             with open(os.path.join(THU_MUC, fn), "r", encoding="utf-8") as f:
                 config = json.load(f)
-                
+
             if isinstance(config, dict) and "result" in config and isinstance(config["result"], dict):
-                                                    
+
                 old_result = config["result"]
                 config = old_result.get("best_params", old_result)
-                
+
             combo = []
             for k in sorted([x for x in config if x.startswith("s") and x[1:].isdigit()], key=lambda x: int(x[1:])):
                 spec = config[k]
@@ -184,13 +184,13 @@ def danh_sach_da_luu():
                     "key": spec.get("key"),
                     "tf": spec.get("tf"),
                 })
-            
+
             if combo:
                 combo_label = " + ".join([f"{c['key'].upper()}@{c['tf']}" for c in combo])
             else:
-                               
+
                 combo_label = meta["name"].replace("plugin__", "").upper()
-                
+
             ds.append({
                 "ten": ten,
                 "combo_label": combo_label,
@@ -201,7 +201,7 @@ def danh_sach_da_luu():
             })
         except Exception:
             continue
-            
+
     ds.sort(key=lambda x: x["ngay_luu"], reverse=True)
     return ds
 
@@ -211,22 +211,22 @@ def doc_chien_luoc(ten):
     p = os.path.join(THU_MUC, f"{_slug(ten)}.json")
     if not os.path.exists(p):
         return {}
-        
+
     try:
         with open(p, "r", encoding="utf-8") as f:
             config = json.load(f)
-            
+
         if isinstance(config, dict) and "result" in config and isinstance(config["result"], dict):
-                                                
+
             old_result = config["result"]
             config = old_result.get("best_params", old_result)
-            
+
         meta = parse_filename_metadata(ten)
         verdict = meta["verdict"]
         oos_sharpe = meta["oos_sharpe"]
         oos_is_ratio = meta["oos_is_ratio"]
-        
-                                  
+
+
         combo = []
         for k in sorted([x for x in config if x.startswith("s") and x[1:].isdigit()], key=lambda x: int(x[1:])):
             spec = config[k]
@@ -238,16 +238,16 @@ def doc_chien_luoc(ten):
                 "params": spec.get("params", {}),
                 "thresholds": spec.get("thresholds", {})
             })
-            
+
         if combo:
             combo_label = " + ".join([f"{c['key'].upper()}@{c['tf']}" for c in combo])
         else:
             combo_label = meta["name"].replace("plugin__", "").upper()
-            
+
         logic_mode = config.get("logic", {}).get("mode", "and")
         persistence = config.get("logic", {}).get("persistence", 1)
-        
-                                                                                     
+
+
         result = {
             "combo": combo,
             "combo_label": combo_label,
@@ -282,7 +282,7 @@ def doc_chien_luoc(ten):
             ] if verdict == "DEPLOY" else [],
             "canh_bao": ["Nạp từ thư viện (chỉ lưu cấu hình chuẩn, các số liệu backtest là tượng trưng)."]
         }
-        
+
         payload = {
             "ten": ten,
             "ngay_luu": meta["ngay_luu"],

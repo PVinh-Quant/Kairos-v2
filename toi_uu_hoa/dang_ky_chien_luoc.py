@@ -24,7 +24,7 @@ if PROJECT_ROOT not in sys.path:
 from chien_luoc.base_strategy import ChienLuocPluginCoSo
 import chien_luoc.user_strategies as _pkg_user_strategies
 
-                                                         
+
 STRATEGY_REGISTRY = {}
 
 
@@ -36,12 +36,12 @@ def nap_plugins(im_lang=True):
             continue
         mod_name = f"chien_luoc.user_strategies.{modinfo.name}"
         try:
-                                                                                      
+
             if mod_name in sys.modules:
                 mod = importlib.reload(sys.modules[mod_name])
             else:
                 mod = importlib.import_module(mod_name)
-        except Exception as e:                
+        except Exception as e:
             if not im_lang:
                 print(f"[WARN] Bỏ qua plugin lỗi '{modinfo.name}': {e}")
             continue
@@ -51,11 +51,11 @@ def nap_plugins(im_lang=True):
                 issubclass(obj, ChienLuocPluginCoSo)
                 and obj is not ChienLuocPluginCoSo
                 and not inspect.isabstract(obj)
-                and obj.__module__ == mod_name                                            
+                and obj.__module__ == mod_name
             ):
                 try:
                     STRATEGY_REGISTRY[obj.khoa()] = obj
-                except Exception as e:                
+                except Exception as e:
                     if not im_lang:
                         print(f"[WARN] Không đăng ký được '{_name}': {e}")
     return STRATEGY_REGISTRY
@@ -80,5 +80,5 @@ def lay_plugin(khoa):
     return STRATEGY_REGISTRY.get(khoa)
 
 
-                            
+
 nap_plugins()

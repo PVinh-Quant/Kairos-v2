@@ -35,7 +35,7 @@ def _rai_xuong_tu_khung_lon(df, polars_time_frame, suffix, tinh_1m):
     htf = htf.with_columns(pl.col("timestamp").dt.offset_by(polars_time_frame))
     feat = [c for c in htf.columns if c not in base]
     ren = {c: c[:-2] + suffix for c in feat if c.endswith("_1m")}
-    htf = htf.rename(ren)                                                                           
+    htf = htf.rename(ren)
     feat = [ren.get(c, c) for c in feat]
     return df.join_asof(
         htf.select(["timestamp"] + feat), on="timestamp", strategy="backward"
@@ -80,7 +80,7 @@ def pt_rsi(df, time_frame, window=14):
 
     col_name = f"rsi_{time_frame}"
 
-                                                              
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, time_frame.lower(), time_frame, lambda d: pt_rsi(d, "1m", window)
@@ -95,7 +95,7 @@ def pt_rsi(df, time_frame, window=14):
         avg_loss = loss.ewm_mean(alpha=1 / window, adjust=False)
         rs = avg_gain / pl.when(avg_loss == 0).then(1e-9).otherwise(avg_loss)
         rsi_val = pl.when(avg_loss == 0).then(100.0).otherwise(100.0 - (100.0 / (1.0 + rs)))
-        
+
         df = df.with_columns(rsi_val.alias(col_name))
     return df
 
@@ -121,7 +121,7 @@ def pt_stochastic(df, time_frame, k_window=14, d_window=3):
     c_k = f"stoch_k_{time_frame}"
     c_d = f"stoch_d_{time_frame}"
 
-                                                              
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, time_frame.lower(), time_frame, lambda d: pt_stochastic(d, "1m", k_window, d_window)
@@ -139,7 +139,7 @@ def pt_stochastic(df, time_frame, k_window=14, d_window=3):
             k_series.alias(c_k),
             d_series.alias(c_d)
         ])
-                                       
+
     df = df.with_columns([
         ((pl.col(c_k).fill_nan(None) > pl.col(c_d).fill_nan(None)).fill_null(False)).alias(f"stoch_bull_cross_{time_frame}"),
         ((pl.col(c_k).fill_nan(None) > 80).fill_null(False)).alias(f"stoch_overbought_{time_frame}"),
@@ -157,13 +157,13 @@ def _compute_mfi_polars(high_col, low_col, close_col, volume_col, w):
     tp = (high_col + low_col + close_col) / 3
     mf = tp * volume_col
     tp_diff = tp.diff()
-    
+
     pos_mf = pl.when(tp_diff > 0).then(mf).otherwise(0.0)
     neg_mf = pl.when(tp_diff < 0).then(mf).otherwise(0.0)
-    
+
     pos_sum = pos_mf.rolling_sum(window_size=w)
     neg_sum = neg_mf.rolling_sum(window_size=w)
-    
+
     neg_sum_safe = pl.when(neg_sum == 0).then(1e-9).otherwise(neg_sum)
     mfi = 100 - 100 / (1 + pos_sum / neg_sum_safe)
     return mfi, tp
@@ -184,7 +184,7 @@ def pt_mfi(df, time_frame, window=14):
 
     c_mfi = f"mfi_{time_frame}"
 
-                                                              
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, time_frame.lower(), time_frame, lambda d: pt_mfi(d, "1m", window)
@@ -213,7 +213,7 @@ def _compute_tsi_polars(close_col, long_w, short_w, signal_w):
     """Tính TSI và đường signal bằng double EMA smoothing."""
     momentum = close_col.diff()
     abs_momentum = momentum.abs()
-    
+
     tsi_num = (
         momentum.ewm_mean(span=short_w, adjust=False)
         .ewm_mean(span=long_w, adjust=False)
@@ -222,7 +222,7 @@ def _compute_tsi_polars(close_col, long_w, short_w, signal_w):
         abs_momentum.ewm_mean(span=short_w, adjust=False)
         .ewm_mean(span=long_w, adjust=False)
     )
-    
+
     tsi_den_safe = pl.when(tsi_den == 0).then(1e-9).otherwise(tsi_den)
     tsi_vals = 100 * tsi_num / tsi_den_safe
     sig_vals = tsi_vals.ewm_mean(span=signal_w, adjust=False)
@@ -277,7 +277,7 @@ def pt_ultimate_oscillator(df, time_frame, w1=7, w2=14, w3=28):
 
     c_uo = f"uo_{time_frame}"
 
-                                                              
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, time_frame.lower(), time_frame, lambda d: pt_ultimate_oscillator(d, "1m", w1, w2, w3)
@@ -337,7 +337,7 @@ def pt_stoch_rsi(df, time_frame, window=14, smooth_k=3, smooth_d=3):
         stoch_rsi_d = stoch_rsi_k.rolling_mean(smooth_d)
         return stoch_rsi_k, stoch_rsi_d, rsi, rsi_min, rsi_max, stoch_rsi, avg_gain, avg_loss
 
-                                                              
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, polars_time_frame, time_frame, lambda d: pt_stoch_rsi(d, "1m", window, smooth_k, smooth_d)
@@ -356,29 +356,29 @@ def _fisher_loop(hl2, window):
     n = len(hl2)
     val = np.zeros(n)
     fish = np.zeros(n)
-    
+
     import pandas as pd
     hl2_series = pd.Series(hl2)
     rolling_min = hl2_series.rolling(window).min().values
     rolling_max = hl2_series.rolling(window).max().values
-    
+
     for i in range(n):
         if i < window:
             val[i] = 0.0
             fish[i] = 0.0
             continue
-        
+
         diff = rolling_max[i] - rolling_min[i]
         if diff < 1e-9:
             diff = 1e-9
-            
+
         ratio = (hl2[i] - rolling_min[i]) / diff
         raw_val = 2 * (ratio - 0.5)
         val[i] = 0.33 * raw_val + 0.67 * val[i-1]
         val[i] = min(max(val[i], -0.999), 0.999)
-        
+
         fish[i] = 0.5 * np.log((1 + val[i]) / (1 - val[i] + 1e-9)) + 0.5 * fish[i-1]
-        
+
     return fish
 
 
@@ -414,14 +414,14 @@ def pt_stc(df, time_frame, fast=23, slow=50, cycle=10):
         macd_max = macd.rolling_max(cycle)
         stoch1 = (macd - macd_min) / (macd_max - macd_min + 1e-9)
         stoch1_smoothed = stoch1.ewm_mean(span=3, adjust=False)
-        
+
         stoch1_min = stoch1_smoothed.rolling_min(cycle)
         stoch1_max = stoch1_smoothed.rolling_max(cycle)
         stoch2 = (stoch1_smoothed - stoch1_min) / (stoch1_max - stoch1_min + 1e-9)
         stc = stoch2.ewm_mean(span=3, adjust=False) * 100
         return stc, macd, macd_min, macd_max
 
-                                                              
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, polars_time_frame, time_frame, lambda d: pt_stc(d, "1m", fast, slow, cycle)

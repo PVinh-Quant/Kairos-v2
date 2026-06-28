@@ -27,11 +27,11 @@ from PyQt6.QtCore import QObject, pyqtSignal
 class PhienNghienCuu(QObject):
     """Bus trạng thái dùng chung giữa các màn hình của 1 cửa sổ ứng dụng."""
 
-                                                                       
+
     dataset_changed = pyqtSignal(object)
     strategy_changed = pyqtSignal(object)
-                                                                                   
-                                                                                      
+
+
     yeu_cau_xem_man = pyqtSignal(str)
 
     def __init__(self, parent=None):
@@ -39,7 +39,7 @@ class PhienNghienCuu(QObject):
         self._active_dataset = None
         self._active_strategy = None
 
-                                                                               
+
     @property
     def active_dataset(self):
         """Bộ dữ liệu đang nghiên cứu (None nếu chưa chọn)."""
@@ -51,7 +51,7 @@ class PhienNghienCuu(QObject):
         if not im_lang:
             self.dataset_changed.emit(dataset)
 
-                                                                               
+
     @property
     def active_strategy(self):
         """Chiến lược đang nghiên cứu — result/best_params từ Tối ưu (None nếu chưa có)."""
@@ -63,7 +63,7 @@ class PhienNghienCuu(QObject):
         if not im_lang:
             self.strategy_changed.emit(strategy)
 
-                                                                               
+
     def yeu_cau_xem(self, khoa):
         """Yêu cầu vỏ app chuyển tới màn `khoa` (vd "vectorized")."""
         self.yeu_cau_xem_man.emit(khoa)

@@ -40,7 +40,7 @@ from PyQt6.QtWidgets import (
 )
 from .dinh_nghia import *
 class CalendarWidget(QWidget):
-                                      
+
     date_selected = pyqtSignal(object)
 
     def __init__(self):
@@ -48,15 +48,15 @@ class CalendarWidget(QWidget):
         super().__init__()
         self.setMinimumSize(250, 300)
         self.year, self.month = datetime.now().year, datetime.now().month
-        self.selected_date = None                                    
-        self.all_trades_df = pl.DataFrame()                         
+        self.selected_date = None
+        self.all_trades_df = pl.DataFrame()
         self.pnl_data = {}
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(10)
 
-                         
+
         nav_container = QWidget()
         nav_container.setFixedHeight(30)
         nav_layout = QHBoxLayout(nav_container)
@@ -90,10 +90,10 @@ class CalendarWidget(QWidget):
 
         layout.addWidget(nav_container)
 
-                      
+
         self.grid = QWidget()
         self.grid.paintEvent = self.grid_paint_event
-                                                
+
         self.grid.mousePressEvent = self.grid_mouse_press
         layout.addWidget(self.grid)
 
@@ -110,10 +110,10 @@ class CalendarWidget(QWidget):
         if not trades:
             self.all_trades_df = pl.DataFrame()
         else:
-                                      
+
             df = pl.DataFrame(trades)
 
-                                             
+
             if df["time_close"].dtype == pl.Utf8:
                 df = df.with_columns(
                     pl.col("time_close").str.strptime(pl.Datetime, strict=False)
@@ -121,8 +121,8 @@ class CalendarWidget(QWidget):
             self.all_trades_df = df
 
         self.selected_date = current_date_filter
-                                                                                       
-                                                                                
+
+
         self._nhay_thang_co_du_lieu()
         self.update_data()
 
@@ -136,7 +136,7 @@ class CalendarWidget(QWidget):
                 & (pl.col("time_close").dt.month() == self.month)
             )
             if cur.height > 0:
-                return                                                                            
+                return
             last_ts = self.all_trades_df["time_close"].max()
             if last_ts is not None:
                 self.year, self.month = last_ts.year, last_ts.month
@@ -146,7 +146,7 @@ class CalendarWidget(QWidget):
 
     def update_data(self):
         """Tính PnL theo ngày trong tháng đang hiển thị và cập nhật lịch."""
-                                                                     
+
         if not hasattr(self, "all_trades_df") or self.all_trades_df.is_empty():
             self.pnl_data = {}
             if hasattr(self, "grid"):
@@ -154,7 +154,7 @@ class CalendarWidget(QWidget):
             return
 
         try:
-                                                          
+
             df = self.all_trades_df
             monthly_stats = (
                 df.filter(
@@ -163,14 +163,14 @@ class CalendarWidget(QWidget):
                 )
                 .group_by(pl.col("time_close").dt.day().alias("day"))
                 .agg(
-                                                                         
+
                     pl.col("pnl_usd")
                     .sum()
                     .round(2)
                     .alias("total_pnl")
                 )
             )
-                                                
+
             self.pnl_data = {
                 int(row["day"]): float(row["total_pnl"])
                 for row in monthly_stats.to_dicts()
@@ -207,14 +207,14 @@ class CalendarWidget(QWidget):
         col_w = w / 7
         row_h = h / 7
 
-                                 
+
         if event.position().y() < row_h:
             return
 
         cal = calendar.Calendar(firstweekday=6)
         matrix = cal.monthdayscalendar(self.year, self.month)
 
-                                         
+
         r = int((event.position().y() - row_h) // row_h)
         c = int(event.position().x() // col_w)
 
@@ -223,9 +223,9 @@ class CalendarWidget(QWidget):
             if day != 0:
                 clicked_date = datetime(self.year, self.month, day).date()
 
-                              
+
                 if self.selected_date == clicked_date:
-                    self.selected_date = None           
+                    self.selected_date = None
                 else:
                     self.selected_date = clicked_date
 
@@ -266,7 +266,7 @@ class CalendarWidget(QWidget):
                 x = c * col_w
                 cell_rect = QRectF(x, y, col_w, row_h)
 
-                                                 
+
                 current_date_obj = None
                 try:
                     current_date_obj = datetime(self.year, self.month, day).date()
@@ -278,7 +278,7 @@ class CalendarWidget(QWidget):
                     painter.setPen(QPen(QColor(ACCENT_COLOR), 1))
                     painter.drawRect(cell_rect.adjusted(2, 2, -2, -2))
 
-                            
+
                 painter.setPen(QColor(TEXT_MAIN))
                 painter.setFont(font_day)
                 painter.drawText(
@@ -287,7 +287,7 @@ class CalendarWidget(QWidget):
                     str(day),
                 )
 
-                        
+
                 if day in self.pnl_data:
                     pnl = self.pnl_data[day]
                     color = QColor(COLOR_WIN) if pnl > 0 else QColor(COLOR_LOSS)
@@ -300,8 +300,8 @@ class CalendarWidget(QWidget):
                     )
 
 
-                                                                                   
-                          
-                                                                                   
+
+
+
 
 __all__ = ["CalendarWidget"]

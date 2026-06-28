@@ -38,32 +38,32 @@ def _doc_regime_cho_phep(strat):
                 return None
     return None
 
-                                                                                      
-                                                                                     
-                                                             
-                                                                                       
+
+
+
+
 DUNG_REGIME_MAC_DINH = False
 
-                                                                                     
-                                                                                           
-                                                                                            
-                                                                                    
+
+
+
+
 DUNG_SL_TP_DONG = False
 DUNG_DON_BAY_DONG = False
 DON_BAY_CO_DINH = int(_config_trade.get("don_bay", 5))
 BASE_SL_DEFAULT = 2.5
 RR_DEFAULT = 2.0
 
-                                                                                  
-                                                                                       
-SL_TP_TIME_FRAME = None                                                                           
-SL_RANGE = (1.0, 5.0)                                            
-RR_RANGE = (1.2, 4.0)                                                 
-DON_BAY_GOC = DON_BAY_CO_DINH                                    
-MAX_LEVERAGE = 50                                 
-DON_BAY_TF = "15m"                                        
 
-                                                      
+
+SL_TP_TIME_FRAME = None
+SL_RANGE = (1.0, 5.0)
+RR_RANGE = (1.2, 4.0)
+DON_BAY_GOC = DON_BAY_CO_DINH
+MAX_LEVERAGE = 50
+DON_BAY_TF = "15m"
+
+
 JSON_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "du_lieu", "danh_sach_chien_luoc")
 STRATEGIES = {}
 if os.path.exists(JSON_DIR):
@@ -78,10 +78,10 @@ if os.path.exists(JSON_DIR):
             strat = JSONStrategy(f)
             strat_name = strat.name.lower()
 
-                                                                                                     
+
             is_rejected = "vd_reject" in filename
 
-                                                                                             
+
             strat_config = strat.config or {}
             is_active_field = strat_config.get("active", True)
             status_field = str(strat_config.get("status", "")).lower()
@@ -91,7 +91,7 @@ if os.path.exists(JSON_DIR):
                 logger.info(f"[vectorized] Bỏ qua chiến lược {strat.name} (bị tắt bên trong cấu hình JSON hoặc status={status_field})")
                 continue
 
-                                                                                                      
+
             if list_kich_hoat_lower:
                 name_matches = (strat_name in list_kich_hoat_lower) or (filename in list_kich_hoat_lower)
                 if not name_matches:
@@ -120,7 +120,7 @@ def ten_cac_chien_luoc_kich_hoat(strategies=None):
         return ""
     ten = [str(getattr(s, "name", "")).strip() for s in strats.values()]
     ten = [t for t in ten if t]
-    return " + ".join(dict.fromkeys(ten))                              
+    return " + ".join(dict.fromkeys(ten))
 
 
 def chay_tat_ca_chien_luoc(df_1m, strategies=None):
@@ -175,7 +175,7 @@ def tong_hop_tin_hieu(df_1m, df_regime=None, dung_regime=None, strategies=None):
     import polars as pl
     import pandas as pd
 
-                                                                              
+
     strats = STRATEGIES if strategies is None else strategies
 
     is_pandas = not hasattr(df_1m, "clone")
@@ -184,18 +184,18 @@ def tong_hop_tin_hieu(df_1m, df_regime=None, dung_regime=None, strategies=None):
     else:
         df_1m_pl = df_1m.clone()
 
-                                                                                       
+
     ket_qua = chay_tat_ca_chien_luoc(df_1m_pl, strategies=strats)
 
-                                        
+
     df_base = df_1m_pl.select(["timestamp", "open", "high", "low", "close", "volume"])
     if df_base.schema["timestamp"] in (pl.String, pl.Utf8):
         df_base = df_base.with_columns(pl.col("timestamp").str.to_datetime())
-    
+
     df_base = df_base.with_columns(pl.lit(0).cast(pl.Int64).alias("signal"))
 
-                                                                                        
-                                                                                             
+
+
     dung_regime_ml = False
     regime_cho_phep = None
     if strats:
@@ -207,7 +207,7 @@ def tong_hop_tin_hieu(df_1m, df_regime=None, dung_regime=None, strategies=None):
             bool(selected_strat.logic.get("use_ml", False))
         )
         dung_regime_ml = use_ml_strat
-                                                                                             
+
         regime_cho_phep = _doc_regime_cho_phep(selected_strat)
 
     if not dung_regime_ml:
@@ -217,13 +217,13 @@ def tong_hop_tin_hieu(df_1m, df_regime=None, dung_regime=None, strategies=None):
             df_s = df_s.with_columns(pl.col("timestamp").str.to_datetime())
         elif df_s.schema["timestamp"] != df_base.schema["timestamp"]:
             df_s = df_s.with_columns(pl.col("timestamp").cast(df_base.schema["timestamp"]))
-        
+
         df_base = df_base.join(df_s.select(["timestamp", pl.col("signal").alias("s_val")]), on="timestamp", how="left")
         df_base = df_base.with_columns(
             pl.when(pl.col("signal") == 0).then(pl.col("s_val").fill_null(0)).otherwise(pl.col("signal")).alias("signal")
         ).drop("s_val")
 
-                                                                                      
+
     if strats:
         selected_strat = list(strats.values())[0]
         base_sl = float(selected_strat.risk.get("base_sl", BASE_SL_DEFAULT))
@@ -235,7 +235,7 @@ def tong_hop_tin_hieu(df_1m, df_regime=None, dung_regime=None, strategies=None):
             selected_strat.config.get("don_bay_goc") or
             DON_BAY_CO_DINH
         )
-                                                                                          
+
         sl_tp_tf = (selected_strat.risk.get("sl_tp_time_frame")
                     or selected_strat.config.get("sl_tp_time_frame") or "15m")
         max_lev = int(selected_strat.risk.get("max_leverage")
@@ -257,7 +257,7 @@ def tong_hop_tin_hieu(df_1m, df_regime=None, dung_regime=None, strategies=None):
         pl.col("signal").diff().fill_null(0).cast(pl.Int64).alias("entry_signal")
     )
 
-                                 
+
     use_sl_tp_dong_strat = False
     use_don_bay_dong_strat = False
     if strats:
@@ -275,25 +275,25 @@ def tong_hop_tin_hieu(df_1m, df_regime=None, dung_regime=None, strategies=None):
             bool(selected_strat.risk.get("use_don_bay_dong", False))
         )
 
-                                                                                       
+
     use_sl_tp_dong_final = use_sl_tp_dong_strat
     if use_sl_tp_dong_final:
         df_base = tinh_sl_tp_vectorized(df_base, time_frame=sl_tp_tf, base_sl=base_sl, rr=rr)
     else:
         df_base = tinh_sl_tp_co_dinh(df_base, base_sl=base_sl, rr=rr)
 
-                     
+
     use_don_bay_dong_final = use_don_bay_dong_strat
     if use_don_bay_dong_final:
         df_base = tinh_don_bay_vectorized(df_base, don_bay_goc=fixed_leverage, max_leverage=max_lev, time_frame=don_bay_tf)
     else:
         df_base = df_base.with_columns(pl.lit(fixed_leverage).cast(pl.Int64).alias("leverage"))
 
-                                                   
+
     df_base = pt_phien_giao_dich(df_base, "1m")
 
-                                                                                           
-                                                                                                  
+
+
     df_base = chuan_hoa_va_loc_tin_hieu(df_base, dung_regime_ml=dung_regime_ml, regime_cho_phep=regime_cho_phep)
 
     return df_base.to_pandas() if is_pandas else df_base

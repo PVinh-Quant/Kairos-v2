@@ -25,7 +25,7 @@ from rich.style import Style
 console = Console()
 
 
-                                                                               
+
 
 LOGO = r"""
  ██╗  ██╗ █████╗ ██╗██████╗  ██████╗ ███████╗
@@ -36,7 +36,7 @@ LOGO = r"""
  ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝"""
 
 
-                                                                               
+
 
 
 def _doc_config_ngan():
@@ -69,7 +69,7 @@ def _doc_config_ngan():
         }
 
 
-                                                                               
+
 
 
 def _count_wrapped_lines(text: str, width: int) -> int:
@@ -98,10 +98,10 @@ def hien_thi_menu():
     console.clear()
     from rich.rule import Rule
 
-                             
+
     console_width = console.width
 
-                                  
+
     min_side_by_side_width = 110
     max_layout_width = 132
 
@@ -116,9 +116,9 @@ def hien_thi_menu():
         right_w = layout_width
         left_w = layout_width
 
-          
+
     logo_text = Text(LOGO, style="bold cyan")
-                                                                              
+
     logo_max_line_len = max(len(line) for line in LOGO.split("\n"))
     subtitle_text = "Analytics System v2"
     padding_len = max(0, (logo_max_line_len - len(subtitle_text)) // 2)
@@ -127,7 +127,7 @@ def hien_thi_menu():
 
     logo_panel = Panel(content, border_style="cyan", padding=(0, 2), width=layout_width)
 
-                                                        
+
     menu = Table(box=None, show_header=False, padding=(0, 1), expand=True)
     menu.add_column("key", style="bold yellow", width=6, justify="center")
     menu.add_column("name", style="white", width=28)
@@ -159,7 +159,7 @@ def hien_thi_menu():
     menu.add_row("", "", "")
     menu.add_row("[0]", Text("Thoát", style="dim red"), "")
 
-                    
+
     cfg = _doc_config_ngan()
     cfg_table = Table(
         box=box.SIMPLE,
@@ -175,7 +175,7 @@ def hien_thi_menu():
     cfg_table.add_row("Backtest", f"{cfg['tu_ngay']}  →  {cfg['den_ngay']}")
     cfg_table.add_row("Von", cfg["von"])
 
-                  
+
     author = Table(box=None, show_header=False, padding=(0, 1), expand=True)
     author.add_column("info")
     author.add_row(Text(""))
@@ -192,7 +192,7 @@ def hien_thi_menu():
     author.add_row(Text("Kairos  v2  ·  2026", style="dim"))
     author.add_row(Text(""))
 
-                              
+
     cfg_panel = Panel(
         cfg_table,
         title="[bold]Config hien tai[/bold]",
@@ -209,12 +209,12 @@ def hien_thi_menu():
     )
 
     if is_side_by_side:
-                                                              
+
         right_group = Group(cfg_panel, author_panel)
         options = console.options.copy().update(width=right_w)
         right_height = len(console.render_lines(right_group, options))
 
-                                                                   
+
         base_rows = len(menu.rows)
         target_rows = right_height - 2
         extra_rows = target_rows - base_rows
@@ -230,7 +230,7 @@ def hien_thi_menu():
             expand=True,
         )
 
-                                                                                    
+
         if console_width > max_layout_width:
             console.print(Align.center(logo_panel))
             console.print(
@@ -244,7 +244,7 @@ def hien_thi_menu():
                 Columns([left_panel, right_group], equal=False, padding=(0, 2))
             )
     else:
-                                              
+
         left_panel = Panel(
             menu,
             title="[bold]Menu[/bold]",
@@ -262,7 +262,7 @@ def hien_thi_menu():
     return console.input("[bold yellow]Chon chuc nang [0-8]:[/bold yellow] ").strip()
 
 
-                                                                               
+
 
 
 def chay_realtime():
@@ -351,7 +351,7 @@ def chay_toi_uu_hoa():
     from toi_uu_hoa.giao_dien_cli import chay_menu_tuong_tac
 
     chay_menu_tuong_tac()
-                                                                        
+
 
 DISPATCH = {
     "1": chay_realtime,

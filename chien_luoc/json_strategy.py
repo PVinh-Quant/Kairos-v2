@@ -18,12 +18,12 @@ class JSONStrategy(BaseStrategy):
     def __init__(self, json_path: str):
         self._json_path = json_path
         self._name = os.path.splitext(os.path.basename(json_path))[0]
-        
-                             
+
+
         with open(json_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
-            
-                                                                                           
+
+
         if isinstance(data, dict):
             if "result" in data and isinstance(data["result"], dict):
                 inner = data["result"]
@@ -42,7 +42,7 @@ class JSONStrategy(BaseStrategy):
         self.risk = {"base_sl": 2.5, "rr": 2.0}
         self.logic = {"mode": "and", "persistence": 1}
 
-                                                   
+
         for k, v in self.config.items():
             if k == "risk":
                 self.risk.update(v)
@@ -51,19 +51,19 @@ class JSONStrategy(BaseStrategy):
             elif k.startswith("s") and k[1:].isdigit():
                 self.specs[k] = v
 
-                                                                          
+
         self._is_plugin = False
         self._plugin_instance = None
         self._plugin_params = {}
-        
+
         plugin_key = None
         for source in [data, data.get("result", {}), data.get("best_params", {})]:
             if isinstance(source, dict):
                 if source.get("loai") == "plugin" or "plugin_khoa" in source:
                     plugin_key = source.get("plugin_khoa")
                     break
-        
-                                                                               
+
+
         if isinstance(self.config, dict):
             if not plugin_key:
                 s0 = self.config.get("s0", {})
@@ -151,7 +151,7 @@ class JSONStrategy(BaseStrategy):
                 target_col = get_cols_by_type(new_cols, spec['type'])
                 rename_dict = {c: f'{idx_str}_{c}' for c in new_cols}
                 df_work = df_work.rename(rename_dict)
-                
+
                 if spec['type'] == 'channel':
                     col_up, col_lo = target_col if isinstance(target_col, tuple) else (target_col, target_col)
                     tcol = (
@@ -160,11 +160,11 @@ class JSONStrategy(BaseStrategy):
                     )
                 else:
                     tcol = f'{idx_str}_{target_col}'.lower() if target_col else None
-                
+
                 self._spec_target[idx_str] = (spec['type'], tcol)
             return df_work.to_pandas() if is_pandas else df_work
 
-                                                                                              
+
         specs_by_tf = {}
         for idx_str, spec in self.specs.items():
             tf = spec.get('tf', '1m')
@@ -212,7 +212,7 @@ class JSONStrategy(BaseStrategy):
                 target_col = get_cols_by_type(new_cols, spec['type'])
                 rename_dict = {c: f'{idx_str}_{c}' for c in new_cols}
                 df_work = df_work.rename(rename_dict)
-                
+
                 if spec['type'] == 'channel':
                     col_up, col_lo = target_col if isinstance(target_col, tuple) else (target_col, target_col)
                     tcol = (
@@ -221,7 +221,7 @@ class JSONStrategy(BaseStrategy):
                     )
                 else:
                     tcol = f'{idx_str}_{target_col}'.lower() if target_col else None
-                
+
                 self._spec_target[idx_str] = (spec['type'], tcol)
 
             dfs_dict[tf] = df_work
@@ -247,7 +247,7 @@ class JSONStrategy(BaseStrategy):
         else:
             df_pl = df.clone()
 
-                                                     
+
         local_specs = copy.deepcopy(self.specs)
 
         if params:
@@ -263,8 +263,8 @@ class JSONStrategy(BaseStrategy):
                             else:
                                 spec.setdefault("params", {})[param_name] = v
 
-                                                                                          
-                                                                                                  
+
+
         logic_mode = self.logic.get("mode", "and").lower()
         persistence = int(self.logic.get("persistence", 1))
 
@@ -306,7 +306,7 @@ class JSONStrategy(BaseStrategy):
         """
         Live entry analysis (Bar-to-bar).
         """
-                                                     
+
         timeframe_map = {
             "3m": df_3m,
             "5m": df_5m,
@@ -316,26 +316,26 @@ class JSONStrategy(BaseStrategy):
             "4h": df_4h,
             "1d": df_1d
         }
-        
-                                                                                
+
+
         df_merged = self.tinh_chi_bao(df_1m, timeframe_map)
         df_sig = self.tinh_tin_hieu_vectorized(df_merged, params)
 
         if df_sig is None or (hasattr(df_sig, "is_empty") and df_sig.is_empty()) or (hasattr(df_sig, "empty") and df_sig.empty):
             return None, 0, f"[{self.name}] Không có dữ liệu sau tính toán chỉ báo"
 
-                                                     
+
         if hasattr(df_sig, "clone"):
             sig_val = df_sig['signal'].item(-1)
         else:
             sig_val = df_sig['signal'].iloc[-1]
-        
-                                                          
+
+
         if sig_val == 1:
             return "buy", 25, f"[{self.name}] Đồng thuận chỉ báo LONG"
         elif sig_val == -1:
             return "sell", -25, f"[{self.name}] Đồng thuận chỉ báo SHORT"
-            
+
         return None, 0, f"[{self.name}] Không có tín hiệu đồng thuận"
 
     def thoat_live(
@@ -354,7 +354,7 @@ class JSONStrategy(BaseStrategy):
         """
         Live exit analysis (Bar-to-bar).
         """
-                                                     
+
         timeframe_map = {
             "3m": df_3m,
             "5m": df_5m,
@@ -364,7 +364,7 @@ class JSONStrategy(BaseStrategy):
             "4h": df_4h,
             "1d": df_1d
         }
-        
+
         df_merged = self.tinh_chi_bao(df_1m, timeframe_map)
         df_sig = self.tinh_tin_hieu_vectorized(df_merged, params)
 
@@ -375,11 +375,11 @@ class JSONStrategy(BaseStrategy):
             sig_val = df_sig['signal'].item(-1)
         else:
             sig_val = df_sig['signal'].iloc[-1]
-        
-                                                   
+
+
         if sig_val == -1:
             return "sell", 25, f"[{self.name}] Đóng vị thế BUY do xuất hiện tín hiệu SHORT"
         elif sig_val == 1:
             return "buy", -25, f"[{self.name}] Đóng vị thế SELL do xuất hiện tín hiệu LONG"
-            
+
         return None, 0, "Giữ lệnh"

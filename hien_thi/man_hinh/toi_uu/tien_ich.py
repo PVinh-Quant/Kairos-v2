@@ -3,7 +3,7 @@ import sys, os, json
 from hien_thi.duong_dan import PROJECT_ROOT
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
-from toi_uu_hoa.kiem_dinh import danh_gia_guardrails, MIN_TRADES_OOS              
+from toi_uu_hoa.kiem_dinh import danh_gia_guardrails, MIN_TRADES_OOS
 _DUONG_DAN_BO_DU_LIEU = os.path.join(PROJECT_ROOT, "du_lieu", "bo_du_lieu.json")
 _THU_MUC_CACHE_OHLCV = os.path.join(PROJECT_ROOT, "du_lieu", "cache_ohlcv")
 def doc_bo_du_lieu():
@@ -42,7 +42,7 @@ def liet_ke_symbol_co_san():
         try:
             from utils.doc_cau_hinh import lay_cau_hinh_giao_dich
             symbols = list((lay_cau_hinh_giao_dich() or {}).get("cap_giao_dich", []))
-        except Exception:                
+        except Exception:
             symbols = []
     return symbols
 

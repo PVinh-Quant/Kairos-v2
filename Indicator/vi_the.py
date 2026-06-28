@@ -66,7 +66,7 @@ def pt_elder_ray(df, time_frame, window=13):
         htf_elder = htf_elder.with_columns(
             pl.col("timestamp").dt.offset_by(polars_time_frame)
         )
-        
+
         htf_to_join = htf_elder.select(["timestamp", "bull", "bear"])
         df_joined = df.join_asof(htf_to_join, on="timestamp", strategy="backward")
         df_out = df_joined.with_columns([

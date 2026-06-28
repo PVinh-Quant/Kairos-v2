@@ -10,11 +10,11 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from utils.log import logger
 
-                                                                                        
+
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 EMAIL_GUI = "your_email@gmail.com"
-MAT_KHAU_APP = "your_app_password"                     
+MAT_KHAU_APP = "your_app_password"
 
 
 def gui_email_canh_bao(tieu_de, noi_dung, email_nhan):
@@ -31,7 +31,7 @@ def gui_email_canh_bao(tieu_de, noi_dung, email_nhan):
 
     try:
         server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls()                      
+        server.starttls()
         server.login(EMAIL_GUI, MAT_KHAU_APP)
         text = msg.as_string()
         server.sendmail(EMAIL_GUI, email_nhan, text)

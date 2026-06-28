@@ -49,7 +49,7 @@ class _ChartBase(QWidget):
     card bo góc + viền + tiêu đề + trạng thái rỗng. Lớp con cài `_ve_du_lieu`.
     """
 
-    HEADER_H = 34                                                    
+    HEADER_H = 34
     PAD_L = 14
     PAD_R = 14
     PAD_B = 14
@@ -102,7 +102,7 @@ class EquityChartWidget(_ChartBase):
         super().__init__("ĐƯỜNG CONG VỐN  ·  IS → OOS", parent)
         self.setMinimumHeight(210)
         self.is_eq = []
-        self.oos_eq = []                                        
+        self.oos_eq = []
         self.final_val = 0.0
         self.pnl = 0.0
         self.pnl_pct = 0.0
@@ -139,7 +139,7 @@ class EquityChartWidget(_ChartBase):
         def XY(i, val):
             return QPointF(x + i * step, baseline - (val - mn) / rng * h)
 
-                                                           
+
         p.setFont(self._f_val)
         p.setPen(QColor(Theme.TEXT_MAIN))
         sval = f"{self.final_val:,.2f}"
@@ -180,7 +180,7 @@ class EquityChartWidget(_ChartBase):
                 p.setPen(QPen(QColor(Theme.TEXT_SUB), 1, Qt.PenStyle.DashLine))
                 p.drawLine(int(xb), int(y), int(xb), int(baseline))
 
-                                                                                      
+
         p.setFont(self._f_sub)
         ly = 20
         lx = self.width() - self.PAD_R - 76
@@ -220,7 +220,7 @@ class DrawdownChartWidget(_ChartBase):
 
         worst = abs(self.max_dd) or 1.0
         step = w / (n - 1) if n > 1 else w
-        y0 = y          
+        y0 = y
 
         def XY(i, val):
             return QPointF(x + i * step, y0 + (abs(val) / worst) * h)
@@ -265,17 +265,17 @@ class PnLHistogramWidget(_ChartBase):
             lo, hi = float(arr.min()), float(arr.max())
             if hi <= lo:
                 lo, hi = lo - 1.0, hi + 1.0
-            
-                                                                         
+
+
             if lo < 0 < hi:
                 range_neg = abs(lo)
                 range_pos = hi
                 total_range = range_neg + range_pos
-                
+
                 nb_total = max(8, min(30, arr.size))
                 nb_neg = max(3, int(round(nb_total * (range_neg / total_range))))
                 nb_pos = max(3, nb_total - nb_neg)
-                
+
                 edges_neg = np.linspace(lo, 0.0, nb_neg + 1)
                 edges_pos = np.linspace(0.0, hi, nb_pos + 1)
                 edges = np.concatenate([edges_neg[:-1], edges_pos])
@@ -283,7 +283,7 @@ class PnLHistogramWidget(_ChartBase):
             else:
                 nb = max(8, min(30, arr.size))
                 counts, edges = np.histogram(arr, bins=nb, range=(lo, hi))
-                
+
             self.counts = counts.tolist()
             self.edges = edges.tolist()
         else:
@@ -307,16 +307,16 @@ class PnLHistogramWidget(_ChartBase):
             left_val = self.edges[i]
             right_val = self.edges[i + 1]
             center = (left_val + right_val) / 2
-            
+
             col = QColor(Theme.WIN if center > 0 else Theme.LOSS)
             col.setAlpha(210)
             bh = (c / mx) * h
-            
-                                                                                 
+
+
             x_left = x + (left_val - lo) / rng * w
             x_right = x + (right_val - lo) / rng * w
             bin_w = x_right - x_left
-            
+
             p.setPen(Qt.PenStyle.NoPen); p.setBrush(col)
             p.drawRect(QRectF(x_left + gap / 2, baseline - bh, max(bin_w - gap, 1.0), bh))
 
@@ -354,9 +354,9 @@ class BieuDoPhanTich(QWidget):
         pt = phan_tich or {}
         is_d = pt.get("is") or {}
         oos_d = pt.get("oos") or {}
-                                                                                              
-                                                                                                    
-                                                                                           
+
+
+
         von_notional = _safe_float(is_d.get("von") or oos_d.get("von")) or 1.0
         so_du = _safe_float(is_d.get("so_du") or oos_d.get("so_du")) or SO_DU_BAN_DAU
         delta = so_du - von_notional
@@ -378,7 +378,7 @@ class ParameterSensitivityScatterWidget(QWidget):
         self.min_y = 0.0
         self.max_val = 1.0
         self.min_val = 0.0
-        
+
         self.param_x_name = "X"
         self.param_y_name = "Y"
 
@@ -403,14 +403,14 @@ class ParameterSensitivityScatterWidget(QWidget):
             x_vals = []
             y_vals = []
             vals = []
-            
+
             for t in trials_data:
                 t_params = t.get("params", {})
                 if param_x in t_params and param_y in t_params:
                     x_v = float(t_params[param_x])
                     y_v = float(t_params[param_y])
                     val = float(t.get("value", 0.0))
-                    
+
                     x_vals.append(x_v)
                     y_vals.append(y_v)
                     vals.append(val)
@@ -426,7 +426,7 @@ class ParameterSensitivityScatterWidget(QWidget):
             self.min_val = min(vals)
             self.max_val = max(vals)
 
-                                      
+
             if self.max_x == self.min_x: self.max_x += 1.0
             if self.max_y == self.min_y: self.max_y += 1.0
             if self.max_val == self.min_val: self.max_val += 1.0
@@ -437,12 +437,12 @@ class ParameterSensitivityScatterWidget(QWidget):
                     x_v = float(t_params[param_x])
                     y_v = float(t_params[param_y])
                     val = float(t.get("value", 0.0))
-                    
-                                            
+
+
                     ratio = (val - self.min_val) / (self.max_val - self.min_val)
                     ratio = max(0.0, min(1.0, ratio))
-                    
-                                                                         
+
+
                     r_col = int(242 + ratio * (8 - 242))
                     g_col = int(54 + ratio * (153 - 54))
                     b_col = int(69 + ratio * (129 - 69))
@@ -463,9 +463,9 @@ class ParameterSensitivityScatterWidget(QWidget):
     def get_pos(self, x_val, y_val, plot_w, plot_h, m_left, m_top):
         x_ratio = (x_val - self.min_x) / (self.max_x - self.min_x)
         y_ratio = (y_val - self.min_y) / (self.max_y - self.min_y)
-        
+
         px = m_left + x_ratio * plot_w
-                                         
+
         py = m_top + plot_h - (y_ratio * plot_h)
         return px, py
 
@@ -481,7 +481,7 @@ class ParameterSensitivityScatterWidget(QWidget):
         plot_w = w - m_left - m_right
         plot_h = h - m_top - m_bottom
 
-        closest_dist = 15         
+        closest_dist = 15
         found = None
 
         for p in self.points:
@@ -517,45 +517,45 @@ class ParameterSensitivityScatterWidget(QWidget):
         plot_w = w - m_left - m_right
         plot_h = h - m_top - m_bottom
 
-                                     
-        painter.setPen(QPen(QColor(Theme.BORDER), 1))
-        painter.drawLine(m_left, m_top, m_left, h - m_bottom)          
-        painter.drawLine(m_left, h - m_bottom, w - m_right, h - m_bottom)          
 
-                                         
+        painter.setPen(QPen(QColor(Theme.BORDER), 1))
+        painter.drawLine(m_left, m_top, m_left, h - m_bottom)
+        painter.drawLine(m_left, h - m_bottom, w - m_right, h - m_bottom)
+
+
         painter.setFont(self.font_sub)
-        
-                      
+
+
         for i in range(5):
             ratio = i / 4.0
             val_x = self.min_x + ratio * (self.max_x - self.min_x)
             px = m_left + ratio * plot_w
-            
-                             
+
+
             painter.setPen(QPen(QColor(Theme.GRID), 1, Qt.PenStyle.DotLine))
             painter.drawLine(int(px), m_top, int(px), h - m_bottom)
-            
-                     
+
+
             painter.setPen(QColor(Theme.TEXT_SUB))
             label = f"{val_x:.1f}" if (self.max_x - self.min_x) < 5 else f"{int(round(val_x))}"
             painter.drawText(int(px) - 15, h - m_bottom + 15, label)
 
-                      
+
         for i in range(5):
             ratio = i / 4.0
             val_y = self.min_y + ratio * (self.max_y - self.min_y)
             py = m_top + plot_h - (ratio * plot_h)
-            
-                               
+
+
             painter.setPen(QPen(QColor(Theme.GRID), 1, Qt.PenStyle.DotLine))
             painter.drawLine(m_left, int(py), w - m_right, int(py))
-            
-                     
+
+
             painter.setPen(QColor(Theme.TEXT_SUB))
             label = f"{val_y:.1f}" if (self.max_y - self.min_y) < 5 else f"{int(round(val_y))}"
             painter.drawText(5, int(py) + 4, label)
 
-                               
+
         painter.setPen(Qt.PenStyle.NoPen)
         for p in self.points:
             x, y = self.get_pos(p["x_val"], p["y_val"], plot_w, plot_h, m_left, m_top)
@@ -574,7 +574,7 @@ class ParameterSensitivityScatterWidget(QWidget):
 
             painter.drawEllipse(QPointF(x, y), radius, radius)
 
-                               
+
         if self.hover_point:
             hp = self.hover_point
             tip_text = f"{self.param_x_name}: {hp['x_val']}\n{self.param_y_name}: {hp['y_val']}\nScore: {hp['val']:.4f}"
@@ -587,7 +587,7 @@ class ParameterSensitivityScatterWidget(QWidget):
             bx = hp["sx"] + 10
             by = hp["sy"] - 10
 
-                                                    
+
             if bx + max_w > w:
                 bx = hp["sx"] - max_w - 10
             if by + box_h > h:
@@ -602,9 +602,9 @@ class ParameterSensitivityScatterWidget(QWidget):
                 painter.drawText(int(bx + 10), int(by + 15 + i * fm.height()), line)
 
 
-                                                                                
-                 
-                                                                                
+
+
+
 
 __all__ = ["_ChartBase", "EquityChartWidget", "DrawdownChartWidget",
            "PnLHistogramWidget", "BieuDoPhanTich", "ParameterSensitivityScatterWidget"]

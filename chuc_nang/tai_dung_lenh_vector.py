@@ -22,10 +22,10 @@ import polars as pl
 
 from utils.doc_cau_hinh import lay_cau_hinh_giao_dich, lay_cau_hinh_ao
 
-                                                                                    
+
 WARMUP_NEN = 43200
 
-                                                                                     
+
 COT_CAN = [
     "timestamp", "open", "high", "low", "close",
     "signal", "sl_pct", "tp_pct", "leverage", "regime",
@@ -69,7 +69,7 @@ def tai_dung_lenh_tu_dump(file_path: str) -> pl.DataFrame:
 
     symbol = _doan_symbol_tu_ten(file_path)
 
-                                                                                     
+
     header = pl.read_csv(file_path, n_rows=1).columns
     need = [c for c in COT_CAN if c in header]
     df = pl.read_csv(file_path, columns=need, infer_schema_length=10000)
@@ -77,7 +77,7 @@ def tai_dung_lenh_tu_dump(file_path: str) -> pl.DataFrame:
     if n == 0:
         return pl.DataFrame()
 
-                                                                     
+
     signals = df["signal"].to_numpy() if "signal" in df.columns else np.zeros(n, dtype=int)
     opens = df["open"].to_numpy()
     closes = df["close"].to_numpy()
@@ -89,7 +89,7 @@ def tai_dung_lenh_tu_dump(file_path: str) -> pl.DataFrame:
     leverages = df["leverage"].to_numpy() if "leverage" in df.columns else np.full(n, DON_BAY)
     regimes = df["regime"].to_numpy() if "regime" in df.columns else np.zeros(n, dtype=int)
 
-                                                                               
+
     lich_su = []
     von_hien_tai = VON_BAN_DAU
     vi_the = 0
@@ -112,7 +112,7 @@ def tai_dung_lenh_tu_dump(file_path: str) -> pl.DataFrame:
         if dem_cooldown > 0:
             dem_cooldown -= 1
 
-                                                                                      
+
         if vi_the == 0 and co_tin_hieu == 0 and dem_cooldown == 0:
             while sig_ptr < num_signals and signal_indices[sig_ptr] < i:
                 sig_ptr += 1
@@ -121,14 +121,14 @@ def tai_dung_lenh_tu_dump(file_path: str) -> pl.DataFrame:
             i = signal_indices[sig_ptr]
 
         tin_hieu_hien_tai = signals[i]
-        tin_hieu_raw = signals[i]                                                 
+        tin_hieu_raw = signals[i]
         gia_open = opens[i]
         gia_high = highs[i]
         gia_low = lows[i]
         thoi_gian = times[i]
         don_bay_i = int(leverages[i])
 
-                                               
+
         if co_tin_hieu != 0 and vi_the == 0:
             if von_hien_tai < VON_MOI_LENH:
                 co_tin_hieu = 0
@@ -153,7 +153,7 @@ def tai_dung_lenh_tu_dump(file_path: str) -> pl.DataFrame:
             sl_pct_vao = sl_pct_i
             tp_pct_vao = tp_pct_i
 
-                                                    
+
         if vi_the != 0:
             can_thoat = False
             loai = "LONG" if vi_the == 1 else "SHORT"
@@ -219,7 +219,7 @@ def tai_dung_lenh_tu_dump(file_path: str) -> pl.DataFrame:
                 vi_the = 0
                 dem_cooldown = COOLDOWN_NEN
 
-                                  
+
         if vi_the == 0 and co_tin_hieu == 0 and tin_hieu_hien_tai != 0 and dem_cooldown == 0:
             co_tin_hieu = tin_hieu_hien_tai
 
@@ -228,7 +228,7 @@ def tai_dung_lenh_tu_dump(file_path: str) -> pl.DataFrame:
     if not lich_su:
         return pl.DataFrame()
 
-                                                                      
+
     lich_su.sort(key=lambda x: str(x.get("Time", "")))
     bal = VON_BAN_DAU
     for t in lich_su:

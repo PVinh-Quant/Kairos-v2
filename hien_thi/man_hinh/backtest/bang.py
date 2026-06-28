@@ -49,14 +49,14 @@ class CoinContentWidget(QWidget):
         self.data = data
         self.row_height = 40
         self.setMinimumHeight(len(data) * self.row_height)
-        self.selected_coin = None                                                 
+        self.selected_coin = None
 
     def update_data(self, data, selected_coin=None):
         """Cập nhật danh sách coin và highlight coin đang được lọc."""
         self.data = data or []
-        self.selected_coin = selected_coin                        
+        self.selected_coin = selected_coin
 
-                                                
+
         new_height = len(self.data) * self.row_height
         if self.minimumHeight() != new_height:
             self.setMinimumHeight(new_height)
@@ -70,7 +70,7 @@ class CoinContentWidget(QWidget):
         index = int(event.position().y() // self.row_height)
 
         if 0 <= index < len(self.data):
-                                        
+
             coin_name = self.data[index]["pair"]
             self.coin_clicked.emit(coin_name)
 
@@ -93,13 +93,13 @@ class CoinContentWidget(QWidget):
         for i, item in enumerate(self.data):
             y = i * self.row_height
 
-                                                                   
+
             if self.selected_coin and self.selected_coin == item.get("pair"):
                 painter.fillRect(QRectF(0, y, w, self.row_height), QColor("#333"))
                 painter.setPen(QPen(QColor(ACCENT_COLOR), 3))
                 painter.drawLine(0, int(y), 0, int(y + self.row_height))
 
-                         
+
             painter.setPen(QColor(ACCENT_COLOR))
             painter.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
             painter.drawText(
@@ -111,7 +111,7 @@ class CoinContentWidget(QWidget):
                 str(item["pair"]),
             )
 
-                        
+
             count = item.get("count", 0)
             painter.setPen(QColor(TEXT_SUB))
             painter.setFont(QFont("Segoe UI", 9))
@@ -124,7 +124,7 @@ class CoinContentWidget(QWidget):
                 f"{count} lệnh",
             )
 
-                    
+
             pnl = item["pnl"]
             color = QColor(COLOR_WIN) if pnl >= 0 else QColor(COLOR_LOSS)
             painter.setPen(color)
@@ -138,7 +138,7 @@ class CoinContentWidget(QWidget):
                 f"{pnl:+.2f}$",
             )
 
-                            
+
             painter.setPen(QPen(QColor(BORDER_COLOR), 1))
             painter.drawLine(
                 10, int(y + self.row_height - 1), w - 10, int(y + self.row_height - 1)
@@ -146,7 +146,7 @@ class CoinContentWidget(QWidget):
 
 
 class CoinResultWidget(QWidget):
-                       
+
     coin_selected_signal = pyqtSignal(str)
 
     def __init__(self):
@@ -163,7 +163,7 @@ class CoinResultWidget(QWidget):
         )
 
         self.content = CoinContentWidget([])
-                               
+
         self.content.coin_clicked.connect(self.on_coin_clicked)
 
         self.scroll.setWidget(self.content)
@@ -175,7 +175,7 @@ class CoinResultWidget(QWidget):
 
     def update_data(self, df: pl.DataFrame | None = None, current_filter_coin=None):
         """Tổng hợp PnL theo coin từ DataFrame và cập nhật danh sách hiển thị."""
-                                                      
+
         if df is None or df.is_empty():
             self.content.update_data([], current_filter_coin)
             return
@@ -186,7 +186,7 @@ class CoinResultWidget(QWidget):
                 .agg(
                     [
                         pl.sum("pnl_usd").alias("pnl"),
-                        pl.len().alias("count"),                                 
+                        pl.len().alias("count"),
                     ]
                 )
                 .sort("pnl", descending=True)
@@ -201,7 +201,7 @@ class CoinResultWidget(QWidget):
                 for r in grp.to_dicts()
             ]
 
-                                                    
+
             self.content.update_data(data, current_filter_coin)
 
         except Exception as e:
@@ -209,9 +209,9 @@ class CoinResultWidget(QWidget):
             self.content.update_data([], current_filter_coin)
 
 
-                                                                                   
-                                      
-                                                                                   
+
+
+
 class _EmptyHintTable(QTableWidget):
     """Bảng hiện 'No Data Available' căn giữa khi chưa có dòng nào.
 
@@ -239,7 +239,7 @@ class TradeHistoryWidget(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
-                                                                             
+
         self.table = _EmptyHintTable()
         self.table.setColumnCount(8)
         self.table.setHorizontalHeaderLabels(
@@ -255,21 +255,21 @@ class TradeHistoryWidget(QWidget):
             ]
         )
 
-                                 
+
         self.table.setShowGrid(False)
         self.table.verticalHeader().setVisible(False)
         self.table.setEditTriggers(
             QAbstractItemView.EditTrigger.NoEditTriggers
-        )                 
+        )
         self.table.setSelectionBehavior(
             QAbstractItemView.SelectionBehavior.SelectRows
-        )                
+        )
 
-                                                                            
+
         self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.table.setAlternatingRowColors(True)
 
-                                                                         
+
         self.table.setStyleSheet(f"""
             QTableWidget {{
                 background-color: {CARD_BG};
@@ -301,7 +301,7 @@ class TradeHistoryWidget(QWidget):
             QTableWidget::item:focus {{
                 border: none;
                 outline: none; /* Tắt viền focus khi click vào ô cụ thể */
-                background-color: #333; 
+                background-color: #333;
             }}
         """)
 
@@ -318,7 +318,7 @@ class TradeHistoryWidget(QWidget):
             self.table.setRowCount(0)
             return
 
-                                                                                        
+
         display_limit = 100
         display_trades = (
             trades[-display_limit:] if len(trades) > display_limit else trades
@@ -329,20 +329,20 @@ class TradeHistoryWidget(QWidget):
         font_bold = QFont("Segoe UI", 9, QFont.Weight.Bold)
 
         for row, t in enumerate(reversed_trades):
-                          
+
             item_time = QTableWidgetItem(str(t.get("time_close", "")))
             item_time.setForeground(QColor(TEXT_SUB))
             item_time.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.table.setItem(row, 0, item_time)
 
-                         
+
             item_pair = QTableWidgetItem(str(t.get("symbol", "")))
             item_pair.setForeground(QColor(ACCENT_COLOR))
             item_pair.setFont(font_bold)
             item_pair.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.table.setItem(row, 1, item_pair)
 
-                       
+
             side_str = str(t.get("side", "")).upper()
             item_side = QTableWidgetItem(side_str)
             if side_str in ["BUY", "LONG"]:
@@ -353,15 +353,15 @@ class TradeHistoryWidget(QWidget):
             item_side.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.table.setItem(row, 2, item_side)
 
-                      
+
             entry_val = t.get("entry", 0)
             self.table.setItem(row, 3, QTableWidgetItem(f"{entry_val:.4f}"))
 
-                     
+
             exit_val = t.get("exit", 0)
             self.table.setItem(row, 4, QTableWidgetItem(f"{exit_val:.4f}"))
 
-                        
+
             pnl = t.get("pnl_usd", 0)
             item_pnl = QTableWidgetItem(f"{pnl:+.2f}$")
             item_pnl.setFont(font_bold)
@@ -374,7 +374,7 @@ class TradeHistoryWidget(QWidget):
             )
             self.table.setItem(row, 5, item_pnl)
 
-                        
+
             roi = t.get("pnl_pct", 0) * 100
             item_roi = QTableWidgetItem(f"{roi:+.2f}%")
             if roi > 0:
@@ -386,7 +386,7 @@ class TradeHistoryWidget(QWidget):
             )
             self.table.setItem(row, 6, item_roi)
 
-                      
+
             full_text = str(t.get("reason", ""))
             display_text = full_text
             if len(full_text) > 30:
@@ -398,7 +398,7 @@ class TradeHistoryWidget(QWidget):
 
             self.table.setItem(row, 7, item_reason)
 
-                                     
+
             for col in [3, 4]:
                 it = self.table.item(row, col)
                 if it:
@@ -406,8 +406,8 @@ class TradeHistoryWidget(QWidget):
                     it.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
 
 
-                                                                                   
-                     
-                                                                                   
+
+
+
 
 __all__ = ["CoinContentWidget", "CoinResultWidget", "TradeHistoryWidget"]

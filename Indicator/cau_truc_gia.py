@@ -38,7 +38,7 @@ def _rai_xuong_tu_khung_lon(df, polars_time_frame, suffix, tinh_1m):
     htf = htf.with_columns(pl.col("timestamp").dt.offset_by(polars_time_frame))
     feat = [c for c in htf.columns if c not in base]
     ren = {c: c[:-2] + suffix for c in feat if c.endswith("_1m")}
-    htf = htf.rename(ren)                                                                           
+    htf = htf.rename(ren)
     feat = [ren.get(c, c) for c in feat]
     return df.join_asof(
         htf.select(["timestamp"] + feat), on="timestamp", strategy="backward"
@@ -64,7 +64,7 @@ def pt_breakout(df, time_frame, window=20):
     c_low = f"breakout_Low_{time_frame}"
     c_status = f"breakout_{time_frame}"
 
-                                                              
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, time_frame.lower(), time_frame, lambda d: pt_breakout(d, "1m", window)
@@ -73,7 +73,7 @@ def pt_breakout(df, time_frame, window=20):
     if time_frame == "1m":
         high_max = pl.col("high").rolling_max(window_size=window)
         low_min = pl.col("low").rolling_min(window_size=window)
-        
+
         df = df.with_columns([
             high_max.alias(c_high),
             low_min.alias(c_low)
@@ -111,7 +111,7 @@ def pt_fractals(df, time_frame, window=2):
     c_up_frac = f"frac_res_{time_frame}"
     c_down_frac = f"frac_sup_{time_frame}"
 
-                                                              
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, time_frame.lower(), time_frame, lambda d: pt_fractals(d, "1m", window)
@@ -165,7 +165,7 @@ def pt_pivot_points(df, time_frame, left_bars=5, right_bars=5):
     c_pivot_high = f"pivot_high_{time_frame}"
     c_pivot_low = f"pivot_low_{time_frame}"
 
-                                                              
+
     if time_frame != "1m":
         return _rai_xuong_tu_khung_lon(
             df, time_frame.lower(), time_frame, lambda d: pt_pivot_points(d, "1m", left_bars, right_bars)
@@ -253,7 +253,7 @@ def pt_fvg(df, time_frame):
             fvg_type_expr.alias(c_fvg_type)
         ])
     else:
-                                     
+
         htf = (
             df.group_by_dynamic(
                 "timestamp",
@@ -269,7 +269,7 @@ def pt_fvg(df, time_frame):
             .sort("timestamp")
         )
 
-                                      
+
         bull_fvg = pl.col("low") > pl.col("high").shift(2)
         bear_fvg = pl.col("high") < pl.col("low").shift(2)
 
@@ -310,12 +310,12 @@ def pt_fvg(df, time_frame):
             htf_fvg_type.alias("f_type")
         ])
 
-                                                         
+
         htf = htf.with_columns(
             pl.col("timestamp").dt.offset_by(time_frame)
         )
 
-                            
+
         htf_to_join = htf.select([
             "timestamp",
             pl.col("f_top").alias("f_top_ffill"),
@@ -323,7 +323,7 @@ def pt_fvg(df, time_frame):
             pl.col("f_type").alias("f_type_ffill")
         ])
         df_joined = df.join_asof(htf_to_join, on="timestamp", strategy="backward")
-        
+
         df = df_joined.with_columns([
             pl.col("f_top_ffill").forward_fill().alias(c_fvg_top),
             pl.col("f_bot_ffill").forward_fill().alias(c_fvg_bot),
@@ -385,16 +385,16 @@ def pt_heikin_ashi(df, time_frame):
             df["low"].to_numpy(),
             df["close"].to_numpy()
         )
-        
+
         df = df.with_columns([
             pl.Series(ha_open_arr).alias(c_ha_open),
             pl.Series(ha_close_arr).alias(c_ha_close)
         ])
-        
+
         ha_high = pl.max_horizontal("high", c_ha_open, c_ha_close)
         ha_low = pl.min_horizontal("low", c_ha_open, c_ha_close)
     else:
-                                     
+
         htf = (
             df.group_by_dynamic(
                 "timestamp",
@@ -412,7 +412,7 @@ def pt_heikin_ashi(df, time_frame):
             .sort("timestamp")
         )
 
-                                                       
+
         ha_open_closed, ha_close_closed = _heikin_ashi_arrays(
             htf["open"].to_numpy(),
             htf["high"].to_numpy(),
@@ -427,12 +427,12 @@ def pt_heikin_ashi(df, time_frame):
             htf["low"].alias("ha_low_closed")
         ])
 
-                                                         
+
         htf = htf.with_columns(
             pl.col("timestamp").dt.offset_by(time_frame)
         )
 
-                            
+
         htf_to_join = htf.select([
             "timestamp",
             pl.col("ha_open_closed").alias("ha_open_ffill"),
@@ -441,12 +441,12 @@ def pt_heikin_ashi(df, time_frame):
             pl.col("ha_low_closed").alias("ha_low_ffill")
         ])
         df_joined = df.join_asof(htf_to_join, on="timestamp", strategy="backward")
-        
+
         df = df_joined.with_columns([
             pl.col("ha_open_ffill").alias(c_ha_open),
             pl.col("ha_close_ffill").alias(c_ha_close)
         ])
-        
+
         ha_high = pl.col("ha_high_ffill")
         ha_low = pl.col("ha_low_ffill")
 

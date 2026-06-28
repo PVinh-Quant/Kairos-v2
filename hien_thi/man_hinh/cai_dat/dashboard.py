@@ -46,7 +46,7 @@ from utils.doc_cau_hinh import (
     duong_dan_config,
 )
 
-                                                                              
+
 NHAN = {
     "ten_nguoi_dung": "Tên người dùng",
     "san_giao_dich_chinh": "Sàn giao dịch chính",
@@ -69,9 +69,9 @@ class ManHinhCaiDat(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.phien = None                                                             
+        self.phien = None
         self.setStyleSheet(f"background: {Theme.BG};")
-        self._fields = []                                           
+        self._fields = []
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -99,7 +99,7 @@ class ManHinhCaiDat(QWidget):
         """Hook bus phiên (shell gọi khi gắn màn). Màn Cài đặt không dùng bus."""
         self.phien = phien
 
-                                                                                
+
     def _build_header(self):
         bar = QFrame()
         bar.setObjectName("header_bar")
@@ -127,7 +127,7 @@ class ManHinhCaiDat(QWidget):
         lay.addWidget(btn_save)
         return bar
 
-                                                                                
+
     def _tai_lai(self):
         """Đọc lại config từ đĩa và dựng lại toàn bộ form."""
         while self._body_lay.count():
@@ -175,7 +175,7 @@ class ManHinhCaiDat(QWidget):
         grid.addWidget(txt, 0, 0, 1, 2)
         return card
 
-                                                                                
+
     def _card(self, tieu_de, ten_file, mota=None):
         """Dựng 1 thẻ section, trả về (card, grid) để đổ field vào grid."""
         card = QFrame()
@@ -217,7 +217,7 @@ class ManHinhCaiDat(QWidget):
 
     def _editor_for(self, val):
         """Tạo widget chỉnh sửa phù hợp với kiểu của giá trị config."""
-        if isinstance(val, bool):                                        
+        if isinstance(val, bool):
             w = QCheckBox()
             w.setChecked(val)
             w.setStyleSheet(f"QCheckBox {{ color: {Theme.TEXT_MAIN}; }}")
@@ -263,7 +263,7 @@ class ManHinhCaiDat(QWidget):
             return float(text)
         return text
 
-                                                                                
+
     def _luu(self):
         """Gom giá trị từ form và ghi vào từng file config."""
         gd, ao = {}, {}
@@ -279,7 +279,7 @@ class ManHinhCaiDat(QWidget):
                 luu_cau_hinh_giao_dich(gd)
             if ao:
                 luu_cau_hinh_ao(ao)
-        except Exception as e:                                                  
+        except Exception as e:
             self._bao(f"⚠ Lỗi khi lưu: {e}", loi=True)
             return
         self._bao("✓ Đã lưu cấu hình vào thư mục config/.", loi=False)
@@ -293,7 +293,7 @@ class ManHinhCaiDat(QWidget):
         QDesktopServices.openUrl(QUrl.fromLocalFile(path))
         self._bao(f"Đã mở {ten_file} bằng trình soạn thảo mặc định.", loi=False, neutral=True)
 
-                                                                                
+
     def _format_nested(self, data, indent=0):
         pad = "    " * indent
         out = []
@@ -319,8 +319,8 @@ class ManHinhCaiDat(QWidget):
         return b
 
     def _spin_css(self):
-                                                                                    
-                                                                                           
+
+
         return (
             f"QAbstractSpinBox {{ background: {Theme.BG}; color: {Theme.TEXT_MAIN}; "
             f"border: 1px solid {Theme.BORDER}; border-radius: 4px; padding: 4px 22px 4px 8px; "

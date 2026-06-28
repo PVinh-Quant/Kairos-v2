@@ -39,11 +39,11 @@ class DraggableCard(QDockWidget):
         )
 
 
-                                                                                   
-                   
-                                                                                   
+
+
+
 class MarketHeatmap(QWidget):
-                                                    
+
     cell_clicked = pyqtSignal(str, str)
 
     def __init__(self):
@@ -53,8 +53,8 @@ class MarketHeatmap(QWidget):
         self.layout.setSpacing(4)
         self.layout.setContentsMargins(10, 10, 10, 10)
 
-                                                       
-                                                                         
+
+
         self.tf_map = {
             "1m": "1m",
             "5m": "5m",
@@ -64,14 +64,14 @@ class MarketHeatmap(QWidget):
             "4h": "4h",
             "1d": "1d",
         }
-                                          
+
         self.display_headers = ["1m", "5m", "15m", "30m", "1h", "4h", "1d"]
 
         self.init_header()
 
     def init_header(self):
         """Vẽ hàng tiêu đề gồm cột Symbol và các cột timeframe."""
-                              
+
         lbl_sym = QLabel("SYMBOL")
         lbl_sym.setStyleSheet(
             f"color: {ACCENT_COLOR}; font-weight: bold; font-size: 12px;"
@@ -79,7 +79,7 @@ class MarketHeatmap(QWidget):
         lbl_sym.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         self.layout.addWidget(lbl_sym, 0, 0)
 
-                           
+
         for col, header in enumerate(self.display_headers):
             lbl = QLabel(header)
             lbl.setStyleSheet(f"color: {TEXT_SUB}; font-weight: bold; font-size: 11px;")
@@ -92,7 +92,7 @@ class MarketHeatmap(QWidget):
 
     def update_data(self, data):
         """Cập nhật heatmap theo danh sách vị thế đang mở từ data dict."""
-                                            
+
         raw_positions = data.get("lenh_dang_chay", {})
 
         if not raw_positions or not isinstance(raw_positions, dict):
@@ -106,14 +106,14 @@ class MarketHeatmap(QWidget):
             self.clear_content()
             return
 
-                                            
+
         self.clear_content()
 
-                       
+
         for row_idx, sym in enumerate(symbols):
             actual_row = row_idx + 1
 
-                                           
+
             btn_sym = QPushButton(sym)
             btn_sym.setCursor(Qt.CursorShape.PointingHandCursor)
             btn_sym.setFlat(True)
@@ -121,28 +121,28 @@ class MarketHeatmap(QWidget):
                 f"color: {TEXT_MAIN}; font-weight: bold; text-align: left; padding-left: 5px; border: none;"
             )
 
-                                           
+
             btn_sym.clicked.connect(partial(self.on_btn_click, sym, "1m"))
             self.layout.addWidget(btn_sym, actual_row, 0)
 
-                                       
+
             order_info = open_positions.get(sym)
             position_side = "buy"
             if isinstance(order_info, dict):
                 position_side = order_info.get("side", "buy")
 
-                                                         
+
             import random
 
             for col_idx, header in enumerate(self.display_headers):
-                tf_code = self.tf_map[header]                                     
+                tf_code = self.tf_map[header]
 
-                                                                                   
+
                 is_bullish = True
                 if header in ["4h", "1d"]:
                     is_bullish = position_side == "buy"
                 else:
-                                           
+
                     if position_side == "buy":
                         is_bullish = random.random() > 0.2
                     else:
@@ -150,7 +150,7 @@ class MarketHeatmap(QWidget):
 
                 color = COLOR_WIN if is_bullish else COLOR_LOSS
 
-                               
+
                 btn_tf = QPushButton()
                 btn_tf.setFixedSize(35, 25)
                 btn_tf.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -167,7 +167,7 @@ class MarketHeatmap(QWidget):
 
                 self.layout.addWidget(btn_tf, actual_row, col_idx + 1)
 
-                            
+
         self.layout.setRowStretch(len(symbols) + 1, 1)
 
     def clear_content(self):
@@ -180,9 +180,9 @@ class MarketHeatmap(QWidget):
                     item.widget().setParent(None)
 
 
-                                                                                   
-                 
-                                                                                   
+
+
+
 class BieuDoGiaoDich(QWidget):
     back_clicked = pyqtSignal()
 
@@ -190,12 +190,12 @@ class BieuDoGiaoDich(QWidget):
         """Khởi tạo widget biểu đồ giá với pyqtgraph và HUD hiển thị thông tin lệnh."""
         super().__init__()
 
-                            
+
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(0)
 
-                                             
+
         self.lbl_info = QLabel("SẴN SÀNG")
         self.lbl_info.setFixedHeight(30)
         self.lbl_info.setStyleSheet(f"""
@@ -211,43 +211,43 @@ class BieuDoGiaoDich(QWidget):
         """)
         self.layout.addWidget(self.lbl_info)
 
-                          
+
         self.plot = pg.PlotWidget()
         self.plot.setBackground(BG_COLOR)
 
-              
+
         self.plot.showGrid(x=False, y=True, alpha=0.2)
         self.plot.getPlotItem().hideButtons()
 
-                
+
         self.plot.getAxis("left").setPen(None)
         self.plot.getAxis("left").setTextPen(TEXT_SUB)
         self.plot.getAxis("left").setStyle(tickTextOffset=8)
 
-                    
+
         self.plot.showAxis("bottom", False)
 
-                       
+
         self.plot.enableAutoRange(axis="y", enable=False)
         self.plot.enableAutoRange(axis="x", enable=True)
 
-                                                   
+
         self.plot.setClipToView(False)
 
-                         
+
         self.price_line = self.plot.plot(pen=pg.mkPen("#2962FF", width=2.5))
 
         self.layout.addWidget(self.plot)
 
-                            
+
         self.plot.scene().sigMouseClicked.connect(self.on_chart_clicked)
 
-                           
+
         self.current_symbol = ""
         self.current_tf = "1m"
         self.current_data = {}
 
-                                                 
+
     def format_price(self, v):
         """Format giá thành chuỗi không có số 0 thừa ở cuối."""
         if v is None:
@@ -257,13 +257,13 @@ class BieuDoGiaoDich(QWidget):
         except:
             return str(v)
 
-                                                  
+
     def on_chart_clicked(self, event):
         """Xử lý click trái trên biểu đồ để phát signal quay lại heatmap."""
         if event.button() == Qt.MouseButton.LeftButton:
             self.back_clicked.emit()
 
-                                                
+
     def switch_context(self, symbol, timeframe):
         """Chuyển ngữ cảnh sang symbol và timeframe mới rồi render lại."""
         self.current_symbol = symbol
@@ -279,7 +279,7 @@ class BieuDoGiaoDich(QWidget):
                 self.current_symbol = syms[0]
         self.re_render()
 
-                                                  
+
     def re_render(self):
         """Vẽ lại đường giá, HUD, và các đường Entry/TP/SL từ dữ liệu hiện tại."""
         try:
@@ -290,7 +290,7 @@ class BieuDoGiaoDich(QWidget):
             if not sym or sym not in self.current_data.get("data_lenh_dang_chay", {}):
                 return
 
-                         
+
             df = self.current_data["data_lenh_dang_chay"][sym].get(key_df)
             if df is None:
                 return
@@ -303,10 +303,10 @@ class BieuDoGiaoDich(QWidget):
             x = list(range(len(closes)))
             current_price = closes[-1]
 
-                             
+
             self.price_line.setData(x, closes)
 
-                             
+
             self.lbl_info.setText(f"""
                 <html>
                 <span style='color:{ACCENT_COLOR}; font-size:14px'>{sym}</span>
@@ -317,19 +317,19 @@ class BieuDoGiaoDich(QWidget):
                 </html>
             """)
 
-                            
+
             for item in list(self.plot.items()):
                 if item is not self.price_line and not isinstance(
                     item, (pg.AxisItem, pg.ViewBox, pg.GridItem)
                 ):
                     self.plot.removeItem(item)
 
-                                     
+
             order = self.current_data.get("lenh_dang_chay", {}).get(sym)
             view_values = [min(closes), max(closes)]
 
             if order:
-                                                
+
                 if order.get("entry_price"):
                     entry = order["entry_price"]
                     view_values.append(entry)
@@ -338,7 +338,7 @@ class BieuDoGiaoDich(QWidget):
                         angle=0,
                         pen=pg.mkPen("#E0E0E0", width=1.5, style=Qt.PenStyle.DashLine),
                     )
-                                                                                
+
                     line_entry.label = pg.InfLineLabel(
                         line_entry,
                         text=f"{self.format_price(entry)}",
@@ -349,7 +349,7 @@ class BieuDoGiaoDich(QWidget):
                     )
                     self.plot.addItem(line_entry)
 
-                                   
+
                 if order.get("tp_price"):
                     tp = order["tp_price"]
                     view_values.append(tp)
@@ -368,7 +368,7 @@ class BieuDoGiaoDich(QWidget):
                     )
                     self.plot.addItem(line_tp)
 
-                                 
+
                 if order.get("sl_price"):
                     sl = order["sl_price"]
                     view_values.append(sl)
@@ -387,7 +387,7 @@ class BieuDoGiaoDich(QWidget):
                     )
                     self.plot.addItem(line_sl)
 
-                                                                       
+
             if view_values:
                 min_y = min(view_values)
                 max_y = max(view_values)
@@ -396,19 +396,19 @@ class BieuDoGiaoDich(QWidget):
                 if diff == 0:
                     diff = 1
 
-                                                          
+
                 pad = diff * 0.15
 
-                                                                       
+
                 self.plot.setYRange(min_y - pad, max_y + pad, padding=0)
 
         except Exception as e:
             print(f"Chart Render Error: {e}")
 
 
-                                                                                   
-                          
-                                                                                   
+
+
+
 class MarketViewContainer(QWidget):
     def __init__(self):
         """Khởi tạo container chứa cả heatmap và chart, chuyển đổi qua lại bằng QStackedWidget."""
@@ -451,9 +451,9 @@ class MarketViewContainer(QWidget):
         self.chart_view.update_data(data)
 
 
-                                                                                   
-                                
-                                                                                   
+
+
+
 class SummaryBox(QWidget):
     def __init__(self):
         """Khởi tạo widget tổng quan tài khoản với các chỉ số equity, PnL, winrate."""
@@ -586,7 +586,7 @@ class HistoryTable(TableBase):
             self.setRowCount(0)
             return
 
-                                                              
+
         if hasattr(hist, "to_dicts"):
             hist = hist.to_dicts()
         elif hasattr(hist, "to_dict"):
@@ -596,12 +596,12 @@ class HistoryTable(TableBase):
         self.setRowCount(len(recent_data))
 
         for i, row in enumerate(recent_data):
-                                    
+
             item_symbol = QTableWidgetItem(str(row.get("symbol", "--")))
             item_symbol.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.setItem(i, 0, item_symbol)
 
-                            
+
             try:
                 pnl = float(row.get("pnl", 0.0))
             except (TypeError, ValueError):
@@ -615,7 +615,7 @@ class HistoryTable(TableBase):
             item_pnl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
             self.setItem(i, 1, item_pnl)
 
-                                              
+
             day = str(row.get("day", ""))
             t_open = str(row.get("open_time", ""))
             t_close = str(row.get("close_time", ""))
@@ -627,7 +627,7 @@ class HistoryTable(TableBase):
                     t_close_clean = t_close.split(".")[0]
                     start_dt = datetime.strptime(f"{day} {t_open_clean}", fmt)
                     end_dt = datetime.strptime(f"{day} {t_close_clean}", fmt)
-                    if end_dt < start_dt:           
+                    if end_dt < start_dt:
                         end_dt += timedelta(days=1)
                     secs = max(0, int((end_dt - start_dt).total_seconds()))
                     h, m, s = secs // 3600, (secs % 3600) // 60, secs % 60
@@ -643,7 +643,7 @@ class HistoryTable(TableBase):
             item_duration.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.setItem(i, 2, item_duration)
 
-                                       
+
             reason = str(row.get("reason", "--"))
             if not reason or reason.strip() == "" or reason == "None":
                 reason = "--"
@@ -673,5 +673,5 @@ class TradingBridge(QThread):
             self._runner()
             self.data_signal.emit(get_all_data())
             self.exec()
-        except Exception as e:                
+        except Exception as e:
             logger.error(f"Bridge Error: {e}")

@@ -38,7 +38,7 @@ def tinh_sl_tp(df, time_frame="15m", base_sl=2.5, rr=2.0):
     atr_mean = pl.col(col_mean).forward_fill().fill_null(pl.col(col_atr).forward_fill().fill_null(0.0))
 
     vol_ratio = (atr / (atr_mean + 1e-9)).clip(0.5, 3.0)
-    
+
     def get_expr(val):
         if isinstance(val, str):
             return pl.col(val)
@@ -57,8 +57,8 @@ def tinh_sl_tp(df, time_frame="15m", base_sl=2.5, rr=2.0):
 
     close = pl.when(pl.col("close") == 0).then(None).otherwise(pl.col("close")).fill_nan(None).forward_fill()
 
-    sl_pct = (atr * he_so_sl / close).clip(0.005, 0.15)              
-    tp_pct = (atr * he_so_tp / close).clip(0.01, 0.30)              
+    sl_pct = (atr * he_so_sl / close).clip(0.005, 0.15)
+    tp_pct = (atr * he_so_tp / close).clip(0.01, 0.30)
 
     df_pl = df_pl.with_columns([
         sl_pct.alias("sl_pct"),
@@ -166,7 +166,7 @@ def tinh_sl_tp_live(df_15m, gia_vao, side, base_sl=2.5, rr=2.0, time_frame="15m"
     if side == "buy":
         sl = gia_vao * (1 - sl_pct)
         tp = gia_vao * (1 + tp_pct)
-    else:        
+    else:
         sl = gia_vao * (1 + sl_pct)
         tp = gia_vao * (1 - tp_pct)
 

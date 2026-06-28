@@ -34,10 +34,10 @@ class KairosDataManager:
             if cls._instance is None:
                 cls._instance = super(KairosDataManager, cls).__new__(cls)
                 cls._instance.cache = {}
-                cls._instance.symbol_to_conn = {}                                   
+                cls._instance.symbol_to_conn = {}
                 cls._instance.connections = (
                     []
-                )                                                            
+                )
                 cls._instance.is_stopping = False
             return cls._instance
 
@@ -51,13 +51,13 @@ class KairosDataManager:
                 "delta": 0.0,
                 "buy_vol": 0.0,
                 "sell_vol": 0.0,
-                                         
+
                 "spread_hist": [],
                 "bid_hist": [],
                 "ask_hist": [],
                 "bid_sz_hist": [],
                 "ask_sz_hist": [],
-                                           
+
                 "depth_bid": [],
                 "depth_ask": [],
                 "bid_total": 0.0,
@@ -80,7 +80,7 @@ class KairosDataManager:
             stream = raw.get("stream", "")
             data = raw.get("data", {})
 
-                                                                              
+
             if "@forceOrder" in stream:
                 symbol = data.get("o", {}).get("s", "").upper()
             else:
@@ -95,7 +95,7 @@ class KairosDataManager:
                 if "@forceOrder" in stream:
                     o = data["o"]
                     qty = float(o["q"])
-                                                                                            
+
                     if o["S"] == "SELL":
                         target["liq_long"] += qty
                     else:
@@ -139,7 +139,7 @@ class KairosDataManager:
                     self.connections[conn_idx]["ws"] = None
                     break
 
-                                                            
+
                 streams = []
                 for s in symbols:
                     s_low = s.lower()
@@ -204,9 +204,9 @@ class KairosDataManager:
             self._safe_close(self.connections[conn_idx]["ws"])
 
 
-                                            
-                   
-                                            
+
+
+
 
 
 def mo_theo_doi(cap_giao_dich):
@@ -247,7 +247,7 @@ if __name__ == "__main__":
         while True:
             for pair in raw_list:
                 pair_data = mo_theo_doi(pair)
-                                                                  
+
                 if pair_data:
                     print(pair_data)
                 time.sleep(1)

@@ -94,37 +94,37 @@ class IndicatorItem(QFrame):
         mime = QMimeData()
         mime.setText(self.key)
         drag.setMimeData(mime)
-        
-                                                                               
+
+
         from PyQt6.QtGui import QPixmap
         from PyQt6.QtCore import QPoint, QRect
-        
+
         font = QFont("Segoe UI", 9, QFont.Weight.Bold)
         fm = QFontMetrics(font)
         text_w = fm.horizontalAdvance(self.key.upper())
-        badge_w = max(text_w + 24, 70)                                    
+        badge_w = max(text_w + 24, 70)
         badge_h = 24
-        
+
         pixmap = QPixmap(badge_w, badge_h)
         pixmap.fill(Qt.GlobalColor.transparent)
-        
+
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        
-                                                        
-        painter.setBrush(QBrush(QColor(14, 14, 14, 210)))              
+
+
+        painter.setBrush(QBrush(QColor(14, 14, 14, 210)))
         painter.setPen(QPen(QColor(Theme.ACCENT), 1.5))
         painter.drawRoundedRect(1, 1, badge_w - 2, badge_h - 2, 4, 4)
-        
-                                  
+
+
         painter.setPen(QColor(Theme.TEXT_MAIN))
         painter.setFont(font)
         painter.drawText(QRect(0, 0, badge_w, badge_h), Qt.AlignmentFlag.AlignCenter, self.key.upper())
         painter.end()
-        
+
         drag.setPixmap(pixmap)
-        drag.setHotSpot(QPoint(badge_w // 2, badge_h // 2))                   
-        
+        drag.setHotSpot(QPoint(badge_w // 2, badge_h // 2))
+
         drag.exec(Qt.DropAction.CopyAction)
 
 
@@ -170,9 +170,9 @@ class PluginItem(QFrame):
         super().mousePressEvent(event)
 
 
-                                                                                
-                                                                        
-                                                                                
+
+
+
 class GridChip(QFrame):
     def __init__(self, idx, spec, dashboard, parent=None):
         super().__init__(parent)
@@ -183,22 +183,22 @@ class GridChip(QFrame):
         self._press_pos = None
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setStyleSheet("QFrame { background: %s; border: 1px solid %s; border-radius: 6px; }" % (Theme.GRID, Theme.BORDER))
-        
+
         v = QVBoxLayout(self)
         v.setContentsMargins(6, 4, 6, 6)
         v.setSpacing(4)
-        
-                                       
+
+
         top = QHBoxLayout()
         top.setContentsMargins(0, 0, 0, 0)
         top.setSpacing(2)
-        
+
         name_str = self.key.upper()
         name = QLabel(name_str)
-                                                                                          
+
         font_size = 9 if len(name_str) > 12 else 11
         name.setStyleSheet(f"color: {Theme.TEXT_MAIN}; font-weight: bold; font-size: {font_size}px; background: transparent; border: none;")
-        
+
         rm = QPushButton("×")
         rm.setFixedSize(14, 14)
         rm.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -207,16 +207,16 @@ class GridChip(QFrame):
             f"QPushButton:hover {{ color: {Theme.LOSS}; }}"
         )
         rm.clicked.connect(lambda _, idx=self.idx: self.dashboard._remove_chip(idx))
-        
+
         top.addWidget(name, 1)
         top.addWidget(rm)
         v.addLayout(top)
-        
-                                                
+
+
         bottom = QHBoxLayout()
         bottom.setContentsMargins(0, 0, 0, 0)
         bottom.setSpacing(0)
-        
+
         role = self.spec.get("role", "trigger")
         role_btn = QPushButton("Trigger" if role == "trigger" else "Filter")
         role_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -227,7 +227,7 @@ class GridChip(QFrame):
             f"QPushButton:hover {{ background: {rc}1a; }}"
         )
         role_btn.clicked.connect(lambda _, idx=self.idx: self.dashboard._toggle_role(idx))
-        
+
         bottom.addWidget(role_btn)
         bottom.addStretch()
         v.addLayout(bottom)
@@ -248,43 +248,43 @@ class GridChip(QFrame):
         mime = QMimeData()
         mime.setText(f"move:{self.idx}:{self.key}")
         drag.setMimeData(mime)
-        
+
         from PyQt6.QtGui import QPixmap
         from PyQt6.QtCore import QPoint, QRect
-        
+
         font = QFont("Segoe UI", 9, QFont.Weight.Bold)
         fm = QFontMetrics(font)
         text_w = fm.horizontalAdvance(self.key.upper())
         badge_w = max(text_w + 24, 70)
         badge_h = 24
-        
+
         pixmap = QPixmap(badge_w, badge_h)
         pixmap.fill(Qt.GlobalColor.transparent)
-        
+
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        
+
         painter.setBrush(QBrush(QColor(14, 14, 14, 210)))
         painter.setPen(QPen(QColor(Theme.ACCENT), 1.5))
         painter.drawRoundedRect(1, 1, badge_w - 2, badge_h - 2, 4, 4)
-        
+
         painter.setPen(QColor(Theme.TEXT_MAIN))
         painter.setFont(font)
         painter.drawText(QRect(0, 0, badge_w, badge_h), Qt.AlignmentFlag.AlignCenter, self.key.upper())
         painter.end()
-        
+
         drag.setPixmap(pixmap)
         drag.setHotSpot(QPoint(badge_w // 2, badge_h // 2))
 
         action = drag.exec(Qt.DropAction.MoveAction)
-                                                                  
+
         if action == Qt.DropAction.IgnoreAction:
             self.dashboard._remove_chip(self.idx)
 
 
-                                                                                
-                                   
-                                                                                
+
+
+
 class TimeframeColumn(QFrame):
     indicator_dropped = pyqtSignal(str, str)
 
@@ -354,9 +354,9 @@ class TimeframeColumn(QFrame):
         self._base_style()
 
 
-                                                                                
-                                                             
-                                                                                
+
+
+
 class ModuleItem(QFrame):
     """Item kéo được trong tab 'Mô-đun' (cột trái). Mime = 'module:<id>'."""
 
@@ -438,7 +438,7 @@ class ModuleChip(QFrame):
 
         self._build_params(v)
 
-                                      
+
     def _lbl(self, text):
         l = QLabel(text)
         l.setStyleSheet(f"color: {Theme.TEXT_SUB}; font-size: 10px; background: transparent; border: none;")
@@ -606,9 +606,9 @@ class ModuleDropZone(QFrame):
         self._base_style()
 
 
-                                                                                
-                                                                
-                                                                                
+
+
+
 class DataChip(QFrame):
     """Item kéo được trong tab 'Data Pool' (cột trái). Mime = 'data:<id>'."""
 
@@ -630,7 +630,7 @@ class DataChip(QFrame):
         syms = item.get("symbols", [])
         ten_full = item.get("ten", "(chưa đặt tên)")
 
-                                                            
+
         top = QHBoxLayout()
         top.setContentsMargins(0, 0, 0, 0)
         top.setSpacing(5)
@@ -660,14 +660,14 @@ class DataChip(QFrame):
         top.addWidget(rm)
         lay.addLayout(top)
 
-                                                                  
+
         sl = QLabel(_ticker_goc(syms))
         sl.setWordWrap(True)
         sl.setToolTip(", ".join(syms))
         sl.setStyleSheet(f"color: {Theme.TEXT_MAIN}; font-size: 11px; background: transparent; border: none;")
         lay.addWidget(sl)
 
-                                       
+
         so_ngay = _so_ngay_khoang(item.get("tu_ngay"), item.get("den_ngay"))
         ngay_txt = f"{item.get('tu_ngay','?')}  →  {item.get('den_ngay','?')}"
         if so_ngay is not None:

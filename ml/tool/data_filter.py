@@ -14,10 +14,10 @@ def tao_log_can_bang():
         return
 
     try:
-                                            
+
         df = pl.read_csv(INPUT_FILE)
 
-                                                                                
+
         df_clean = df.with_columns(
             pl.col("correct").cast(pl.Int64, strict=False)
         ).drop_nulls(subset=["correct"])
@@ -26,7 +26,7 @@ def tao_log_can_bang():
             print("⚠️ File log không có dữ liệu 'correct' hợp lệ nào.")
             return
 
-                                        
+
         count_df = df_clean.group_by("correct").count().sort("correct")
         print("\n📊 Phân bố dữ liệu GỐC:")
         print(count_df)
@@ -36,22 +36,22 @@ def tao_log_can_bang():
             df_clean.write_csv(OUTPUT_FILE)
             return
 
-                                            
+
         min_samples = count_df["count"].min()
         print(f"\n✂️ Sẽ cắt gọt dữ liệu về mức thấp nhất: {min_samples} dòng/loại")
 
-                          
-                                                                       
+
+
         labels = count_df["correct"].to_list()
         balanced_dfs = [
             df_clean.filter(pl.col("correct") == label).sample(n=min_samples, seed=42)
             for label in labels
         ]
 
-                                                 
+
         df_final = pl.concat(balanced_dfs).sample(fraction=1.0, shuffle=True, seed=42)
 
-                       
+
         df_final.write_csv(OUTPUT_FILE)
 
         print("-" * 50)

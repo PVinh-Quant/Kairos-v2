@@ -55,21 +55,21 @@ def chuan_hoa_va_loc_tin_hieu(
     if "signal" not in df_pl.columns:
         return df_pl.to_pandas() if is_pandas else df_pl
 
-                                                                   
+
     if "signal_raw" not in df_pl.columns:
         df_pl = df_pl.with_columns(pl.col("signal").alias("signal_raw"))
 
-                                                                        
+
     if not dung_regime_ml and "regime" not in df_pl.columns:
         df_pl = df_pl.with_columns(pl.lit(-1).cast(pl.Int64).alias("regime"))
 
-                               
+
     df_pl = loc_trang_thai_thi_truong(
         df_pl, loc_cuoi_tuan=loc_cuoi_tuan, loc_gio_spread=loc_gio_spread,
         regime_cho_phep=regime_cho_phep,
     )
 
-                                                                                        
+
     if "trade_allowed" in df_pl.columns:
         cols = [
             pl.when(pl.col("trade_allowed")).then(pl.col("signal")).otherwise(0).alias("signal")

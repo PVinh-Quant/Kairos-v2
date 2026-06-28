@@ -21,9 +21,9 @@ import importlib
 
 from .dang_ky_man_hinh import MAN_HINH
 
-                                                             
+
 _LOP_TOI_MODULE = {m["lop"]: m["module"] for m in MAN_HINH}
-                                                
+
 _KHOA_TOI_LOP = {m["khoa"]: m["lop"] for m in MAN_HINH}
 
 __all__ = list(_LOP_TOI_MODULE) + ["danh_sach_man_hinh", "lay_lop"]

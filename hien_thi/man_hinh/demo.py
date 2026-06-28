@@ -32,7 +32,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QRectF, QPointF
 from PyQt6.QtGui import QColor, QFont, QPicture, QPainter, QPen, QBrush, QLinearGradient
 
-                            
+
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 if PROJECT_ROOT not in sys.path:
     sys.path.append(PROJECT_ROOT)
@@ -42,10 +42,10 @@ from chuc_nang.chay_demo import chay_demo
 import thuc_thi_lenh.quan_ly_lenh as quan_ly_lenh
 from thuc_thi_lenh.quan_ly_lenh import ui_signals, get_all_data
 
-                                                                                   
-                        
-                                                                                   
-                                                                     
+
+
+
+
 from hien_thi.giao_dien.bang_mau import (
     ACCENT_COLOR, BG_COLOR, CARD_BG, BORDER_COLOR,
     TEXT_MAIN, TEXT_SUB, COLOR_WIN, COLOR_LOSS,
@@ -67,7 +67,7 @@ class MainDashboard_demo(ChienLuocActiveMixin, QMainWindow):
         self.setStyleSheet(f"background-color: {BG_COLOR};")
         self.setDockNestingEnabled(True)
 
-                                                            
+
         self.toolbar = QToolBar("Controls")
         self.toolbar.setMovable(False)
         self.toolbar.setStyleSheet(
@@ -82,7 +82,7 @@ class MainDashboard_demo(ChienLuocActiveMixin, QMainWindow):
         )
         self.btn_start.clicked.connect(self.start_trading)
         self.toolbar.addWidget(self.btn_start)
-                                                            
+
 
         self.market_view = MarketViewContainer()
         self.pos_table = PositionsTable()
@@ -116,25 +116,25 @@ class MainDashboard_demo(ChienLuocActiveMixin, QMainWindow):
         self.worker = TradingBridge(chay_demo)
         self.worker.data_signal.connect(self.sync_all)
 
-                                               
+
         self.statusBar().showMessage(
             "Hệ thống đang chờ... Vui lòng bấm 'BẮT ĐẦU CHẠY'."
         )
 
-                                                  
+
     def start_trading(self):
         """Khóa nút và khởi động luồng demo khi người dùng bấm bắt đầu."""
-        self.btn_start.setEnabled(False)                            
+        self.btn_start.setEnabled(False)
         self.btn_start.setText("ĐANG CHẠY DEMO...")
         self.btn_start.setStyleSheet(
             f"background-color: {COLOR_WIN}; color: #FFF; font-weight: bold; padding: 6px 20px; border-radius: 4px; border: none;"
         )
         self.statusBar().showMessage("Đang khởi động hệ thống...")
 
-                                                                                        
+
         self._ap_dung_chien_luoc_ghi_de()
 
-        self.worker.start()                                
+        self.worker.start()
 
     def sync_all(self, data):
         """Cập nhật toàn bộ các widget UI khi nhận được data mới từ luồng demo."""
